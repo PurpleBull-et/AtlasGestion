@@ -1,0 +1,47 @@
+# Ignorar entorno virtual
+venv/
+env/
+
+# Archivos de configuración sensibles (variables de entorno, etc.)
+*.env
+
+# Ignorar archivos compilados de Python
+*.py[cod]
+__pycache__/
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Ignorar bases de datos locales
+*.sqlite3
+*.db
+
+# Archivos estáticos generados
+staticfiles/
+media/
+
+# Ignorar archivos de logs
+*.log
+*.pot
+
+# Ignorar archivos de administración de versiones y sistema
+*.swp
+*.swo
+*~
+.DS_Store
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Ignorar carpeta productos dentro de media
+/media/productos/
+
+# Ignorar archivos de migraciones de Django
+**/migrations/**/0*.py
+
+# Ignorar archivos de configuración de editores/IDE
+.vscode/
+.idea/
