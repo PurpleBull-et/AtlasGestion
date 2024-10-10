@@ -1,0 +1,25 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+<h1>Modificar Perfil Staff</h1>
+
+<form method="post">
+    {% csrf_token %}
+    
+    {{ profile_form.as_p }}
+    
+    <div class="form-group">
+        <label for="grupo">Asignar Grupo:</label>
+        <select name="grupo" id="grupo" class="form-control">
+            <option value="">Seleccionar un grupo</option>
+            {% for grupo in grupos %}
+                <option value="{{ grupo.id }}" {% if grupo_actual and grupo_actual.id == grupo.id %}selected{% endif %}>
+                    {{ grupo.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+</form>
+{% endblock %}

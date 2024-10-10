@@ -1,0 +1,13 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+<h1>Licencia Vencida</h1>
+
+<div class="alert alert-warning">
+    <h4>Tu membresía ha expirado</h4>
+    <p>Para continuar utilizando el sistema, debes renovar tu licencia.</p>
+    <p>Contacta con el administrador para renovar tu membresía.</p>
+</div>
+
+<a href="{% url 'home' %}" class="btn btn-primary">Volver al inicio</a>
+{% endblock %}

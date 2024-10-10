@@ -1,0 +1,34 @@
+{% extends 'app/base.html' %}
+{% block contenido %}
+<h2>Ventas Realizadas</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID Compra</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Productos Comprados</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for compra in compras %}
+        <tr>
+            <td>{{ compra.id }}</td>
+            <td>{{ compra.fecha }}</td>
+            <td>{{ compra.total }}</td>
+            <td>
+                <ul>
+                    {% for detalle in compra.detalles.all %}
+                    <li>{{ detalle.producto.nombre }} ({{ detalle.cantidad }} x {{ detalle.precio_unitario }})</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <a href="#" class="btn btn-warning btn-sm">Anular Boleta</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+<h1>Mi Negocio</h1>
+
+<!-- Perfil del Staff -->
+<section id="perfil-staff">
+    <h2>Perfil del Staff</h2>
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">{{ staff.username }}</h4>
+            <p class="card-text">Correo: {{ staff.email }}</p>
+            <p class="card-text">Nombre completo: {{ staff.first_name }} {{ staff.last_name }}</p>
+            <a href="{% url 'change_password' %}" class="btn btn-secondary mt-3">Cambiar Contraseña</a>
+        </div>
+    </div>
+</section>
+
+<!-- Dashboard -->
+<section id="dashboard" class="mt-5">
+    <h2>Dashboard</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Total de Ventas</h4>
+                    <p>{{ total_ventas }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Promedio Diario de Ventas</h4>
+                    <p>{{ promedio_ventas_diario }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Producto Más Vendido</h4>
+                    <p>{{ producto_mas_vendido.nombre }} ({{ producto_mas_vendido.cantidad_total }} vendidos)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Ventas Totales -->
+<section id="ventas-totales" class="mt-5">
+    <h2>Ventas Realizadas</h2>
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>ID Compra</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Productos Comprados</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for compra in compras %}
+            <tr>
+                <td>{{ compra.id }}</td>
+                <td>{{ compra.fecha }}</td>
+                <td>{{ compra.total }}</td>
+                <td>
+                    <ul>
+                        {% for detalle in compra.detalles.all %}
+                        <li>{{ detalle.producto.nombre }} ({{ detalle.cantidad }} x {{ detalle.precio_unitario }})</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    <a href="#" class="btn btn-warning btn-sm">Anular Boleta</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+{% endblock %}

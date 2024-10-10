@@ -1,0 +1,17 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+<h1>Modificar Usuario Staff</h1>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <h4>Datos del Usuario</h4>
+    {{ user_form.as_p }}
+    
+    
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+</form>
+<!-- Botón para cambiar la contraseña -->
+<a href="{% url 'change_password' %}" class="btn btn-secondary mt-3">Cambiar Contraseña</a>
+{% endblock %}

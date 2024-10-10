@@ -1,0 +1,9 @@
+{% extends 'app/base.html' %}
+{% block contenido %}
+<h2>Eliminar Administrador</h2>
+<p>¿Está seguro que desea eliminar a {{ admin_profile.user.username }}?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Eliminar</button>
+</form>
+{% endblock %}

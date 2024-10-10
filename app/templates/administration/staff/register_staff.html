@@ -1,0 +1,29 @@
+<!-- register_staff.html -->
+
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+<h1>Registrar Nuevo Usuario Staff</h1>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <h4>Datos del Usuario</h4>
+    {{ user_form.as_p }}
+    {% if user_form.errors %}
+        <div class="alert alert-danger">
+            {{ user_form.errors }}
+        </div>
+    {% endif %}
+    
+    <h4>Datos del Perfil de Staff</h4>
+    {{ profile_form.as_p }}
+    {% if profile_form.errors %}
+        <div class="alert alert-danger">
+            {{ profile_form.errors }}
+        </div>
+    {% endif %}
+    
+    <button type="submit" class="btn btn-primary">Registrar</button>
+</form>
+{% endblock %}

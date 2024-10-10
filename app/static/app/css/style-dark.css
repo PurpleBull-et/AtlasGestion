@@ -1,0 +1,285 @@
+/* Modo oscuro */
+body.dark-mode {
+  --blue: #339af0;
+  --indigo: #715aff;
+  --purple: #815ac2;
+  --pink: #f05589;
+  --red: #e14a46;
+  --orange: #fc9245;
+  --yellow: #ffcc00;
+  --green: #37b24d;
+  --teal: #20c997;
+  --cyan: #18b2c9;
+  --white: #e9ecef; /* Fondo claro en textos */
+  --gray: #adb5bd;
+  --gray-dark: #495057;
+  --primary: #bb86fc;
+  --secondary: #6c757d;
+  --success: #37b24d;
+  --info: #18b2c9;
+  --warning: #ffcc00;
+  --danger: #e14a46;
+  --light: #343a40; /* Fondo oscuro */
+  --dark: #121212; /* Fondo más oscuro */
+  
+  /* Fondo y colores generales */
+  background-color: var(--dark); /* Fondo oscuro general */
+  color: var(--white); 
+}
+
+body.dark-mode * {
+  box-sizing: border-box;
+}
+
+/* Imágenes */
+body.dark-mode .img {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-color: var(--gray-dark);
+}
+
+/* Contenedor general */
+body.dark-mode .wrap {
+  width: 100%;
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 5px;
+  box-shadow: 0px 10px 34px -15px rgba(255, 255, 255, 0.2); /* Sombra clara */
+}
+
+/* Textos */
+body.dark-mode .text-wrap,
+body.dark-mode .login-wrap {
+  width: 100%;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+body.dark-mode .text-wrap {
+  width: 100%;
+  position: relative;
+}
+
+body.dark-mode .text-wrap:after {
+  background: var(--primary);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  content: '';
+  opacity: .4;
+  z-index: -1;
+}
+
+@media (min-width: 992px) {
+  body.dark-mode .text-wrap {
+    width: 40%;
+  }
+}
+
+@media (min-width: 992px) {
+  body.dark-mode .login-wrap {
+    width: 60%;
+  }
+}
+
+body.dark-mode .text-wrap .text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+body.dark-mode .text-wrap .text h2 {
+  font-weight: 700;
+  color: #fff;
+  font-size: 20px;
+}
+
+/* Login */
+body.dark-mode .login-wrap {
+  position: relative;
+  background: var(--dark); /* Fondo oscuro en áreas de login */
+}
+
+body.dark-mode .login-wrap h3 {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--white);
+}
+
+body.dark-mode .login-wrap h3 span {
+  font-size: 16px;
+  display: block;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6); /* Texto tenue */
+}
+
+/* Formularios */
+body.dark-mode .form-group label {
+  font-weight: 500;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 0;
+}
+
+body.dark-mode .form-control {
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1); /* Fondo oscuro en inputs */
+  color: #e9ecef;
+  font-size: 16px;
+  border-radius: 4px;
+  box-shadow: none;
+  border: none;
+  padding-left: 20px;
+  padding-right: 20px;
+  transition: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.dark-mode .form-control {
+    transition: none;
+  }
+}
+
+body.dark-mode .form-control::-webkit-input-placeholder {
+  color: rgba(255, 255, 255, 0.8) !important; /* Placeholder claro */
+}
+
+body.dark-mode .form-control::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.dark-mode .form-control:-ms-input-placeholder {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.dark-mode .form-control:-moz-placeholder {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-control:active {
+  outline: none !important;
+  box-shadow: none;
+  border-color: var(--primary); /* Color de borde en focus */
+  background: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode textarea.form-control {
+  height: inherit !important;
+}
+
+/* Botones */
+body.dark-mode .btn {
+  cursor: pointer;
+  box-shadow: none;
+  font-size: 15px;
+}
+
+body.dark-mode .btn:hover,
+body.dark-mode .btn:active,
+body.dark-mode .btn:focus {
+  outline: none;
+}
+
+body.dark-mode .btn.btn-primary {
+  background: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+  color: var(--white) !important;
+  box-shadow: 0px 10px 19px -16px rgba(255, 255, 255, 0.2) !important; /* Sombra clara */
+}
+
+body.dark-mode .btn.btn-primary:hover {
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+}
+
+body.dark-mode .btn.btn-primary.btn-outline-primary {
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+}
+
+body.dark-mode .btn.btn-primary.btn-outline-primary:hover {
+  border: 1px solid transparent;
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Adaptación para listas y tablas en modo oscuro */
+body.dark-mode table {
+  width: 100%;
+  background-color: var(--dark); /* Fondo oscuro general */
+  border-collapse: collapse;
+  color: var(--white); /* Texto blanco */
+  border: 1px solid #343a40; /* Bordes más oscuros */
+}
+
+body.dark-mode th, 
+body.dark-mode td {
+  padding: 12px 15px;
+  border: 1px solid #495057; /* Bordes sutiles en la tabla */
+  text-align: left;
+}
+
+body.dark-mode th {
+  background-color: #343a40; /* Fondo oscuro para encabezados */
+  color: var(--white); /* Texto blanco para los encabezados */
+  font-weight: bold;
+}
+
+body.dark-mode tr:nth-child(even) {
+  background-color: #212529; /* Fila par con un tono gris oscuro */
+}
+
+body.dark-mode tr:nth-child(odd) {
+  background-color: #2a2f36; /* Fila impar con un tono ligeramente más claro */
+}
+
+body.dark-mode tr:hover {
+  background-color: #343a40; /* Sutil cambio al hover */
+}
+
+body.dark-mode td {
+  color: var(--white); /* Texto claro para el contenido de las celdas */
+}
+
+/* Ajustes a las listas */
+body.dark-mode ul, 
+body.dark-mode ol {
+  background-color: var(--dark); /* Fondo oscuro para listas */
+  border: 1px solid #343a40; /* Bordes en gris oscuro */
+  padding: 10px 20px;
+  color: var(--white); /* Texto blanco */
+  border-radius: 5px;
+}
+
+body.dark-mode ul li, 
+body.dark-mode ol li {
+  padding: 5px 0;
+  border-bottom: 1px solid #495057; /* Separación sutil entre ítems */
+}
+
+body.dark-mode ul li:last-child, 
+body.dark-mode ol li:last-child {
+  border-bottom: none; /* Último ítem sin borde */
+}
+
+/* Modificación de los enlaces en las tablas/listas */
+body.dark-mode a {
+  color: #bb86fc; /* Enlaces con color vibrante */
+  text-decoration: none;
+}
+
+body.dark-mode a:hover {
+  color: #d5aefb; /* Ligero cambio de color en el hover */
+  text-decoration: underline;
+}
+
+body.dark-mode .table-dark {
+  background-color: var(--dark); /* Fondo oscuro */
+  color: var(--white); /* Texto claro */
+  border: 1px solid #343a40; /* Bordes */
+}
+

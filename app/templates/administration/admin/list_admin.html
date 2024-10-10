@@ -1,0 +1,34 @@
+{% extends 'app/base.html' %}
+{% block contenido %}
+<h1>Gestión de Administradores</h1>
+<a href="{% url 'register_admin' %}" class="btn btn-primary mb-3">Registrar Nuevo Administrador</a>
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre de Usuario</th>
+            <th>Nombre Completo</th>
+            <th>Correo Electrónico</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for admin in admin_list %}
+        <tr>
+            <td>{{ admin.id }}</td>
+            <td>{{ admin.username }}</td>
+            <td>{{ admin.first_name }} {{ admin.last_name }}</td>
+            <td>{{ admin.email }}</td>
+            <td>
+                <!-- Botón para modificar perfil -->
+                <a href="{% url 'mod_admin_profile' admin.id %}" class="btn btn-info">Perfil</a>
+                <!-- Botón para modificar cuenta -->
+                <a href="{% url 'mod_admin_account' admin.id %}" class="btn btn-warning">Cuenta</a>
+                <!-- Botón para eliminar con confirmación -->
+                <a href="{% url 'erase_admin' admin.id %}" class="btn btn-danger">Eliminar</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

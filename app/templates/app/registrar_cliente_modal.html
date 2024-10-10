@@ -1,0 +1,21 @@
+<!-- Modal para registrar cliente -->
+<div class="modal fade" id="modalRegistrarCliente" tabindex="-1" aria-labelledby="modalRegistrarClienteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalRegistrarClienteLabel">Registrar Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Cargar el formulario directamente en el modal -->
+                <form method="post" action="{% url 'registrar_cliente' %}" id="formRegistrarCliente">
+                    {% csrf_token %}
+                    {{ form.as_p }}  <!-- Renderizar el formulario de cliente -->
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary w-100">Registrar Cliente</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

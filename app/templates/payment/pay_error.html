@@ -1,0 +1,8 @@
+{% extends 'app/base.html' %}
+{% block contenido %}
+<div class="error-page">
+    <h2>¡Error en el Pago!</h2>
+    <p>Hubo un problema al procesar tu pago. Por favor, intenta nuevamente.</p>
+    <a href="{% url 'home' %}" class="btn">Volver al Inicio</a>
+</div>
+{% endblock %}

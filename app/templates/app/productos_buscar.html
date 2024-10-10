@@ -1,0 +1,22 @@
+<!-- productos_buscar.html -->
+<ul>
+    {% for producto in productos %}
+    <li class="product-item">
+        <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}">
+        <div class="product-info">
+            <h3>{{ producto.nombre }}</h3>
+            <p>{{ producto.descripcion }}</p>
+            {% if producto.talla %}
+                <p><strong>Talla:</strong> {{ producto.talla }}</p>
+            {% endif %}
+        </div>
+        <div class="product-actions">
+            <span class="product-price">{{ producto.precio }} CLP</span>
+            <form method="post" action="{% url 'agregar_al_carrito' producto.producto_id %}">
+                {% csrf_token %}  <!-- Asegúrate de incluir el token CSRF -->
+                <button type="submit">Añadir al carrito</button>
+            </form>
+        </div>
+    </li>
+    {% endfor %}
+</ul>

@@ -1,0 +1,30 @@
+{% extends 'app/base.html' %}
+{% block contenido %}
+<h2>Dashboard</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h4>Total de Ventas</h4>
+                <p>{{ total_ventas }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h4>Promedio Diario de Ventas</h4>
+                <p>{{ promedio_ventas_diario }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h4>Producto Más Vendido</h4>
+                <p>{{ producto_mas_vendido.nombre }} ({{ producto_mas_vendido.cantidad_total }} vendidos)</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

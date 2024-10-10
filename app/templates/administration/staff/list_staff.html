@@ -1,0 +1,67 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+<h1>Gestión de Staff</h1>
+
+<!-- Botón para registrar nuevo staff -->
+<a href="{% url 'register_staff' %}" class="btn btn-primary mb-3">Registrar Nuevo Usuario Staff</a>
+
+<!-- Dropdown para filtrar usuarios por negocio -->
+<div class="mb-4">
+    <form method="get" class="d-flex align-items-center">
+        <label for="negocio" class="me-2">Filtrar por negocio:</label>
+        <select name="negocio" id="negocio" class="form-select w-auto me-3" onchange="this.form.submit();">
+            <option value="">Todos los negocios</option>
+            {% for negocio in negocios %}
+                <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>
+                    {{ negocio.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<!-- Mostrar el nombre del negocio filtrado si está presente -->
+{% if negocio_nombre %}
+<h2>Negocio: {{ negocio_nombre }}</h2>
+{% endif %}
+
+<!-- Lista de usuarios activos (staff) -->
+<table class="table table-bordered table-hover">
+    
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre de Usuario</th>
+            <th>Nombre Completo</th>
+            <th>Correo Electrónico</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if staff_list %}
+            {% for user in staff_list %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <!-- Botón para modificar perfil -->
+                        <a href="{% url 'mod_staff_profile' user.id %}" class="btn btn-info">Perfil</a>
+                        <!-- Botón para modificar cuenta -->
+                        <a href="{% url 'mod_staff_account' user.id %}" class="btn btn-warning">Cuenta</a>
+                        <!-- Botón para eliminar con confirmación -->
+                        <a href="{% url 'erase_staff' user.id %}" class="btn btn-danger">Eliminar</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="5">No hay usuarios staff registrados.</td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
+
+{% endblock %}

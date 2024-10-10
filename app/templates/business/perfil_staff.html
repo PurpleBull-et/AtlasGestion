@@ -1,0 +1,11 @@
+{% extends 'app/base.html' %}
+{% block contenido %}
+<h2>Perfil del Staff</h2>
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">{{ staff.username }}</h4>
+        <p class="card-text">Correo: {{ staff.email }}</p>
+        <p class="card-text">Nombre completo: {{ staff.first_name }} {{ staff.last_name }}</p>
+    </div>
+</div>
+{% endblock %}
