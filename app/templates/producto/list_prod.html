@@ -7,8 +7,6 @@
         <a href="{% url 'add_prod' %}" class="btn btn-success">Agregar Producto</a>
     </div>
 
-
-
     <div class="mb-4">
         <form method="get" class="d-flex align-items-center">
             <label for="estado" class="me-2">Filtrar por estado:</label>
@@ -19,7 +17,6 @@
                 <option value="descontinuado" {% if estado_filtro == 'descontinuado' %}selected{% endif %}>Descontinuado</option>
             </select>
 
-            <!-- Dropdown para filtrar por negocio solo para administradores -->
             {% if request.user.is_superuser %}
             <label for="negocio" class="me-2">Filtrar por negocio:</label>
             <select name="negocio" id="negocio" class="form-select w-auto" onchange="this.form.submit();">
@@ -34,7 +31,6 @@
         </form>
     </div>
 
-    <!-- Tabla de productos -->
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
             <thead class="table-dark">
@@ -46,7 +42,6 @@
                     <th>Stock</th>
                     <th>Estado</th>
                     <th>Descripción</th>
-                    <th>Imagen</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -75,24 +70,78 @@
                         </td>
                         <td>{{ producto.descripcion }}</td>
                         <td>
-                            <p>No disponible.</p>
-                        </td>
-                        <td>
                             <a href="{% url 'mod_prod' producto.producto_id %}" class="btn btn-primary btn-sm">Editar</a>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#precioModal{{ producto.producto_id }}" class="btn btn-info btn-sm">Asignar Precio</a>
+
+                            <!-- Modal para actualizar precio -->
+                            <div class="modal fade" id="precioModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="precioModalLabel{{ producto.producto_id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="precioModalLabel{{ producto.producto_id }}">Asignar Precio a {{ producto.nombre }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST" action="{% url 'actualizar_precio_prod' producto.producto_id %}">
+                                            {% csrf_token %}
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label for="precio" class="form-label">Nuevo Precio</label>
+                                                    <input type="number" class="form-control" id="precio" name="precio" value="{{ producto.precio }}" required min="0">
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Modal para devolución -->
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#devolverModal{{ producto.producto_id }}" class="btn btn-warning btn-sm">Devolver</a>
+
+                            <div class="modal fade" id="devolverModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="devolverModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="devolverModalLabel">Devolver Producto - {{ producto.nombre }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST" action="{% url 'devolver_prod' producto.producto_id %}">
+                                            {% csrf_token %}
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label for="lote" class="form-label">Número de Lote</label>
+                                                    <input type="text" class="form-control" id="lote" name="lote" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="motivo_devolucion" class="form-label">Motivo de Devolución</label>
+                                                    <textarea class="form-control" id="motivo_devolucion" name="motivo_devolucion" rows="3"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-primary">Devolver</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
                             {% if producto.estado != 'descontinuado' %}
-                            <form action="{% url 'descontinuar_prod' producto.producto_id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('¿Estás seguro de que deseas descontinuar este producto?');">Descontinuar</button>
-                            </form>
+                                <form action="{% url 'descontinuar_prod' producto.producto_id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('¿Estás seguro de que deseas descontinuar este producto?');">Descontinuar</button>
+                                </form>
                             {% endif %}
-                        </td>                            
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <!-- Mensaje en caso de que no haya productos -->
     {% if not productos %}
         <div class="alert alert-warning text-center mt-4">No hay productos disponibles.</div>
     {% endif %}

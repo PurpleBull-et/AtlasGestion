@@ -58,6 +58,14 @@
                 <i class="fas fa-cubes"></i>
                 <span class="sidebar-text">Mi negocio</span>
             </a>
+            <a href="{% url 'list_categorias' %}" title="Gestión de Categorías">
+                <i class="fas fa-tags"></i>
+                <span class="sidebar-text">Categorías</span>
+            </a>
+            <a href="{% url 'list_proveedores' %}" title="Gestión de Proveedores">
+                <i class="fas fa-truck"></i>
+                <span class="sidebar-text">Proveedores</span>
+            </a>
             <!-- Solo visible para administradores -->
             {% if request.user.is_superuser %}
             <a href="{% url 'list_staff' %}" title="Gestión de Usuarios Staff">
@@ -71,10 +79,6 @@
             <a href="{% url 'list_negocios' %}" title="Gestión de Negocios">
                 <i class="fas fa-briefcase"></i>
                 <span class="sidebar-text">Negocios</span>
-            </a>
-            <a href="{% url 'list_proveedores' %}" title="Gestión de Proveedores">
-                <i class="fas fa-truck"></i>
-                <span class="sidebar-text">Proveedores</span>
             </a>
             {% endif %}
             <div class="sidebar-logo">LOGO EMPRESA</div>

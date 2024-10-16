@@ -2,30 +2,13 @@
 {% block contenido %}
 <h1>Modificar Producto</h1>
 
-<form method="post" enctype="multipart/form-data">
+<form method="post">
     {% csrf_token %}
     
     <fieldset>
         <legend>Información del Producto</legend>
         {{ producto_form.as_p }}
     </fieldset>
-
-    <fieldset>
-        <legend>Imagen del Producto</legend>
-        {% if producto.imagenes.first %}
-            {% if producto.imagenes.first.imagen %}
-                <p>Imagen actual:</p>
-                <img src="{{ producto.imagenes.first.imagen.url }}" alt="{{ producto.nombre }}" width="150">
-                <p>¿Deseas reemplazar esta imagen?</p>
-            {% else %}
-                <p>No hay imagen asociada.</p>
-            {% endif %}
-        {% else %}
-            <p>No hay imagen asociada.</p>
-        {% endif %}
-        {{ imagen_form.as_p }}
-    </fieldset>
-        
 
     <button type="submit">Guardar Cambios</button>
 </form>

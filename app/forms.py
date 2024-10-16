@@ -51,21 +51,41 @@ class StaffProfileForm(forms.ModelForm):
         }
 
 
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ['nombre']
+
 #PRODUCTO
 class ProductoForm(forms.ModelForm):
     proveedores = forms.ModelMultipleChoiceField(queryset=Proveedor.objects.all(), required=False)
 
+class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['nombre', 'marca', 'precio', 'descripcion', 'proveedores']  # Añadir proveedores
+        fields = ['nombre', 'marca', 'categoria', 'descripcion']  # Campos limitados
 
     def save(self, commit=True):
         producto = super().save(commit=False)
+        # Solo establecer stock a 0 si el producto es nuevo (es decir, si no tiene un ID)
+        if not producto.pk:
+            producto.stock = 0  # Stock por defecto en 0 al crear
+            producto.precio = 0  # Precio por defecto en 0 al crear
         if commit:
-            producto.stock = 0  # Stock por defecto en 0
             producto.save()
-            self.save_m2m()  # Guardar las relaciones many-to-many
+            self.save_m2m()  # Guardar relaciones many-to-many si las hay
         return producto
+
+class ActualizarPrecioForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['precio']
+        labels = {
+            'precio': 'Precio del Producto',
+        }
+        widgets = {
+            'precio': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+        }
 
 
 
@@ -107,7 +127,7 @@ class PerfilClientesForm(forms.ModelForm):
 class EntradaBodegaForm(forms.ModelForm):
     class Meta:
         model = EntradaBodega
-        fields = ['producto', 'cantidad_recibida', 'proveedor', 'precio_unitario', 'medio_pago']
+        fields = ['producto', 'cantidad_recibida', 'proveedor', 'precio_unitario', 'lote', 'medio_pago']
 
     def __init__(self, *args, **kwargs):
         almacen = kwargs.pop('almacen', None)  # Recibe el almacén como parámetro
@@ -119,9 +139,20 @@ class EntradaBodegaForm(forms.ModelForm):
             )
 
 class NegocioForm(forms.ModelForm):
+    almacen_direccion = forms.CharField(label="Dirección del Almacén", max_length=255)
+
     class Meta:
         model = Negocio
         fields = ['nombre', 'direccion', 'telefono', 'region', 'provincia', 'logo']
+
+    def save(self, commit=True):
+        negocio = super().save(commit=False)
+        if commit:
+            negocio.save()
+
+            Almacen.objects.create(direccion=self.cleaned_data['almacen_direccion'], negocio=negocio)
+        
+        return negocio
 
 
 class ProveedorForm(forms.ModelForm):

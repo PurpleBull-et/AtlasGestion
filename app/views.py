@@ -313,40 +313,29 @@ def logoutView(request):
 # / / / / / / / / / / / / / / / / / #
 #####################################
 # CRUD PRODUCTO
-# views.py
-# views.py
 @login_required
 @permission_required('app.add_producto', raise_exception=True)
 def add_prod(request):
-    staff_profile = StaffProfile.objects.get(user=request.user)
+    staff_profile = StaffProfile.objects.get(user=request.user)  # Obtener el negocio del usuario
 
     if request.method == 'POST':
         producto_form = ProductoForm(request.POST)
-        imagen_form = ImagenProductoForm(request.POST, request.FILES)
         
-        if producto_form.is_valid() and imagen_form.is_valid():
+        if producto_form.is_valid():
             producto = producto_form.save(commit=False)
-            producto.almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()
-            producto.stock = 0  # Stock por defecto
+            producto.almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()  # Enlazar con el almacén del negocio
             producto.save()
-
-            # Guardar los proveedores seleccionados
-            producto_form.save_m2m()
-
-            imagen = imagen_form.save(commit=False)
-            imagen.producto = producto
-            imagen.save()
 
             return redirect('list_prod')
     else:
         producto_form = ProductoForm()
-        imagen_form = ImagenProductoForm()
-    
-    return render(request, 'producto/add_prod.html', {
-        'producto_form': producto_form,
-        'imagen_form': imagen_form
-    })
 
+    # Filtrar las categorías por el negocio del usuario
+    producto_form.fields['categoria'].queryset = Categoria.objects.filter(negocio=staff_profile.negocio)
+
+    return render(request, 'producto/add_prod.html', {
+        'producto_form': producto_form
+    })
 
 @login_required
 def list_prod(request):
@@ -414,27 +403,79 @@ def erase_prod(request, producto_id):
 @permission_required('app.change_producto', raise_exception=True)
 def descontinuar_prod(request, producto_id):
     producto = get_object_or_404(Producto, producto_id=producto_id)
-    
+
+    # Verificar que el producto pertenece al negocio del staff
     staff_profile = StaffProfile.objects.get(user=request.user)
     if producto.almacen.negocio != staff_profile.negocio:
         return HttpResponseForbidden("No tienes permiso para modificar este producto.")
 
     devoluciones = []
-    for proveedor in producto.proveedores.all():
-        devolucion = DevolucionProveedor.objects.create(
-            producto=producto,
-            cantidad=producto.stock,  # Registrar toda la cantidad en stock como devuelta
-            proveedor=proveedor  # Registrar el proveedor correspondiente
-        )
-        devoluciones.append(devolucion)
+    if producto.stock > 0:
+        for proveedor in producto.proveedores.all():
+            # Registrar toda la cantidad en stock como devuelta al último proveedor
+            devolucion = DevolucionProveedor.objects.create(
+                producto=producto,
+                cantidad=producto.stock,
+                proveedor=proveedor.nombre,
+                fecha_devolucion=timezone.now()
+            )
+            devoluciones.append(devolucion)
 
     # Marcar el producto como descontinuado y poner stock a 0
     producto.estado = 'descontinuado'
     producto.stock = 0
     producto.save()
 
+    messages.success(request, f'Producto {producto.nombre} descontinuado exitosamente.')
     return redirect('list_prod')
 
+
+@login_required
+@permission_required('app.add_productosdevueltos', raise_exception=True)
+def devolver_prod(request, producto_id):
+    producto = get_object_or_404(Producto, pk=producto_id)
+
+    if request.method == 'POST':
+        lote = request.POST.get('lote')
+        motivo_devolucion = request.POST.get('motivo_devolucion')
+        
+        # Verificar la existencia del lote en las entradas de bodega
+        entrada = EntradaBodega.objects.filter(producto=producto, lote=lote).first()
+        
+        if not entrada:
+            messages.error(request, f"No se encontró una entrada con el lote {lote} para este producto.")
+            return redirect('list_prod')
+
+        # Verificar si ya existe una devolución para este lote, producto y proveedor
+        devolucion_existente = ProductosDevueltos.objects.filter(
+            producto=producto, 
+            lote=lote, 
+            proveedor=entrada.proveedor
+        ).exists()
+
+        if devolucion_existente:
+            messages.error(request, f"El lote {lote} ya ha sido devuelto para este producto y proveedor.")
+            return redirect('list_prod')
+
+        # Si no existe una devolución previa, registrar la devolución
+        devolucion = ProductosDevueltos.objects.create(
+            producto=producto,
+            entrada_bodega=entrada,
+            cantidad_devuelta=entrada.cantidad_recibida,
+            proveedor=entrada.proveedor,
+            lote=entrada.lote,
+            motivo_devolucion=motivo_devolucion
+        )
+
+        # Actualizar el stock del producto
+        producto.stock -= entrada.cantidad_recibida
+        producto.actualizar_estado()
+        producto.save()
+
+        messages.success(request, f"Devolución del lote {lote} registrada correctamente.")
+        return redirect('list_prod')
+
+    return render(request, 'producto/devolver_prod.html', {'producto': producto})
 
 @login_required
 @permission_required('app.change_producto', raise_exception=True)
@@ -446,39 +487,53 @@ def mod_prod(request, producto_id):
     if producto.almacen.negocio != staff_profile.negocio:
         return HttpResponseForbidden("No tienes permiso para modificar este producto.")
 
-    imagen = producto.imagenes.first()
-
     if request.method == 'POST':
         producto_form = ProductoForm(request.POST, instance=producto)
-        imagen_form = ImagenProductoForm(request.POST, request.FILES, instance=imagen)
 
-        if producto_form.is_valid() and imagen_form.is_valid():
+        if producto_form.is_valid():
             producto = producto_form.save()
 
-            # Si el stock es 0, marcar como "sin stock"
+            # Si el stock es 0, marcar como "sin_stock"
             if producto.stock == 0:
                 producto.estado = 'sin_stock'
             producto.save()
 
-            if 'imagen' in request.FILES:
-                if imagen:
-                    imagen.imagen.delete(save=False)
-                    imagen.delete()
-                nueva_imagen = imagen_form.save(commit=False)
-                nueva_imagen.producto = producto
-                nueva_imagen.save()
-
             return redirect('list_prod')
     else:
         producto_form = ProductoForm(instance=producto)
-        imagen_form = ImagenProductoForm(instance=imagen)
 
     return render(request, 'producto/mod_prod.html', {
         'producto_form': producto_form,
-        'imagen_form': imagen_form,
         'producto': producto,
     })
 
+
+@login_required
+@permission_required('app.change_producto', raise_exception=True)
+def actualizar_precio_prod(request, producto_id):
+    producto = get_object_or_404(Producto, producto_id=producto_id)
+
+    # Verificar que el producto pertenece al negocio del staff
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    if producto.almacen.negocio != staff_profile.negocio:
+        return HttpResponseForbidden("No tienes permiso para modificar este producto.")
+
+    if request.method == 'POST':
+        form = ActualizarPrecioForm(request.POST, instance=producto)
+        if form.is_valid():
+            producto = form.save()
+            return redirect('list_prod')  # Recargar la página después de guardar
+        else:
+            return render(request, 'producto/modal_actualizar_precio.html', {
+                'form': form,
+                'producto': producto
+            })
+    else:
+        form = ActualizarPrecioForm(instance=producto)
+    return render(request, 'producto/modal_actualizar_precio.html', {
+        'form': form,
+        'producto': producto
+    })
 
 #####################################
 # / / / / / / / / / / / / / / / / / #
@@ -511,66 +566,56 @@ def historial_bodega(request):
     entradas = EntradaBodega.objects.all().order_by('-fecha_entrada')
     return render(request, 'bodega/historial_bodega.html', {'entradas': entradas})
 
-
 @login_required
 @staff_member_required
 @permission_required('app.add_entradabodega', raise_exception=True)
 def operaciones_bodega(request):
-    if request.user.is_superuser:
-        negocio_filtro = request.GET.get('negocio', None)
-        negocios = Negocio.objects.all()
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio  # Obtener el negocio desde el perfil del staff
 
-        entradas = EntradaBodega.objects.all().order_by('-fecha_entrada')
-        devoluciones = DevolucionProveedor.objects.all().order_by('-fecha_devolucion')
+    # Filtrar productos que están asociados al negocio del staff y tienen stock o están sin stock
+    productos_validos = Producto.objects.filter(almacen__negocio=negocio, estado__in=['disponible', 'sin_stock'])
+    
+    # Filtrar proveedores que están asociados al negocio del staff
+    proveedores_validos = Proveedor.objects.filter(negocio=negocio)
 
-        negocio_nombre = None
-        almacen = None
+    # Manejo del formulario de entrada de bodega
+    if request.method == 'POST':
+        form = EntradaBodegaForm(request.POST)
+        if form.is_valid():
+            entrada = form.save(commit=False)
+            
+            # Asignar el negocio correctamente a la entrada de bodega
+            entrada.negocio = negocio
 
-        if negocio_filtro:
-            try:
-                negocio_filtro = int(negocio_filtro)
-                almacen = Almacen.objects.filter(negocio_id=negocio_filtro).first()
-                entradas = entradas.filter(producto__almacen=almacen)
-                devoluciones = devoluciones.filter(producto__almacen=almacen)
-                negocio_nombre = Negocio.objects.get(id=negocio_filtro).nombre
-            except (ValueError, Negocio.DoesNotExist):
-                negocio_filtro = None
-        
-        return render(request, 'bodega/operaciones_bodega.html', {
-            'entradas': entradas,
-            'devoluciones': devoluciones,
-            'negocios': negocios,
-            'negocio_filtro': negocio_filtro,
-            'negocio_nombre': negocio_nombre
-        })
+            # Actualizar el stock del producto en base a la cantidad recibida
+            entrada.producto.stock += entrada.cantidad_recibida
+            entrada.producto.save()
 
+            # Guardar la entrada de bodega
+            entrada.save()
+            return redirect('operaciones_bodega')
     else:
-        staff_profile = StaffProfile.objects.get(user=request.user)
-        almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()
+        form = EntradaBodegaForm()
 
-        productos_validos = Producto.objects.filter(almacen=almacen, estado__in=['disponible', 'sin_stock'])
+        # Filtrar productos y proveedores válidos en el formulario
+        form.fields['producto'].queryset = productos_validos
+        form.fields['proveedor'].queryset = proveedores_validos
 
-        if request.method == 'POST':
-            form = EntradaBodegaForm(request.POST)
-            if form.is_valid():
-                entrada = form.save(commit=False)
-                entrada.producto.stock += entrada.cantidad_recibida
-                entrada.producto.estado = 'disponible' if entrada.cantidad_recibida > 0 else entrada.producto.estado
-                entrada.producto.save()
-                entrada.save()
-                return redirect('operaciones_bodega')
-        else:
-            form = EntradaBodegaForm()
-            form.fields['producto'].queryset = productos_validos 
+    # Mostrar las entradas de bodega filtradas por el negocio actual
+    entradas = EntradaBodega.objects.filter(negocio=negocio).order_by('-fecha_entrada')
 
-        entradas = EntradaBodega.objects.filter(producto__almacen=almacen).order_by('-fecha_entrada')
-        devoluciones = DevolucionProveedor.objects.filter(producto__almacen=almacen).order_by('-fecha_devolucion')
+    # Obtener todas las devoluciones de productos
+    devoluciones = ProductosDevueltos.objects.filter(entrada_bodega__negocio=negocio).order_by('-fecha_devolucion')
 
-        return render(request, 'bodega/operaciones_bodega.html', {
-            'form': form,
-            'entradas': entradas,
-            'devoluciones': devoluciones
-        })
+    return render(request, 'bodega/operaciones_bodega.html', {
+        'form': form,
+        'entradas': entradas,
+        'devoluciones': devoluciones  # Pasamos las devoluciones al contexto
+    })
+
+
+
 
 
 #####################################
@@ -856,29 +901,45 @@ def list_negocios(request):
     negocios = Negocio.objects.all()
 
     if request.method == 'POST':
-        form = NegocioForm(request.POST, request.FILES)  # Añadir request.FILES para admitir la subida de archivos
+        form = NegocioForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect('list_negocios')
     else:
         form = NegocioForm()
 
-    return render(request, 'administration/negocio/list_negocios.html', {'form': form, 'negocios': negocios})
+    return render(request, 'administration/negocio/list_negocios.html', {
+        'form': form,
+        'negocios': negocios
+    })
+
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def mod_negocio(request, negocio_id):
     negocio = get_object_or_404(Negocio, pk=negocio_id)
-    
+    almacen = Almacen.objects.filter(negocio=negocio).first()  # Obtener el almacén asociado
+
     if request.method == 'POST':
-        form = NegocioForm(request.POST, request.FILES, instance=negocio)  # Añadir request.FILES
+        form = NegocioForm(request.POST, request.FILES, instance=negocio)
         if form.is_valid():
-            form.save()
+            negocio = form.save(commit=False)
+            negocio.save()
+            
+            if almacen:
+                almacen.direccion = form.cleaned_data['almacen_direccion']
+                almacen.save()
             return redirect('list_negocios')
     else:
-        form = NegocioForm(instance=negocio)
 
-    return render(request, 'administration/negocio/mod_negocio.html', {'form': form})
+        form = NegocioForm(instance=negocio, initial={
+            'almacen_direccion': almacen.direccion if almacen else ''
+        })
+
+    return render(request, 'administration/negocio/mod_negocio.html', {
+        'form': form
+    })
+
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -896,25 +957,58 @@ def erase_negocio(request, negocio_id):
 #####################################
 #MANEJO DE PROVEEDORES
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('app.add_proveedor', raise_exception=True)
+def add_proveedor(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+
+    if request.method == 'POST':
+        proveedor_form = ProveedorForm(request.POST)
+        
+        if proveedor_form.is_valid():
+            proveedor = proveedor_form.save(commit=False)
+            proveedor.negocio = staff_profile.negocio  # Enlazar el proveedor con el negocio del usuario actual
+            proveedor.save()
+
+            return redirect('list_proveedores')
+    else:
+        proveedor_form = ProveedorForm()
+
+    return render(request, 'administration/proveedor/add_proveedor.html', {
+        'proveedor_form': proveedor_form,
+    })
+
+@login_required
+@permission_required('app.view_proveedor', raise_exception=True)
 def list_proveedores(request):
-    proveedores = Proveedor.objects.all()
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    proveedores = Proveedor.objects.filter(negocio=staff_profile.negocio)  # Filtrar proveedores por negocio
 
     if request.method == 'POST':
         form = ProveedorForm(request.POST)
         if form.is_valid():
-            form.save()
+            proveedor = form.save(commit=False)
+            proveedor.negocio = staff_profile.negocio  # Asociar el proveedor al negocio
+            proveedor.save()
             return redirect('list_proveedores')
     else:
         form = ProveedorForm()
 
-    return render(request, 'administration/proveedor/list_proveedores.html', {'form': form, 'proveedores': proveedores})
+    return render(request, 'administration/proveedor/list_proveedores.html', {
+        'proveedores': proveedores,
+        'form': form,  # Pasar el formulario al template
+    })
+
+
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('app.change_proveedor', raise_exception=True)
 def mod_proveedor(request, proveedor_id):
     proveedor = get_object_or_404(Proveedor, pk=proveedor_id)
-    
+    staff_profile = StaffProfile.objects.get(user=request.user)
+
+    if proveedor.negocio != staff_profile.negocio:
+        return HttpResponseForbidden("No tienes permiso para modificar este proveedor.")
+
     if request.method == 'POST':
         form = ProveedorForm(request.POST, instance=proveedor)
         if form.is_valid():
@@ -926,12 +1020,93 @@ def mod_proveedor(request, proveedor_id):
     return render(request, 'administration/proveedor/mod_proveedor.html', {'form': form})
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@permission_required('app.delete_proveedor', raise_exception=True)
 def erase_proveedor(request, proveedor_id):
     proveedor = get_object_or_404(Proveedor, pk=proveedor_id)
-    
+    staff_profile = StaffProfile.objects.get(user=request.user)
+
+    if proveedor.negocio != staff_profile.negocio:
+        return HttpResponseForbidden("No tienes permiso para eliminar este proveedor.")
+
     if request.method == 'POST':
         proveedor.delete()
         return redirect('list_proveedores')
 
     return render(request, 'administration/proveedor/erase_proveedor.html', {'proveedor': proveedor})
+
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+#MANEJO DE CATEGORIAS
+
+@login_required
+@permission_required('app.view_categoria', raise_exception=True)
+def list_categorias(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    categorias = Categoria.objects.filter(negocio=staff_profile.negocio)  # Filtrar categorías por negocio
+
+    if request.method == 'POST':
+        form = CategoriaForm(request.POST)
+        if form.is_valid():
+            categoria = form.save(commit=False)
+            categoria.negocio = staff_profile.negocio  # Asociar la categoría al negocio del usuario
+            categoria.save()
+            return redirect('list_categorias')
+    else:
+        form = CategoriaForm()
+
+    return render(request, 'categorias/list_categorias.html', {
+        'categorias': categorias,
+        'form': form,  # Pasar el formulario al template
+    })
+
+@login_required
+@permission_required('app.add_categoria', raise_exception=True)
+def add_categoria(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+
+    if request.method == 'POST':
+        form = CategoriaForm(request.POST)
+        if form.is_valid():
+            categoria = form.save(commit=False)
+            categoria.negocio = staff_profile.negocio  # Asociar categoría con el negocio
+            categoria.save()
+            return redirect('list_categorias')
+    else:
+        form = CategoriaForm()
+
+    return render(request, 'categorias/add_categoria.html', {'form': form})
+
+@login_required
+@permission_required('app.change_categoria', raise_exception=True)
+def mod_categoria(request, categoria_id):
+    categoria = get_object_or_404(Categoria, id=categoria_id)
+    staff_profile = StaffProfile.objects.get(user=request.user)
+
+    if categoria.negocio != staff_profile.negocio:
+        return HttpResponseForbidden("No tienes permiso para modificar esta categoría.")
+
+    if request.method == 'POST':
+        form = CategoriaForm(request.POST, instance=categoria)
+        if form.is_valid():
+            form.save()
+            return redirect('list_categorias')
+    else:
+        form = CategoriaForm(instance=categoria)
+
+    return render(request, 'categorias/mod_categoria.html', {'form': form})
+
+@login_required
+@permission_required('app.delete_categoria', raise_exception=True)
+def erase_categoria(request, categoria_id):
+    categoria = get_object_or_404(Categoria, id=categoria_id)
+    staff_profile = StaffProfile.objects.get(user=request.user)
+
+    if categoria.negocio != staff_profile.negocio:
+        return HttpResponseForbidden("No tienes permiso para eliminar esta categoría.")
+
+    if request.method == 'POST':
+        categoria.delete()
+        return redirect('list_categorias')
+
+    return render(request, 'categorias/erase_categoria.html', {'categoria': categoria})

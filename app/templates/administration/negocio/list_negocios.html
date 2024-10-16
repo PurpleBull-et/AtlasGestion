@@ -25,6 +25,7 @@
             <th>Nombre</th>
             <th>Dirección</th>
             <th>Teléfono</th>
+            <th>Almacén Dirección</th> 
             <th>Acciones</th>
         </tr>
     </thead>
@@ -42,13 +43,14 @@
             <td>{{ negocio.nombre }}</td>
             <td>{{ negocio.direccion }}</td>
             <td>{{ negocio.telefono }}</td>
+            <td>{{ negocio.almacen_set.first.direccion }}</td> 
             <td>
                 <a href="{% url 'mod_negocio' negocio.id %}" class="btn btn-warning">Modificar</a>
                 <a href="{% url 'erase_negocio' negocio.id %}" class="btn btn-danger">Eliminar</a>
             </td>
         </tr>
         {% endfor %}
-    </tbody>
+    </tbody>    
 </table>
 
 

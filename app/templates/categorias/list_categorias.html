@@ -1,0 +1,32 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+<h1>Gestión de Categorías</h1>
+
+<!-- Incluir el formulario de agregar categoría -->
+{% include 'categorias/add_categoria.html' %}
+
+<!-- Lista de categorías -->
+<h2>Categorías Registradas</h2>
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for categoria in categorias %}
+        <tr>
+            <td>{{ categoria.id }}</td>
+            <td>{{ categoria.nombre }}</td>
+            <td>
+                <a href="{% url 'mod_categoria' categoria.id %}" class="btn btn-warning">Modificar</a>
+                <a href="{% url 'erase_categoria' categoria.id %}" class="btn btn-danger">Eliminar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

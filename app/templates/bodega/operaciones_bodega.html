@@ -1,9 +1,10 @@
 {% extends 'app/base.html' %}
+
 {% block contenido %}
 <div class="container mt-4">
     <h1>Operaciones de Bodega</h1>
 
-    <!-- Mostrar el dropdown para seleccionar negocio solo si es administrador -->
+    <!-- Dropdown para seleccionar negocio (solo visible para administradores) -->
     {% if request.user.is_superuser %}
     <div class="mb-4">
         <form method="get" class="d-flex align-items-center">
@@ -11,16 +12,17 @@
             <select name="negocio" id="negocio" class="form-select w-auto me-3" onchange="this.form.submit();">
                 <option value="">Todos</option>
                 {% for negocio in negocios %}
-                    <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>
-                        {{ negocio.nombre }}
-                    </option>
+                <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>
+                    {{ negocio.nombre }}
+                </option>
                 {% endfor %}
             </select>
         </form>
     </div>
     {% endif %}
+    
 
-    <!-- Mostrar el formulario de registro de entradas solo si no es administrador -->
+    <!-- Formulario de registro de entrada de productos (visible solo para staff) -->
     {% if not request.user.is_superuser %}
     <h2>Registrar Entrada de Productos</h2>
     <form method="post">
@@ -30,62 +32,67 @@
     </form>
     {% endif %}
 
-    <h2 class="mt-5">Productos recibidos</h2>
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Producto</th>
-                <th>Cantidad Recibida</th>
-                <th>Proveedor</th>
-                <th>Fecha de Entrada</th>
-            </tr>
-        </thead>
-        <!-- operaciones_bodega.html -->
-        <tbody>
-            {% if entradas %}
-                {% for entrada in entradas %}
-                <tr>
-                    <td>{{ entrada.producto.nombre }}</td>
-                    <td>{{ entrada.cantidad_recibida }}</td>
-                    <td>
-                        {% for proveedor in entrada.producto.proveedores.all %}
-                            {{ proveedor.nombre }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </td>
-                    <td>{{ entrada.fecha_entrada }}</td>
-                </tr>
-                {% endfor %}
-            {% else %}
-                <tr>
-                    <td colspan="4" class="text-center">No hay productos recibidos.</td>
-                </tr>
-            {% endif %}
-        </tbody>
-    </table>
-    <h2 class="mt-5">Devoluciones de Productos Descontinuados</h2>
+<!-- Tabla de productos recibidos -->
+<h2 class="mt-5">Productos Recibidos</h2>
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad Recibida</th>
+            <th>Proveedor</th>
+            <th>Lote</th>
+            <th>Precio Unitario</th>
+            <th>Precio Total</th> <!-- Nueva columna para el precio total -->
+            <th>Fecha de Entrada</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entrada in entradas %}
+        <tr>
+            <td>{{ entrada.producto.nombre }}</td>
+            <td>{{ entrada.cantidad_recibida }}</td>
+            <td>{{ entrada.proveedor.nombre }}</td>
+            <td>{{ entrada.lote }}</td>
+            <td>${{ entrada.precio_unitario }}</td>
+            <td>${{ entrada.total_entrada }}</td> <!-- Mostrar el precio total calculado -->
+            <td>{{ entrada.fecha_entrada }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+    <!-- Sección: Registro de Productos Devueltos -->
+    <h2 class="mt-5">Registro de Productos Devueltos</h2>
     <table class="table table-bordered table-hover">
         <thead class="table-dark">
             <tr>
                 <th>Producto</th>
                 <th>Cantidad Devuelta</th>
                 <th>Proveedor</th>
+                <th>Lote</th>
+                <th>Precio Unitario</th>
+                <th>Motivo de Devolución</th>
                 <th>Fecha de Devolución</th>
             </tr>
         </thead>
         <tbody>
             {% if devoluciones %}
-                {% for devolucion in devoluciones %}
-                <tr>
-                    <td>{{ devolucion.producto.nombre }}</td>
-                    <td>{{ devolucion.cantidad }}</td>
-                    <td>{{ devolucion.proveedor }}</td>
-                    <td>{{ devolucion.fecha_devolucion }}</td>
-                </tr>
-                {% endfor %}
+            {% for devolucion in devoluciones %}
+            <tr>
+                <td>{{ devolucion.producto.nombre }}</td>
+                <td>{{ devolucion.cantidad_devuelta }}</td>
+                <td>{{ devolucion.proveedor.nombre }}</td>
+                <td>{{ devolucion.lote }}</td>
+                <td>${{ devolucion.entrada_bodega.precio_unitario }}</td>
+                <td>{{ devolucion.motivo_devolucion }}</td>
+                <td>{{ devolucion.fecha_devolucion }}</td>
+            </tr>
+            {% endfor %}
             {% else %}
-                <tr>
-                    <td colspan="4" class="text-center">No hay devoluciones de productos descontinuados.</td>
-                </tr>
+            <tr>
+                <td colspan="7" class="text-center">No hay productos devueltos registrados.</td>
+            </tr>
             {% endif %}
         </tbody>
     </table>

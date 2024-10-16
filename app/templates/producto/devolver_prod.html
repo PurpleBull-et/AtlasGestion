@@ -1,0 +1,19 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+<h1>Devolver Producto del Lote {{ lote }}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <p><strong>Producto:</strong> {{ producto.nombre }}</p>
+    <p><strong>Proveedor:</strong> {{ proveedor.nombre }}</p>
+    <p><strong>Número de Lote:</strong> {{ lote }}</p>
+    <p><strong>Cantidad Recibida:</strong> {{ cantidad_recibida }}</p>
+    <p><strong>Stock Actual del Producto:</strong> {{ producto.stock }}</p>
+
+    <label for="cantidad_a_devolver">Cantidad a devolver:</label>
+    <input type="number" id="cantidad_a_devolver" name="cantidad_a_devolver" min="1" max="{{ cantidad_recibida }}" required>
+
+    <button type="submit" class="btn btn-primary">Devolver</button>
+</form>
+{% endblock %}

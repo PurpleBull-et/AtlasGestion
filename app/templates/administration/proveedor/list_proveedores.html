@@ -3,17 +3,8 @@
 {% block contenido %}
 <h1>Gestión de Proveedores</h1>
 
-<!-- Registro de nuevo proveedor -->
-<div class="card mb-5">
-    <div class="card-body">
-        <h4 class="card-title">Registrar Nuevo Proveedor</h4>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Registrar</button>
-        </form>
-    </div>
-</div>
+<!-- Extender el formulario de agregar proveedor -->
+{% include 'administration/proveedor/add_proveedor.html' %}
 
 <!-- Lista de proveedores -->
 <h2>Proveedores Registrados</h2>

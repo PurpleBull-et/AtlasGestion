@@ -56,9 +56,15 @@ urlpatterns = [
     path('negocio/modificar/<int:negocio_id>/', mod_negocio, name='mod_negocio'),
     path('negocio/borrar/<int:negocio_id>/', erase_negocio, name='erase_negocio'),
 
+    path('proveedores/agregar/', add_proveedor, name='add_proveedor'),
     path('proveedores/', list_proveedores, name='list_proveedores'),
     path('proveedor/modificar/<proveedor_id>/', mod_proveedor, name='mod_proveedor'),
     path('proveedor/borrar/<proveedor_id>/', erase_proveedor, name='erase_proveedor'),
+
+    path('categorias/', list_categorias, name='list_categorias'),
+    path('categorias/agregar/', add_categoria, name='add_categoria'),
+    path('categorias/modificar/<int:categoria_id>/', mod_categoria, name='mod_categoria'),
+    path('categorias/eliminar/<int:categoria_id>/', erase_categoria, name='erase_categoria'),
     
      # Ruta para error de pago
     path('error-pago/', error_pago, name='error_pago'),
@@ -79,6 +85,11 @@ urlpatterns = [
     path('productos/modificar/<producto_id>/', mod_prod, name='mod_prod'),
     path('productos/eliminar/<producto_id>/', erase_prod, name='erase_prod'),
     path('productos/descontinuar/<int:producto_id>/', descontinuar_prod, name='descontinuar_prod'),
+    path('productos/devolver/<int:producto_id>/', devolver_prod, name='devolver_prod'),
+    path('producto/<int:producto_id>/actualizar_precio/', actualizar_precio_prod, name='actualizar_precio_prod'),
+
+
+    
 
     
     

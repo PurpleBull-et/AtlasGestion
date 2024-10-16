@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'atlasManagement.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'ddbb_1atlas',
+        'NAME': 'ddbb_2atlas',
         'USER': 'sa',
         'PASSWORD': 'asdasdqweqwe',
         'HOST': 'DESKTOP-RDDBT2K\SQLEXPRESS',
@@ -95,9 +95,6 @@ DATABASES = {
         },
     }
 }
-
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
