@@ -14,8 +14,19 @@
                 <option value="">Todos</option>
                 <option value="disponible" {% if estado_filtro == 'disponible' %}selected{% endif %}>Disponible</option>
                 <option value="sin_stock" {% if estado_filtro == 'sin_stock' %}selected{% endif %}>Sin Stock</option>
-                <option value="descontinuado" {% if estado_filtro == 'descontinuado' %}selected{% endif %}>Descontinuado</option>
+                <option value="registrado_reciente" {% if estado_filtro == 'registrado_reciente' %}selected{% endif %}>Nuevo</option>
             </select>
+
+            <label for="categoria" class="me-2">Filtrar por categoría:</label>
+            <select name="categoria" id="categoria" class="form-select w-auto me-3" onchange="this.form.submit();">
+                <option value="">Todas</option>
+                {% for categoria in categorias %}
+                    <option value="{{ categoria.id }}" {% if categoria_filtro == categoria.id %}selected{% endif %}>
+                        {{ categoria.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+            
 
             {% if request.user.is_superuser %}
             <label for="negocio" class="me-2">Filtrar por negocio:</label>
@@ -38,6 +49,7 @@
                     <th>ID</th>
                     <th>Nombre</th>
                     <th>Marca</th>
+                    <th>Categoría</th>
                     <th>Precio</th>
                     <th>Stock</th>
                     <th>Estado</th>
@@ -47,10 +59,11 @@
             </thead>
             <tbody>
                 {% for producto in productos %}
-                    <tr class="{% if producto.estado == 'sin_stock' %}table-warning{% elif producto.estado == 'descontinuado' %}table-danger{% else %}table-success{% endif %}">
+                    <tr class="{% if producto.estado == 'sin_stock' %}table-danger{% elif producto.estado == 'registrado_reciente' %}table-warning {% else %}table-success{% endif %}">
                         <td>{{ producto.producto_id }}</td>
                         <td>{{ producto.nombre }}</td>
                         <td>{{ producto.marca }}</td>
+                        <td>{{ producto.categoria }}</td>
                         <td>{{ producto.precio }}</td>
                         <td>
                             {% if producto.stock > 0 %}
@@ -63,9 +76,9 @@
                             {% if producto.estado == 'disponible' %}
                                 <span class="badge bg-success">Disponible</span>
                             {% elif producto.estado == 'sin_stock' %}
-                                <span class="badge bg-warning text-dark">Sin Stock</span>
-                            {% elif producto.estado == 'descontinuado' %}
-                                <span class="badge bg-danger">Descontinuado</span>
+                                <span class="badge bg-danger text-dark">Sin Stock</span>
+                            {% elif producto.estado == 'registrado_reciente' %}
+                                <span class="badge bg-warning">Nuevo</span>
                             {% endif %}
                         </td>
                         <td>{{ producto.descripcion }}</td>
@@ -128,13 +141,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            {% if producto.estado != 'descontinuado' %}
-                                <form action="{% url 'descontinuar_prod' producto.producto_id %}" method="post" style="display:inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('¿Estás seguro de que deseas descontinuar este producto?');">Descontinuar</button>
-                                </form>
-                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}

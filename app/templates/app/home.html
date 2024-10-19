@@ -1,124 +1,82 @@
 {% extends 'app/base.html' %}
-{% block contenido %}
 {% load static %}
-{% include 'app/registrar_cliente_modal.html' %}
+{% block contenido %}
 
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOME</title>
-    <link rel="stylesheet" href="{% static 'app/css/cart.css' %}"> <!-- Cargamos el archivo CSS separado -->
-    <script src="{% static 'app/js/carro.js' %}" defer></script>
-    <!-- Usa "defer" para cargar el script correctamente -->
-</head>
-
-<div class="main">
-    <!-- Sección de productos -->
-    <div class="products-section">
-        <h2>Productos / Servicios</h2>
-
-        <!-- Campo de búsqueda con selector de categoría -->
-        <form method="GET" action="{% url 'home' %}" class="d-flex">
-            <input type="text" name="buscar" placeholder="Buscar productos (nombre, descripción o talla)"
-                class="form-control me-2">
-
-            <!-- Dropdown de categoría -->
-            <select name="categoria" class="form-select me-2">
-                <option value="">Todas las categorías</option>
-                <option value="almacen">Almacén</option>
-                <option value="bar">Bar</option>
-                <option value="ropa">Ropa</option>
-            </select>
-
-            <button type="submit" class="btn btn-primary">Buscar</button>
-        </form>
-
-        <!-- Contenedor dinámico para productos -->
-        <!-- Contenedor dinámico para productos -->
-        <ul id="productos-lista">
-            {% for producto in productos %}
-            <li class="product-item">
-                <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}">
-                <div class="product-info">
-                    <h3>{{ producto.nombre }}</h3>
-                    <p>{{ producto.descripcion }}</p>
-                    {% if producto.talla %}
-                    <p><strong>Talla:</strong> {{ producto.talla }}</p>
-                    {% endif %}
+<div class="card">
+    <div class="row">
+        <!-- Sección de productos -->
+        <div class="col-md-8 cart">
+            <div class="title">
+                <div class="row">
+                    <div class="col">
+                        <h4><b>Lista de Productos</b></h4>
+                    </div>
                 </div>
-                <div class="product-actions">
-                    <span class="product-price">{{ producto.precio }} CLP</span>
-                    <form method="post" action="{% url 'agregar_al_carrito' producto.producto_id %}">
-                        {% csrf_token %}
-                        <button type="submit">Añadir al carrito</button>
-                    </form>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
-
-    </div>
-
-    <!-- Sección del carrito -->
-    <div id="carrito-container">
-        <!-- El carrito se cargará aquí dinámicamente con AJAX -->
-    </div>
-</div>
-
-<!-- Sección para registrar cliente o continuar como invitado -->
-<div class="client-section mt-4">
-    <h3>Clientes:</h3>
-
-    <!-- Input para el correo electrónico del cliente -->
-    <form method="post" action="{% url 'confirmar_compra_invitado' %}">
-        {% csrf_token %}
-        <div class="input-group mb-3">
-            <input type="email" name="email_invitado" class="form-control" placeholder="Correo del cliente" required>
-            <button type="submit" class="btn btn-primary">Agregar</button>
+            </div>
+            <ul class="list-unstyled">
+                {% for producto in productos %}
+                <li class="product-item row main align-items-center border-top border-bottom py-3">
+                    <div class="col-2">
+                        <div class="row text-muted">{{ producto.nombre }}</div>
+                    </div>
+                    <div class="col">
+                        <div class="row">{{ producto.descripcion }}</div>
+                    </div>
+                    <div class="col">
+                        <span class="product-price">{{ producto.precio }} CLP</span>
+                    </div>
+                    <div class="col product-actions">
+                        <form method="post" action="{% url 'agregar_al_carrito' producto.producto_id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">Añadir al carrito</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
-    </form>
 
-    <!-- Botón para abrir el modal de registro completo -->
-    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalRegistrarCliente">
-        Registrar Cliente Completo
-    </button>
+        <!-- Sección del carrito -->
+        <div class="col-md-4 summary">
+            <div><h5><b>Resumen del carrito</b></h5></div>
+            <hr>
+            {% if carrito_items %}
+            <ul class="list-unstyled">
+                {% for item in carrito_items %}
+                <li class="cart-item d-flex justify-content-between align-items-center border-bottom py-3">
+                    <div class="product-name">{{ item.producto.nombre }}</div>
+                    <div class="cart-controls d-flex">
+                        <form method="post" action="{% url 'restar_producto' item.producto.producto_id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary">-</button>
+                        </form>
+                        <input type="number" value="{{ item.cantidad }}" readonly class="form-control text-center" style="width: 50px;">
+                        <form method="post" action="{% url 'agregar_al_carrito' item.producto.producto_id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary">+</button>
+                        </form>
+                    </div>
+                    <div class="product-price text-right">{{ item.total_precio }} CLP</div>
+                    <form method="post" action="{% url 'eliminar_del_carrito' item.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger ms-3">x</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="row border-top py-3">
+                <div class="col">Total productos: {{ carrito_total_cantidad }}</div>
+                <div class="col text-right">Total: {{ carrito_total }} CLP</div>
+            </div>
+            <form method="post" action="{% url 'confirmar_compra' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success w-100 mt-3">Confirmar Compra</button>
+            </form>
+            {% else %}
+            <p>Tu carrito está vacío.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
-
-<!-- Script para búsqueda dinámica con AJAX -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const inputBusqueda = document.querySelector('input[name="buscar"]');
-        const selectCategoria = document.querySelector('select[name="categoria"]');
-
-        function realizarBusqueda() {
-            const query = inputBusqueda.value;
-            const categoria = selectCategoria.value;
-
-            fetch(`{% url 'home' %}?buscar=${query}&categoria=${categoria}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'  // Indica que es una solicitud AJAX
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('productos-lista').innerHTML = data.html;
-                });
-        }
-
-        inputBusqueda.addEventListener('input', realizarBusqueda);
-        selectCategoria.addEventListener('change', realizarBusqueda);
-
-        // Cargar carrito al inicio
-        fetch("{% url 'ver_carrito' %}")  // Asegúrate de tener una URL para cargar el carrito
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('carrito-container').innerHTML = html;
-            });
-    });
-</script>
-
-</html>
+<script src="{% static 'app/js/carro.js' %}"></script>
 {% endblock %}

@@ -46,41 +46,33 @@ class Categoria(models.Model):
 
 
 class Producto(models.Model):
-    proveedores = models.ManyToManyField(Proveedor, blank=True)  # Relación con varios proveedores
+    proveedores = models.ManyToManyField(Proveedor, blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
     ESTADO_CHOICES = [
+        ('registrado_reciente', 'Registrado Reciente'),
         ('disponible', 'Disponible'),
         ('sin_stock', 'Sin Stock'),
-        ('descontinuado', 'Descontinuado'),
     ]
     producto_id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
     marca = models.CharField(max_length=50)
-    precio = models.IntegerField(default=0) 
-    stock = models.IntegerField(default=0)  
+    precio = models.IntegerField(default=0)
+    stock = models.IntegerField(default=0)
     descripcion = models.TextField()
     almacen = models.ForeignKey('Almacen', on_delete=models.CASCADE, null=True, blank=True)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='sin_stock')
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='registrado_reciente')
 
     def __str__(self):
         return self.nombre
 
     def actualizar_estado(self):
-        if self.stock == 0:
+        if self.stock <= 0:
             self.estado = 'sin_stock'
+        elif self.stock > 0:
+            self.estado = 'disponible'
         self.save()
 
-class ProductoAlmacen(Producto):
-    pass  # Productos como yogurt, galletas, etc.
 
-class ProductoTienda(Producto):
-    talla = models.CharField(max_length=3, choices=[('S', 'Small'), ('M', 'Medium'), ('L', 'Large')])
-
-    def __str__(self):
-        return f'{self.nombre} (Talla: {self.talla})'
-
-class ProductoBar(Producto):
-    cc_por_unidad = models.DecimalField(max_digits=5, decimal_places=1)  # Cantidad de cc por unidad del producto
 
 class EntradaBodega(models.Model):
     MEDIOS_PAGO = [
@@ -163,7 +155,7 @@ class Carrito(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     productos = models.ManyToManyField(Producto, through='CarritoProducto')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total = models.IntegerField(default=0)  
 
     def __str__(self):
         return f'Carrito de {self.usuario.username}'
@@ -184,7 +176,7 @@ class CarritoProducto(models.Model):
 class Compra(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     fecha = models.DateTimeField(auto_now_add=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.IntegerField()  
     correo = models.EmailField(null=True, blank=True)  # Campo opcional para correo de invitados
 
     def __str__(self):
@@ -195,13 +187,14 @@ class DetalleCompra(models.Model):
     compra = models.ForeignKey(Compra, related_name='detalles', on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    precio_unitario = models.IntegerField()  
 
     def subtotal(self):
         return self.cantidad * self.precio_unitario
 
     def __str__(self):
         return f'{self.cantidad} x {self.producto.nombre} en Compra {self.compra.id}'
+
 
 
 class AdminProfile(models.Model):

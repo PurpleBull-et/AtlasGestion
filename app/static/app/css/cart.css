@@ -1,115 +1,55 @@
-/* Estilos generales */
-body {
-    font-family: Arial, sans-serif;
-}
 
-.main {
-    display: flex;
-    margin-top: 20px;
-    gap: 20px;
-}
-
-/* Sección de productos */
-.products-section {
-    flex: 2;
-    background-color: #f1f1f1;
-    padding: 20px;
-    border-radius: 8px;
-}
-
-.products-section h2 {
-    margin-bottom: 15px;
-}
-
-ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.product-item {
-    display: flex;
-    justify-content: space-between;
+.cart .cart-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 0.5fr 0.5fr; 
     align-items: center;
-    padding: 20px 0;
-    border-bottom: 1px solid #ccc;
+    gap: 10px; 
+    padding: 1rem 0;
+    border-bottom: 1px solid #e0e0e0;
+    position: relative; 
 }
 
-.product-item img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 8px;
+.cart .cart-item .product-name {
+    font-size: 16px;
+    margin-right: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; 
+    position: absolute;
+    left: 0;
+    top: 50%; 
+    transform: translateY(-50%);
 }
 
-.product-info {
-    flex-grow: 1;
-    padding: 0 20px;
-}
-
-.product-info h3 {
-    margin: 0;
-    font-size: 18px;
-}
-
-.product-actions {
+.cart .cart-controls {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    gap: 5px; 
+    justify-content: center;
+    position: relative; 
 }
 
-.product-actions button {
-    background-color: #ff7b7b;
-    border: none;
-    padding: 10px;
-    border-radius: 5px;
-    color: white;
-    cursor: pointer;
-}
-
-.product-actions button:hover {
-    background-color: #ff4c4c;
-}
-
-/* Sección del carrito */
-.cart-section {
-    flex: 1;
-    background-color: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    position: relative;
-}
-
-.cart-section h2 {
-    margin-bottom: 15px;
-}
-
-.cart-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 0;
-    border-bottom: 1px solid #ccc;
-}
-
-.cart-item:last-child {
-    border-bottom: none;
-}
-
-.cart-item .product-name {
-    flex-grow: 1;
-}
-
-.cart-item input {
+.cart .cart-controls input {
     width: 50px;
     text-align: center;
+    font-size: 14px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
 
-.cart-controls {
-    display: flex;
-    gap: 10px;
+.cart .cart-item .product-price {
+    font-weight: bold;
+    font-size: 16px;
+    text-align: right;
+    white-space: nowrap;
+    position: absolute;
+    right: 0;
+    top: 50%; 
+    transform: translateY(-50%);
 }
 
-.cart-item button {
+.cart .cart-item .btn-danger {
     background-color: #ff7b7b;
     border: none;
     padding: 5px 10px;
@@ -118,137 +58,35 @@ ul {
     cursor: pointer;
 }
 
-.cart-item button:hover {
+.cart .cart-item .btn-danger:hover {
     background-color: #ff4c4c;
 }
 
-.cart-item .product-price {
-    font-weight: bold;
-    min-width: 100px;
-    text-align: right;
-}
-
-.summary {
-    margin-top: 30px;
-    font-size: 18px;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-}
-
-.confirm-btn {
-    background-color: #28a745;
-    color: white;
+.cart .cart-controls .btn {
+    background-color: #ddd;
     border: none;
-    padding: 15px 30px;
-    border-radius: 5px;
+    padding: 5px 10px;
     cursor: pointer;
-    text-align: center;
-    width: 100%;
-    font-size: 18px;
-    margin-top: 20px;
 }
 
-.confirm-btn:hover {
-    background-color: #218838;
+.cart .cart-controls .btn:hover {
+    background-color: #bbb;
 }
 
-/* Estilos para la sección de productos */
-.main .products-section {
-    height: 400px;  /* Fijar la altura de la sección de productos */
-    overflow-y: auto;  /* Habilitar el scroll vertical si el contenido excede la altura */
-    border: 1px solid #ccc;  /* Agregar un borde para definir el área de productos */
-    padding: 10px;
-    margin-right: 20px;
-}
-
-/* Eliminar el estilo predeterminado de las listas */
-.main .products-section ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-/* Estilos para cada elemento de producto */
-.main .products-section .product-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-/* Ajustar el tamaño de las imágenes */
-.main .products-section .product-item img {
-    max-width: 50px;
-    margin-right: 10px;
-}
-
-/* Flex para el contenido del producto */
-.main .products-section .product-info {
-    flex-grow: 1;
-}
-
-/* Estilo para la sección de acciones del producto */
-.main .products-section .product-actions {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
-}
-
-/* Estilo para el precio */
-.main .products-section .product-price {
-    font-weight: bold;
-}
-
-/* Ajustes para el modal de pago */
-.modal-content {
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.modal-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.modal-body {
-    padding: 20px;
-}
-
-/* Botones del modal */
-.modal-body .btn {
-    width: 100%; /* Se asegura que los botones sean 100% de ancho */
-    padding: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-bottom: 10px; /* Separación entre botones */
-}
-
-/* Input group para que se vea limpio */
-.input-group input {
-    border-radius: 0;
-}
-
-.input-group button {
-    border-radius: 0;
-}
-
-/* Responsividad adicional para pantallas pequeñas */
 @media (max-width: 768px) {
-    .modal-dialog {
-        max-width: 100%;
-        margin: 10px;
+    .cart .cart-item {
+        display: flex;
+        flex-direction: column;
+        position: static; 
     }
 
-    .modal-content {
-        padding: 10px;
+    .cart .cart-item .product-name {
+        text-align: center;
+        position: static; 
     }
 
-    .modal-body .btn {
-        font-size: 14px;
-        padding: 10px;
+    .cart .cart-item .product-price {
+        text-align: center;
+        position: static;
     }
 }

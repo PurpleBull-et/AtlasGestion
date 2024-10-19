@@ -1,67 +1,89 @@
 {% extends 'app/base.html' %}
+{% load custom_filters %}
 
 {% block contenido %}
 <div class="container mt-4">
-    <h1>Operaciones de Bodega</h1>
-
-    <!-- Dropdown para seleccionar negocio (solo visible para administradores) -->
-    {% if request.user.is_superuser %}
-    <div class="mb-4">
-        <form method="get" class="d-flex align-items-center">
-            <label for="negocio" class="me-2">Cambiar de negocio:</label>
-            <select name="negocio" id="negocio" class="form-select w-auto me-3" onchange="this.form.submit();">
-                <option value="">Todos</option>
+        <!-- Filtrado por negocio solo para administradores -->
+        {% if request.user.is_superuser %}
+        <form method="get" class="mb-3">
+            <label for="negocio" class="me-2">Filtrar por negocio:</label>
+            <select name="negocio" id="negocio" class="form-select w-auto" onchange="this.form.submit();">
+                <option value="">Todos los negocios</option>
                 {% for negocio in negocios %}
-                <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>
-                    {{ negocio.nombre }}
-                </option>
+                    <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>
+                        {{ negocio.nombre }}
+                    </option>
                 {% endfor %}
             </select>
         </form>
+        {% endif %}
+    
+    <h1 class="text-center">Operaciones de Bodega</h1>
+
+    <!-- Formulario de registro de entrada de productos -->
+    {% if not request.user.is_superuser %}
+    <div class="form-wrapper">
+        <h2>Registrar Entrada de Productos</h2>
+        <form method="post" class="login-wrap">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="producto">Producto:</label>
+                {{ form.producto|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label for="cantidad_recibida">Cantidad recibida:</label>
+                {{ form.cantidad_recibida|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label for="proveedor">Proveedor:</label>
+                {{ form.proveedor|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label for="precio_unitario">Precio unitario:</label>
+                {{ form.precio_unitario|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label for="lote">Lote:</label>
+                {{ form.lote|add_class:"form-control" }}
+            </div>
+            <div class="form-group">
+                <label for="medio_pago">Medio de pago:</label>
+                {{ form.medio_pago|add_class:"form-control" }}
+            </div>
+            <button type="submit" class="btn btn-primary">Registrar Entrada</button>
+        </form>
     </div>
     {% endif %}
+
+    <!-- Tabla de productos recibidos -->
+    <h2 class="mt-5 text-center">Productos Recibidos</h2>
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad Recibida</th>
+                <th>Proveedor</th>
+                <th>Lote</th>
+                <th>Precio Unitario</th>
+                <th>Precio Total</th>
+                <th>Fecha de Entrada</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entrada in entradas %}
+            <tr>
+                <td>{{ entrada.producto.nombre }}</td>
+                <td>{{ entrada.cantidad_recibida }}</td>
+                <td>{{ entrada.proveedor.nombre }}</td>
+                <td>{{ entrada.lote }}</td>
+                <td>${{ entrada.precio_unitario }}</td>
+                <td>${{ entrada.total_entrada }}</td>
+                <td>{{ entrada.fecha_entrada }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     
-
-    <!-- Formulario de registro de entrada de productos (visible solo para staff) -->
-    {% if not request.user.is_superuser %}
-    <h2>Registrar Entrada de Productos</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Registrar Entrada</button>
-    </form>
-    {% endif %}
-
-<!-- Tabla de productos recibidos -->
-<h2 class="mt-5">Productos Recibidos</h2>
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Producto</th>
-            <th>Cantidad Recibida</th>
-            <th>Proveedor</th>
-            <th>Lote</th>
-            <th>Precio Unitario</th>
-            <th>Precio Total</th> <!-- Nueva columna para el precio total -->
-            <th>Fecha de Entrada</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for entrada in entradas %}
-        <tr>
-            <td>{{ entrada.producto.nombre }}</td>
-            <td>{{ entrada.cantidad_recibida }}</td>
-            <td>{{ entrada.proveedor.nombre }}</td>
-            <td>{{ entrada.lote }}</td>
-            <td>${{ entrada.precio_unitario }}</td>
-            <td>${{ entrada.total_entrada }}</td> <!-- Mostrar el precio total calculado -->
-            <td>{{ entrada.fecha_entrada }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-
     <!-- Sección: Registro de Productos Devueltos -->
     <h2 class="mt-5">Registro de Productos Devueltos</h2>
     <table class="table table-bordered table-hover">

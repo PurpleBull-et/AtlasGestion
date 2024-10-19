@@ -28,38 +28,33 @@ def home(request):
     palabra_clave = request.GET.get('buscar', None)
     categoria = request.GET.get('categoria', None)
 
-    # Obtener el negocio relacionado al usuario
     if request.user.is_superuser:
         productos = Producto.objects.all()
     else:
         staff_profile = StaffProfile.objects.get(user=request.user)
         productos = Producto.objects.filter(almacen__negocio=staff_profile.negocio)
 
-    # Filtrar por palabra clave (opcional)
     if palabra_clave:
         productos = productos.filter(
             Q(nombre__icontains=palabra_clave) |
             Q(descripcion__icontains=palabra_clave)
         )
 
-    # Filtrar por categoría (opcional)
     if categoria:
         productos = productos.filter(categoria=categoria)
 
     carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
 
-    # Si la solicitud es AJAX, devolver solo el HTML de los productos
     if es_ajax(request):
-        csrf_token = csrf.get_token(request)  # Obtener el token CSRF
+        csrf_token = csrf.get_token(request) 
         
-        # Si no hay productos, devolvemos un mensaje
         if not productos.exists():
             html = '<p>No se encontraron productos</p>'
             return JsonResponse({'html': html}, status=200)
 
         html = render_to_string('app/productos_buscar.html', {
             'productos': productos,
-            'csrf_token': csrf_token,  # Pasar el token CSRF al contexto
+            'csrf_token': csrf_token, 
         })
         return JsonResponse({'html': html})
 
@@ -75,7 +70,6 @@ def ver_carrito(request):
     carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
     carrito_items = carrito.carritoproducto_set.all()
 
-    # Verificar si el carrito está vacío
     if not carrito_items.exists():
         return render(request, 'app/carrito.html', {
             'carrito_items': [],
@@ -90,13 +84,12 @@ def ver_carrito(request):
         'carrito_total_cantidad': carrito_items.count(),
     })
 
-# Vista para agregar un producto al carrito
 def registrar_cliente(request):
     if request.method == 'POST':
         form = PerfilClientesForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('home')  # Después de guardar, redirige a home o muestra un mensaje de éxito
+            return redirect('home') 
     else:
         form = PerfilClientesForm()
 
@@ -104,29 +97,20 @@ def registrar_cliente(request):
 
 
 
+@login_required
 def agregar_al_carrito(request, producto_id):
     producto = get_object_or_404(Producto, producto_id=producto_id)
-    
-    if isinstance(producto, ProductoBar):
-        if producto.cc_por_unidad < 200:  # ejemplo, verificamos que hay suficiente en stock
-            return HttpResponse("No hay suficiente alcohol disponible", status=400)
-
-        # Reducir el stock en cc
-        producto.cc_por_unidad -= 200
-        producto.save()
-
     carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
     carrito_producto, created = CarritoProducto.objects.get_or_create(carrito=carrito, producto=producto)
+    
     if not created:
         carrito_producto.cantidad += 1
-        carrito_producto.save()
-
+    carrito_producto.save()
+    
     actualizar_total_carrito(carrito)
     return redirect('home')
 
 
-
-# Vista para restar la cantidad de un producto en el carrito
 @require_POST
 @login_required
 def restar_producto(request, producto_id):
@@ -152,7 +136,6 @@ def restar_producto(request, producto_id):
 
     return redirect('home')
 
-# Vista para eliminar un producto del carrito
 @require_POST
 @login_required
 def eliminar_del_carrito(request, item_id):
@@ -172,7 +155,6 @@ def eliminar_del_carrito(request, item_id):
 
     return redirect('home')
 
-# Función auxiliar para actualizar el total del carrito
 def actualizar_total_carrito(carrito):
     total = sum(item.total_precio() for item in carrito.carritoproducto_set.all())
     carrito.total = total
@@ -180,28 +162,18 @@ def actualizar_total_carrito(carrito):
 
     carrito.save()
 
-
-from django.contrib.auth.decorators import login_required
 #####################################
 # / / / / / / / / / / / / / / / / / #
 #####################################
 #PAGO
-from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.timezone import now
-
-from .models import Carrito, CarritoProducto, Compra, DetalleCompra
-
-
 @login_required
 def confirmar_compra(request):
     carrito = get_object_or_404(Carrito, usuario=request.user)
     carrito_items = carrito.carritoproducto_set.all()
 
     if carrito_items:
-        # Crear una nueva compra
         compra = Compra.objects.create(usuario=request.user, total=carrito.total)
 
-        # Crear los detalles de la compra
         for item in carrito_items:
             DetalleCompra.objects.create(
                 compra=compra,
@@ -210,12 +182,10 @@ def confirmar_compra(request):
                 precio_unitario=item.producto.precio
             )
 
-        # Limpiar el carrito una vez realizada la compra
         carrito.carritoproducto_set.all().delete()
         carrito.total = 0
         carrito.save()
 
-        # Redirigir a la página de éxito de compra
         return redirect('compra_exitosa', compra_id=compra.id)
 
     return redirect('home')
@@ -223,37 +193,29 @@ def confirmar_compra(request):
 
 @login_required
 def compra_exitosa(request, compra_id):
-    # Buscar la compra por ID, independientemente de si tiene un usuario o no
     compra = get_object_or_404(Compra, id=compra_id)
 
-    # Obtener los detalles de la compra
     detalles = compra.detalles.all()
 
-    # Si el parámetro 'pdf' está presente en la URL, generar PDF
     if 'pdf' in request.GET:
-        # Cargar la plantilla HTML para el PDF
         template_path = 'payment/compra_exitosa_pdf.html'
         context = {
             'compra': compra,
             'detalles': detalles
         }
 
-        # Generar el PDF
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="comprobante.pdf"'
 
-        # Renderizar el HTML a PDF
         template = get_template(template_path)
         html = template.render(context)
         pisa_status = pisa.CreatePDF(html, dest=response)
 
-        # Verificar errores de generación
         if pisa_status.err:
             return HttpResponse('Hubo un error al generar el PDF <pre>%s</pre>' % html)
 
         return response
 
-    # Renderizar la página HTML normal si no se solicita PDF
     return render(request, 'payment/compra_exitosa.html', {
         'compra': compra,
         'detalles': detalles
@@ -265,10 +227,8 @@ def confirmar_compra_invitado(request):
     carrito_items = carrito.carritoproducto_set.all()
 
     if carrito_items:
-        # Crear una nueva compra sin usuario registrado, solo con el correo si se proporciona
         compra = Compra.objects.create(usuario=None, total=carrito.total, correo=email)
 
-        # Crear los detalles de la compra
         for item in carrito_items:
             DetalleCompra.objects.create(
                 compra=compra,
@@ -277,13 +237,11 @@ def confirmar_compra_invitado(request):
                 precio_unitario=item.producto.precio
             )
 
-        # Limpiar el carrito una vez realizada la compra
         carrito.carritoproducto_set.all().delete()
         carrito.total = 0
         carrito.save()
 
-        # Redirigir a la página de éxito de compra
-        return redirect('compra_exitosa', compra_id=compra.id)  # Asegúrate de que compra.id se está obteniendo correctamente
+        return redirect('compra_exitosa', compra_id=compra.id)
 
     return redirect('home')
 
@@ -291,7 +249,7 @@ def confirmar_compra_invitado(request):
 #####################################
 # / / / / / / / / / / / / / / / / / #
 #####################################
-# REGISTRO, LOGIN Y LOGOUT
+# LOGIN Y LOGOUT
 def login(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -302,7 +260,6 @@ def login(request):
     else:
         form = AuthenticationForm()
     return render(request, 'registration/login.html', {'form': form})
-
 
 
 @require_POST
@@ -330,7 +287,6 @@ def add_prod(request):
     else:
         producto_form = ProductoForm()
 
-    # Filtrar las categorías por el negocio del usuario
     producto_form.fields['categoria'].queryset = Categoria.objects.filter(negocio=staff_profile.negocio)
 
     return render(request, 'producto/add_prod.html', {
@@ -341,32 +297,65 @@ def add_prod(request):
 def list_prod(request):
     estado_filtro = request.GET.get('estado', None)
     negocio_filtro = request.GET.get('negocio', None)
-    
+    categoria_filtro = request.GET.get('categoria', None)  # Obtener categoría seleccionada
+
     # Si el usuario es administrador
     if request.user.is_superuser:
         negocios = Negocio.objects.all()
-        productos = Producto.objects.all()
+        productos = Producto.objects.exclude(estado='descontinuado').order_by(
+            models.Case(
+                models.When(estado='disponible', then=0),
+                models.When(estado='sin_stock', then=1),
+                models.When(estado='registrado_reciente', then=2),
+                default=3,
+                output_field=models.IntegerField(),
+            ),
+            'nombre'
+        )
 
-        # Aplicar filtro de negocio
         negocio_nombre = None
         if negocio_filtro:
             try:
                 negocio_filtro = int(negocio_filtro)
                 productos = productos.filter(almacen__negocio_id=negocio_filtro)
-                negocio_nombre = Negocio.objects.get(id=negocio_filtro).nombre  
+                negocio_nombre = Negocio.objects.get(id=negocio_filtro).nombre
             except (ValueError, Negocio.DoesNotExist):
                 negocio_filtro = None
-        
+
         if estado_filtro:
             productos = productos.filter(estado=estado_filtro)
+
+        if categoria_filtro: 
+            try:
+                categoria_filtro = int(categoria_filtro)
+                productos = productos.filter(categoria_id=categoria_filtro)
+            except (ValueError, Categoria.DoesNotExist):
+                categoria_filtro = None
 
     else:
         staff_profile = StaffProfile.objects.get(user=request.user)
-        productos = Producto.objects.filter(almacen__negocio=staff_profile.negocio)
-        negocio_nombre = staff_profile.negocio.nombre 
+        productos = Producto.objects.filter(almacen__negocio=staff_profile.negocio).exclude(estado='descontinuado').order_by(
+            models.Case(
+                models.When(estado='disponible', then=0),
+                models.When(estado='sin_stock', then=1),
+                models.When(estado='registrado_reciente', then=2),
+                default=3,
+                output_field=models.IntegerField(),
+            ),
+            'nombre'
+        )
+
+        negocio_nombre = staff_profile.negocio.nombre
 
         if estado_filtro:
             productos = productos.filter(estado=estado_filtro)
+
+        if categoria_filtro: 
+            try:
+                categoria_filtro = int(categoria_filtro)
+                productos = productos.filter(categoria_id=categoria_filtro)
+            except (ValueError, Categoria.DoesNotExist):
+                categoria_filtro = None
 
         negocios = None
 
@@ -375,9 +364,10 @@ def list_prod(request):
         'estado_filtro': estado_filtro,
         'negocios': negocios,
         'negocio_filtro': negocio_filtro,
-        'negocio_nombre': negocio_nombre 
+        'negocio_nombre': negocio_nombre,
+        'categorias': Categoria.objects.all(),
+        'categoria_filtro': categoria_filtro, 
     })
-
 
 
 
@@ -398,37 +388,6 @@ def erase_prod(request, producto_id):
         return redirect('list_prod')
     
     return redirect('list_prod')
-
-@login_required
-@permission_required('app.change_producto', raise_exception=True)
-def descontinuar_prod(request, producto_id):
-    producto = get_object_or_404(Producto, producto_id=producto_id)
-
-    # Verificar que el producto pertenece al negocio del staff
-    staff_profile = StaffProfile.objects.get(user=request.user)
-    if producto.almacen.negocio != staff_profile.negocio:
-        return HttpResponseForbidden("No tienes permiso para modificar este producto.")
-
-    devoluciones = []
-    if producto.stock > 0:
-        for proveedor in producto.proveedores.all():
-            # Registrar toda la cantidad en stock como devuelta al último proveedor
-            devolucion = DevolucionProveedor.objects.create(
-                producto=producto,
-                cantidad=producto.stock,
-                proveedor=proveedor.nombre,
-                fecha_devolucion=timezone.now()
-            )
-            devoluciones.append(devolucion)
-
-    # Marcar el producto como descontinuado y poner stock a 0
-    producto.estado = 'descontinuado'
-    producto.stock = 0
-    producto.save()
-
-    messages.success(request, f'Producto {producto.nombre} descontinuado exitosamente.')
-    return redirect('list_prod')
-
 
 @login_required
 @permission_required('app.add_productosdevueltos', raise_exception=True)
@@ -469,13 +428,24 @@ def devolver_prod(request, producto_id):
 
         # Actualizar el stock del producto
         producto.stock -= entrada.cantidad_recibida
-        producto.actualizar_estado()
+        
+        # Actualizar el estado del producto según el stock restante
+        if producto.stock <= 0:
+            # Si el stock es 0 o menor, cambiar a "sin_stock"
+            producto.estado = 'sin_stock'
+        elif producto.stock > 0:
+            # Si aún tiene stock, dejarlo en "disponible"
+            producto.estado = 'disponible'
+        
+        # Guardar los cambios en el producto
         producto.save()
 
+        # Mostrar mensaje de éxito
         messages.success(request, f"Devolución del lote {lote} registrada correctamente.")
         return redirect('list_prod')
 
     return render(request, 'producto/devolver_prod.html', {'producto': producto})
+
 
 @login_required
 @permission_required('app.change_producto', raise_exception=True)
@@ -567,54 +537,65 @@ def historial_bodega(request):
     return render(request, 'bodega/historial_bodega.html', {'entradas': entradas})
 
 @login_required
-@staff_member_required
 @permission_required('app.add_entradabodega', raise_exception=True)
 def operaciones_bodega(request):
-    staff_profile = StaffProfile.objects.get(user=request.user)
-    negocio = staff_profile.negocio  # Obtener el negocio desde el perfil del staff
+    negocio_filtro = request.GET.get('negocio', None)
+    negocio_nombre = None  # Definir la variable antes de su uso
 
-    # Filtrar productos que están asociados al negocio del staff y tienen stock o están sin stock
-    productos_validos = Producto.objects.filter(almacen__negocio=negocio, estado__in=['disponible', 'sin_stock'])
-    
-    # Filtrar proveedores que están asociados al negocio del staff
-    proveedores_validos = Proveedor.objects.filter(negocio=negocio)
+    # Si el usuario es administrador
+    if request.user.is_superuser:
+        negocios = Negocio.objects.all()  # Admin puede ver todos los negocios
+        productos_validos = Producto.objects.filter(estado__in=['disponible', 'sin_stock', 'registrado_reciente'])
+        
+        if negocio_filtro:
+            try:
+                negocio_filtro = int(negocio_filtro)
+                productos_validos = productos_validos.filter(almacen__negocio_id=negocio_filtro)
+                entradas = EntradaBodega.objects.filter(negocio_id=negocio_filtro).order_by('-fecha_entrada')
+                devoluciones = ProductosDevueltos.objects.filter(entrada_bodega__negocio_id=negocio_filtro).order_by('-fecha_devolucion')
+                negocio_nombre = Negocio.objects.get(id=negocio_filtro).nombre
+            except (ValueError, Negocio.DoesNotExist):
+                negocio_filtro = None
+        else:
+            # Si no se aplica el filtro, mostrar todas las entradas y devoluciones
+            entradas = EntradaBodega.objects.all().order_by('-fecha_entrada')
+            devoluciones = ProductosDevueltos.objects.all().order_by('-fecha_devolucion')
+        
+        form = None  # El admin no tiene acceso al formulario de reposición
 
-    # Manejo del formulario de entrada de bodega
-    if request.method == 'POST':
-        form = EntradaBodegaForm(request.POST)
-        if form.is_valid():
-            entrada = form.save(commit=False)
-            
-            # Asignar el negocio correctamente a la entrada de bodega
-            entrada.negocio = negocio
-
-            # Actualizar el stock del producto en base a la cantidad recibida
-            entrada.producto.stock += entrada.cantidad_recibida
-            entrada.producto.save()
-
-            # Guardar la entrada de bodega
-            entrada.save()
-            return redirect('operaciones_bodega')
     else:
-        form = EntradaBodegaForm()
+        # Lógica para los usuarios staff
+        staff_profile = StaffProfile.objects.get(user=request.user)
+        negocio = staff_profile.negocio
+        
+        productos_validos = Producto.objects.filter(almacen__negocio=negocio, estado__in=['disponible', 'sin_stock', 'registrado_reciente'])
+        proveedores_validos = Proveedor.objects.filter(negocio=negocio)
+        entradas = EntradaBodega.objects.filter(negocio=negocio).order_by('-fecha_entrada')
+        devoluciones = ProductosDevueltos.objects.filter(entrada_bodega__negocio=negocio).order_by('-fecha_devolucion')
 
-        # Filtrar productos y proveedores válidos en el formulario
-        form.fields['producto'].queryset = productos_validos
-        form.fields['proveedor'].queryset = proveedores_validos
-
-    # Mostrar las entradas de bodega filtradas por el negocio actual
-    entradas = EntradaBodega.objects.filter(negocio=negocio).order_by('-fecha_entrada')
-
-    # Obtener todas las devoluciones de productos
-    devoluciones = ProductosDevueltos.objects.filter(entrada_bodega__negocio=negocio).order_by('-fecha_devolucion')
+        # Formulario de reposición solo para usuarios staff
+        if request.method == 'POST':
+            form = EntradaBodegaForm(request.POST)
+            if form.is_valid():
+                entrada = form.save(commit=False)
+                entrada.negocio = negocio
+                entrada.producto.stock += entrada.cantidad_recibida
+                entrada.producto.actualizar_estado()
+                entrada.save()
+                return redirect('operaciones_bodega')
+        else:
+            form = EntradaBodegaForm()
+            form.fields['producto'].queryset = productos_validos
+            form.fields['proveedor'].queryset = proveedores_validos
 
     return render(request, 'bodega/operaciones_bodega.html', {
         'form': form,
         'entradas': entradas,
-        'devoluciones': devoluciones  # Pasamos las devoluciones al contexto
+        'devoluciones': devoluciones,
+        'negocios': negocios if request.user.is_superuser else None,  # Pasar los negocios solo si es admin
+        'negocio_filtro': negocio_filtro,  # Pasar el filtro de negocio al template
+        'negocio_nombre': negocio_nombre,  # Pasar el nombre del negocio filtrado (si corresponde)
     })
-
-
 
 
 
@@ -980,24 +961,48 @@ def add_proveedor(request):
 @login_required
 @permission_required('app.view_proveedor', raise_exception=True)
 def list_proveedores(request):
-    staff_profile = StaffProfile.objects.get(user=request.user)
-    proveedores = Proveedor.objects.filter(negocio=staff_profile.negocio)  # Filtrar proveedores por negocio
+    negocio_filtro = request.GET.get('negocio', None)
+    negocio_nombre = None  # Inicializamos la variable para evitar el error
 
-    if request.method == 'POST':
-        form = ProveedorForm(request.POST)
-        if form.is_valid():
-            proveedor = form.save(commit=False)
-            proveedor.negocio = staff_profile.negocio  # Asociar el proveedor al negocio
-            proveedor.save()
-            return redirect('list_proveedores')
+    # Si el usuario es administrador
+    if request.user.is_superuser:
+        negocios = Negocio.objects.all()  # Los administradores pueden ver todos los proveedores de todos los negocios
+        proveedores = Proveedor.objects.all()
+
+        if negocio_filtro:
+            try:
+                negocio_filtro = int(negocio_filtro)
+                proveedores = proveedores.filter(negocio_id=negocio_filtro)
+                negocio_nombre = Negocio.objects.get(id=negocio_filtro).nombre
+            except (ValueError, Negocio.DoesNotExist):
+                negocio_filtro = None
+
+        form = None  # Los administradores no necesitan un formulario para añadir proveedores
+
     else:
-        form = ProveedorForm()
+        # Si el usuario es staff, solo puede ver los proveedores de su propio negocio
+        staff_profile = StaffProfile.objects.get(user=request.user)
+        negocio = staff_profile.negocio
+        
+        proveedores = Proveedor.objects.filter(negocio=negocio)  # Filtrar proveedores por negocio
+
+        if request.method == 'POST':
+            form = ProveedorForm(request.POST)
+            if form.is_valid():
+                proveedor = form.save(commit=False)
+                proveedor.negocio = negocio  # Asociar el proveedor al negocio del usuario
+                proveedor.save()
+                return redirect('list_proveedores')
+        else:
+            form = ProveedorForm()
 
     return render(request, 'administration/proveedor/list_proveedores.html', {
         'proveedores': proveedores,
-        'form': form,  # Pasar el formulario al template
+        'form': form if not request.user.is_superuser else None,  # Pasar el formulario solo si no es admin
+        'negocios': negocios if request.user.is_superuser else None,  # Pasar los negocios solo si es admin
+        'negocio_filtro': negocio_filtro,  # Pasar el filtro de negocio al template
+        'negocio_nombre': negocio_nombre,  # Pasar el nombre del negocio filtrado
     })
-
 
 
 @login_required
@@ -1042,22 +1047,47 @@ def erase_proveedor(request, proveedor_id):
 @login_required
 @permission_required('app.view_categoria', raise_exception=True)
 def list_categorias(request):
-    staff_profile = StaffProfile.objects.get(user=request.user)
-    categorias = Categoria.objects.filter(negocio=staff_profile.negocio)  # Filtrar categorías por negocio
+    negocio_filtro = request.GET.get('negocio', None)
+    negocio_nombre = None  # Inicializamos la variable para evitar el error
 
-    if request.method == 'POST':
-        form = CategoriaForm(request.POST)
-        if form.is_valid():
-            categoria = form.save(commit=False)
-            categoria.negocio = staff_profile.negocio  # Asociar la categoría al negocio del usuario
-            categoria.save()
-            return redirect('list_categorias')
+    # Si el usuario es administrador
+    if request.user.is_superuser:
+        negocios = Negocio.objects.all()  # Los administradores pueden ver todas las categorías de todos los negocios
+        categorias = Categoria.objects.all()
+
+        if negocio_filtro:
+            try:
+                negocio_filtro = int(negocio_filtro)
+                categorias = categorias.filter(negocio_id=negocio_filtro)
+                negocio_nombre = Negocio.objects.get(id=negocio_filtro).nombre
+            except (ValueError, Negocio.DoesNotExist):
+                negocio_filtro = None
+
+        form = None  # Los administradores no necesitan un formulario para añadir categorías
+
     else:
-        form = CategoriaForm()
+        # Si el usuario es staff, solo puede ver las categorías de su propio negocio
+        staff_profile = StaffProfile.objects.get(user=request.user)
+        negocio = staff_profile.negocio
+        
+        categorias = Categoria.objects.filter(negocio=negocio)  # Filtrar categorías por negocio
+
+        if request.method == 'POST':
+            form = CategoriaForm(request.POST)
+            if form.is_valid():
+                categoria = form.save(commit=False)
+                categoria.negocio = negocio  # Asociar la categoría al negocio del usuario
+                categoria.save()
+                return redirect('list_categorias')
+        else:
+            form = CategoriaForm()
 
     return render(request, 'categorias/list_categorias.html', {
         'categorias': categorias,
-        'form': form,  # Pasar el formulario al template
+        'form': form if not request.user.is_superuser else None,  # Pasar el formulario solo si no es admin
+        'negocios': negocios if request.user.is_superuser else None,  # Pasar los negocios solo si es admin
+        'negocio_filtro': negocio_filtro,  # Pasar el filtro de negocio al template
+        'negocio_nombre': negocio_nombre,  # Pasar el nombre del negocio filtrado
     })
 
 @login_required

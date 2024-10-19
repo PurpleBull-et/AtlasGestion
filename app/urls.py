@@ -32,9 +32,10 @@ urlpatterns = [
     path('mi_negocio/', mi_negocio, name='mi_negocio'),
 
     path('staffs/', list_staff, name='list_staff'),
-    path('staffs/eliminar/<int:staff_id>/', erase_staff, name='erase_staff'),  # Correcta ruta para eliminar
+    path('staffs/eliminar/<int:staff_id>/', erase_staff, name='erase_staff'),
     path('licencia-vencida/', licencia_vencida, name='licencia_vencida'),
     path('staffs/registrar/', register_staff, name='register_staff'),
+    
     #Mod cuenta y perfil staff
     path('perfil/modificar/<int:staff_id>/', mod_staff_profile, name='mod_staff_profile'),
     path('cuenta/modificar/<int:staff_id>/', mod_staff_account, name='mod_staff_account'),
@@ -84,14 +85,9 @@ urlpatterns = [
     path('productos/agregar/', add_prod, name='add_prod'),
     path('productos/modificar/<producto_id>/', mod_prod, name='mod_prod'),
     path('productos/eliminar/<producto_id>/', erase_prod, name='erase_prod'),
-    path('productos/descontinuar/<int:producto_id>/', descontinuar_prod, name='descontinuar_prod'),
     path('productos/devolver/<int:producto_id>/', devolver_prod, name='devolver_prod'),
     path('producto/<int:producto_id>/actualizar_precio/', actualizar_precio_prod, name='actualizar_precio_prod'),
 
-
-    
-
-    
     
 
 ]
