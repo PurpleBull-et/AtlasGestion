@@ -3,17 +3,8 @@
 {% block contenido %}
 <h1>Gestión de Negocios</h1>
 
-<!-- Registro de nuevo negocio -->
-<div class="card mb-5">
-    <div class="card-body">
-        <h4 class="card-title">Registrar Nuevo Negocio</h4>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Registrar</button>
-        </form>
-    </div>
-</div>
+<!-- formulario de agregar negocio -->
+{% include 'administration/negocio/add_negocio.html' %}
 
 <!-- Lista de negocios -->
 <h2>Negocios Registrados</h2>
@@ -21,11 +12,13 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>Logo</th>
             <th>Nombre</th>
+            <th>RUT Empresa</th>
             <th>Dirección</th>
             <th>Teléfono</th>
-            <th>Almacén Dirección</th> 
+            <th>Dirección del Almacén</th>
+            <th>Estado</th>
+            <th>Mayorista</th> 
             <th>Acciones</th>
         </tr>
     </thead>
@@ -33,25 +26,37 @@
         {% for negocio in negocios %}
         <tr>
             <td>{{ negocio.id }}</td>
-            <td>
-                {% if negocio.logo %}
-                <img src="{{ negocio.logo.url }}" alt="{{ negocio.nombre }}" width="50" height="50">
-                {% else %}
-                <p>Sin logo</p>
-                {% endif %}
-            </td>
             <td>{{ negocio.nombre }}</td>
+            <td>{{ negocio.rut_empresa }}</td>
             <td>{{ negocio.direccion }}</td>
             <td>{{ negocio.telefono }}</td>
-            <td>{{ negocio.almacen_set.first.direccion }}</td> 
+            <td>{{ negocio.almacen_set.first.direccion }}</td>
+            <td>
+                {% if negocio.is_active %}
+                    Activo
+                {% else %}
+                    Inactivo
+                {% endif %}
+            </td>
+            <td>
+                {% if negocio.is_mayorista %}
+                    Sí
+                {% else %}
+                    No
+                {% endif %}
+            </td>
             <td>
                 <a href="{% url 'mod_negocio' negocio.id %}" class="btn btn-warning">Modificar</a>
                 <a href="{% url 'erase_negocio' negocio.id %}" class="btn btn-danger">Eliminar</a>
+                {% if negocio.is_active %}
+                    <a href="{% url 'cambiar_estado_negocio' negocio.id %}" class="btn btn-secondary">Inactivar</a>
+                {% else %}
+                    <a href="{% url 'cambiar_estado_negocio' negocio.id %}" class="btn btn-success">Activar</a>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}
     </tbody>    
 </table>
-
 
 {% endblock %}

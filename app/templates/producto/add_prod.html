@@ -10,26 +10,17 @@
     <div class="container mt-4">
         <div class="row">
             <div class="col-md-8 offset-md-2">
-                <!-- Título del formulario -->
                 <h1 class="text-center mb-4">Agregar Producto</h1>
 
                 <!-- Formulario para agregar producto -->
                 <form method="post" enctype="multipart/form-data" class="card p-4 shadow-sm">
                     {% csrf_token %}
                     
-                    <!-- Información del Producto -->
                     <fieldset class="mb-4">
                         <legend>Información del Producto</legend>
                         {{ producto_form.as_p }}
                     </fieldset>
 
-                    <!-- Imagen del Producto -->
-                    <!-- <fieldset class="mb-4">
-                        <legend>Imagen del Producto</legend>
-                        {{ imagen_form.as_p }}
-                    </fieldset>-->
-
-                    <!-- Botón para enviar -->
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary w-50">Guardar Producto</button>
                     </div>

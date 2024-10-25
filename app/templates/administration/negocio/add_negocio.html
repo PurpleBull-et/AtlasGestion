@@ -1,0 +1,24 @@
+{% block add_negocio_form %}
+<div class="card mb-5">
+    <div class="card-body">
+        <h4>Registrar Nuevo Negocio</h4>
+
+        <!-- Mostrar errores -->
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul>
+                {% for field, errors in form.errors.items %}
+                    <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Registrar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -59,7 +59,7 @@
             </thead>
             <tbody>
                 {% for producto in productos %}
-                    <tr class="{% if producto.estado == 'sin_stock' %}table-danger{% elif producto.estado == 'registrado_reciente' %}table-warning {% else %}table-success{% endif %}">
+                    <tr class="{% if producto.estado == 'sin_stock' or producto.estado == 'ingresado_manual' %}table-danger{% elif producto.estado == 'registrado_reciente' %}table-warning{% else %}table-success{% endif %}">
                         <td>{{ producto.producto_id }}</td>
                         <td>{{ producto.nombre }}</td>
                         <td>{{ producto.marca }}</td>
@@ -76,16 +76,18 @@
                             {% if producto.estado == 'disponible' %}
                                 <span class="badge bg-success">Disponible</span>
                             {% elif producto.estado == 'sin_stock' %}
-                                <span class="badge bg-danger text-dark">Sin Stock</span>
+                                <span class="badge bg-danger">Sin Stock</span>
                             {% elif producto.estado == 'registrado_reciente' %}
                                 <span class="badge bg-warning">Nuevo</span>
+                            {% elif producto.estado == 'ingresado_manual' %}
+                                <span class="badge bg-danger">Ingresado Manual</span> <!-- Resaltado en rojo -->
                             {% endif %}
                         </td>
                         <td>{{ producto.descripcion }}</td>
                         <td>
                             <a href="{% url 'mod_prod' producto.producto_id %}" class="btn btn-primary btn-sm">Editar</a>
                             <a href="#" data-bs-toggle="modal" data-bs-target="#precioModal{{ producto.producto_id }}" class="btn btn-info btn-sm">Asignar Precio</a>
-
+            
                             <!-- Modal para actualizar precio -->
                             <div class="modal fade" id="precioModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="precioModalLabel{{ producto.producto_id }}" aria-hidden="true">
                                 <div class="modal-dialog">
@@ -110,10 +112,10 @@
                                     </div>
                                 </div>
                             </div>
-
+            
                             <!-- Modal para devolución -->
                             <a href="#" data-bs-toggle="modal" data-bs-target="#devolverModal{{ producto.producto_id }}" class="btn btn-warning btn-sm">Devolver</a>
-
+            
                             <div class="modal fade" id="devolverModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="devolverModalLabel" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
@@ -144,10 +146,9 @@
                         </td>
                     </tr>
                 {% endfor %}
-            </tbody>
+            </tbody>            
         </table>
     </div>
-
     {% if not productos %}
         <div class="alert alert-warning text-center mt-4">No hay productos disponibles.</div>
     {% endif %}

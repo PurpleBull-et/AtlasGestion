@@ -25,43 +25,71 @@ def es_ajax(request):
 
 @login_required
 def home(request):
-    palabra_clave = request.GET.get('buscar', None)
-    categoria = request.GET.get('categoria', None)
+    palabra_clave = request.GET.get('buscar', '')  # Filtro por palabra clave, vacío por defecto
+    categoria_filtro = request.GET.get('categoria', None)  # Para el filtro por categoría
+    negocio_filtro = request.GET.get('negocio', None)  # Para el filtro por negocio (solo admin)
 
+    # Si el usuario es superusuario (admin), puede ver todos los productos
     if request.user.is_superuser:
-        productos = Producto.objects.all()
+        productos = Producto.objects.exclude(precio=0)  # Excluir productos con precio 0
     else:
+        # Los usuarios staff solo ven los productos de su negocio
         staff_profile = StaffProfile.objects.get(user=request.user)
-        productos = Producto.objects.filter(almacen__negocio=staff_profile.negocio)
+        productos = Producto.objects.filter(almacen__negocio=staff_profile.negocio).exclude(precio=0)
 
+    # Filtro por palabra clave (en nombre o descripción)
     if palabra_clave:
         productos = productos.filter(
             Q(nombre__icontains=palabra_clave) |
             Q(descripcion__icontains=palabra_clave)
         )
 
-    if categoria:
-        productos = productos.filter(categoria=categoria)
+    # Filtro por categoría
+    if categoria_filtro and categoria_filtro.isdigit():
+        productos = productos.filter(categoria_id=int(categoria_filtro))
 
+    # Filtro por negocio (solo para administradores)
+    if request.user.is_superuser and negocio_filtro and negocio_filtro.isdigit():
+        productos = productos.filter(almacen__negocio_id=int(negocio_filtro))
+
+    # Obtener el carrito del usuario
     carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
 
-    if es_ajax(request):
-        csrf_token = csrf.get_token(request) 
-        
-        if not productos.exists():
-            html = '<p>No se encontraron productos</p>'
-            return JsonResponse({'html': html}, status=200)
-
-        html = render_to_string('app/productos_buscar.html', {
-            'productos': productos,
-            'csrf_token': csrf_token, 
-        })
+    # Si es una solicitud AJAX, devolvemos solo el HTML de los productos filtrados
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        html = ''
+        for producto in productos:
+            html += f'''
+            <li class="product-item row main align-items-center border-top border-bottom py-3">
+                <div class="col-2">
+                    <div class="row text-muted">{producto.nombre}</div>
+                </div>
+                <div class="col">
+                    <div class="row">{producto.descripcion}</div>
+                </div>
+                <div class="col">
+                    <span class="product-price">{producto.precio} CLP</span>
+                </div>
+                <div class="col product-actions">
+                    <form method="post" action="/carrito/agregar/{producto.producto_id}/">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{csrf.get_token(request)}">
+                        <button type="submit" class="btn btn-success">Añadir al carrito</button>
+                    </form>
+                </div>
+            </li>
+            '''
         return JsonResponse({'html': html})
 
+    # Renderizado normal para solicitudes no AJAX
     return render(request, 'app/home.html', {
         'productos': productos,
         'carrito_items': carrito.carritoproducto_set.all(),
-        'carrito_total': carrito.total
+        'carrito_total': carrito.total,
+        'categorias': Categoria.objects.all(),
+        'negocios': Negocio.objects.all() if request.user.is_superuser else None,
+        'categoria_filtro': categoria_filtro,
+        'negocio_filtro': negocio_filtro,
+        'palabra_clave': palabra_clave,
     })
 
 
@@ -71,31 +99,76 @@ def ver_carrito(request):
     carrito_items = carrito.carritoproducto_set.all()
 
     if not carrito_items.exists():
-        return render(request, 'app/carrito.html', {
+        return render(request, 'app/home.html', {
             'carrito_items': [],
             'carrito_total': 0,
             'carrito_total_cantidad': 0,
             'mensaje_carrito_vacio': 'Tu carrito está vacío.'
         })
 
-    return render(request, 'app/carrito.html', {
+    return render(request, 'app/home.html', {
         'carrito_items': carrito_items,
         'carrito_total': carrito.total,
         'carrito_total_cantidad': carrito_items.count(),
     })
 
-def registrar_cliente(request):
+
+@login_required
+def confirmar_compra(request):
     if request.method == 'POST':
-        form = PerfilClientesForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('home') 
-    else:
-        form = PerfilClientesForm()
+        accion = request.POST.get('accion')
+        correo = request.POST.get('correo', '').strip()
 
-    return render(request, 'app/registrar_cliente_modal.html', {'form': form})
+        carrito = get_object_or_404(Carrito, usuario=request.user)
+        carrito_items = carrito.carritoproducto_set.all()
 
+        if carrito_items:
+            # Verificar si el correo ingresado pertenece a un perfil de cliente existente
+            perfil_cliente = None
+            if correo:
+                try:
+                    perfil_cliente = PerfilClientes.objects.get(correo=correo)
+                except PerfilClientes.DoesNotExist:
+                    # Si no existe el perfil, crear uno nuevo
+                    perfil_cliente = PerfilClientes.objects.create(correo=correo)
 
+            # Crear la compra, registrando el correo del cliente si existe un perfil asociado
+            compra = Compra.objects.create(
+                usuario=request.user,
+                total=carrito.total,
+                nombre_staff=request.user.get_full_name(),
+                correo=perfil_cliente.correo if perfil_cliente else None  # Guardar el correo del perfil
+            )
+
+            for item in carrito_items:
+                producto = item.producto
+                if producto.stock >= item.cantidad:
+                    producto.stock -= item.cantidad
+                    producto.actualizar_estado()
+                    producto.save()
+
+                    # Crear detalle de la compra
+                    DetalleCompra.objects.create(
+                        compra=compra,
+                        producto=producto,
+                        cantidad=item.cantidad,
+                        precio_unitario=producto.precio
+                    )
+                else:
+                    messages.error(request, f"No hay suficiente stock para {producto.nombre}. Solo quedan {producto.stock} unidades disponibles.")
+                    return redirect('home')
+
+            # Vaciar el carrito
+            carrito.carritoproducto_set.all().delete()
+            carrito.total = 0
+            carrito.save()
+
+            messages.success(request, 'La compra ha sido confirmada.')
+            return redirect('compra_exitosa', compra_id=compra.id)
+
+        else:
+            messages.warning(request, 'El carrito está vacío.')
+            return redirect('home')
 
 @login_required
 def agregar_al_carrito(request, producto_id):
@@ -109,7 +182,6 @@ def agregar_al_carrito(request, producto_id):
     
     actualizar_total_carrito(carrito)
     return redirect('home')
-
 
 @require_POST
 @login_required
@@ -125,17 +197,9 @@ def restar_producto(request, producto_id):
         carrito_producto.delete()
 
     actualizar_total_carrito(carrito)
-
-    if es_ajax(request):
-        html_carrito = render_to_string('app/carrito.html', {
-            'carrito_items': carrito.carritoproducto_set.all(),
-            'carrito_total': carrito.total,
-            'carrito_total_cantidad': carrito.carritoproducto_set.count()
-        })
-        return JsonResponse({'carrito_html': html_carrito})
-
     return redirect('home')
 
+# Función para eliminar un producto del carrito
 @require_POST
 @login_required
 def eliminar_del_carrito(request, item_id):
@@ -145,50 +209,16 @@ def eliminar_del_carrito(request, item_id):
     carrito = carrito_producto.carrito
     actualizar_total_carrito(carrito)
 
-    if es_ajax(request):
-        html_carrito = render_to_string('app/carrito.html', {
-            'carrito_items': carrito.carritoproducto_set.all(),
-            'carrito_total': carrito.total,
-            'carrito_total_cantidad': carrito.carritoproducto_set.count()
-        })
-        return JsonResponse({'carrito_html': html_carrito})
-
     return redirect('home')
 
+# Función para actualizar el total del carrito
 def actualizar_total_carrito(carrito):
-    total = sum(item.total_precio() for item in carrito.carritoproducto_set.all())
+    """
+    Recalcula el total del carrito sumando los precios de todos los productos.
+    """
+    total = sum(item.producto.precio * item.cantidad for item in carrito.carritoproducto_set.all())
     carrito.total = total
     carrito.save()
-
-    carrito.save()
-
-#####################################
-# / / / / / / / / / / / / / / / / / #
-#####################################
-#PAGO
-@login_required
-def confirmar_compra(request):
-    carrito = get_object_or_404(Carrito, usuario=request.user)
-    carrito_items = carrito.carritoproducto_set.all()
-
-    if carrito_items:
-        compra = Compra.objects.create(usuario=request.user, total=carrito.total)
-
-        for item in carrito_items:
-            DetalleCompra.objects.create(
-                compra=compra,
-                producto=item.producto,
-                cantidad=item.cantidad,
-                precio_unitario=item.producto.precio
-            )
-
-        carrito.carritoproducto_set.all().delete()
-        carrito.total = 0
-        carrito.save()
-
-        return redirect('compra_exitosa', compra_id=compra.id)
-
-    return redirect('home')
 
 
 @login_required
@@ -245,6 +275,42 @@ def confirmar_compra_invitado(request):
 
     return redirect('home')
 
+@login_required
+@permission_required('app.add_producto', raise_exception=True)
+def reg_prod(request):
+    staff_profile = StaffProfile.objects.get(user=request.user) 
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        stock = int(request.POST.get('stock', 0))
+        precio = float(request.POST.get('precio', 0.0))
+
+        almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()
+
+        producto = Producto.objects.create(
+            nombre=nombre,
+            stock=stock,
+            precio=precio,
+            categoria=None,
+            marca='Marca no registrada',
+            descripcion='Sin descripción',
+            estado='ingresado_manual', 
+            almacen=almacen
+        )
+
+        # Agregar el producto manualmente al carrito
+        carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
+        carrito_producto, created = CarritoProducto.objects.get_or_create(carrito=carrito, producto=producto)
+        
+        if not created:
+            carrito_producto.cantidad += 1
+        carrito_producto.save()
+
+        actualizar_total_carrito(carrito)
+        messages.success(request, f'El producto {producto.nombre} ha sido registrado y agregado al carrito.')
+
+    return redirect('home')
+
 
 #####################################
 # / / / / / / / / / / / / / / / / / #
@@ -273,25 +339,30 @@ def logoutView(request):
 @login_required
 @permission_required('app.add_producto', raise_exception=True)
 def add_prod(request):
-    staff_profile = StaffProfile.objects.get(user=request.user)  # Obtener el negocio del usuario
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio 
+
+    if negocio.is_mayorista:
+        FormularioProducto = ProductoFormMayorista
+    else:
+        FormularioProducto = ProductoFormMinorista
 
     if request.method == 'POST':
-        producto_form = ProductoForm(request.POST)
+        producto_form = FormularioProducto(request.POST) 
         
         if producto_form.is_valid():
             producto = producto_form.save(commit=False)
-            producto.almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()  # Enlazar con el almacén del negocio
+            producto.almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first() 
             producto.save()
-
             return redirect('list_prod')
     else:
-        producto_form = ProductoForm()
-
-    producto_form.fields['categoria'].queryset = Categoria.objects.filter(negocio=staff_profile.negocio)
+        producto_form = FormularioProducto() 
 
     return render(request, 'producto/add_prod.html', {
         'producto_form': producto_form
     })
+
+
 
 @login_required
 def list_prod(request):
@@ -307,7 +378,8 @@ def list_prod(request):
                 models.When(estado='disponible', then=0),
                 models.When(estado='sin_stock', then=1),
                 models.When(estado='registrado_reciente', then=2),
-                default=3,
+                models.When(estado='ingresado_manual', then=3),  # Añadir el nuevo estado al ordenamiento
+                default=4,
                 output_field=models.IntegerField(),
             ),
             'nombre'
@@ -339,7 +411,8 @@ def list_prod(request):
                 models.When(estado='disponible', then=0),
                 models.When(estado='sin_stock', then=1),
                 models.When(estado='registrado_reciente', then=2),
-                default=3,
+                models.When(estado='ingresado_manual', then=3),  # Añadir el nuevo estado al ordenamiento
+                default=4,
                 output_field=models.IntegerField(),
             ),
             'nombre'
@@ -368,6 +441,7 @@ def list_prod(request):
         'categorias': Categoria.objects.all(),
         'categoria_filtro': categoria_filtro, 
     })
+
 
 
 
@@ -454,11 +528,19 @@ def mod_prod(request, producto_id):
     
     # Verificar que el producto pertenece al negocio del staff
     staff_profile = StaffProfile.objects.get(user=request.user)
-    if producto.almacen.negocio != staff_profile.negocio:
+    negocio = staff_profile.negocio  # Obtener el negocio del usuario
+
+    if producto.almacen.negocio != negocio:
         return HttpResponseForbidden("No tienes permiso para modificar este producto.")
 
+    # Determinar el formulario basado en el tipo de negocio
+    if negocio.is_mayorista:
+        FormularioProducto = ProductoFormMayorista
+    else:
+        FormularioProducto = ProductoFormMinorista
+
     if request.method == 'POST':
-        producto_form = ProductoForm(request.POST, instance=producto)
+        producto_form = FormularioProducto(request.POST, instance=producto)
 
         if producto_form.is_valid():
             producto = producto_form.save()
@@ -470,12 +552,13 @@ def mod_prod(request, producto_id):
 
             return redirect('list_prod')
     else:
-        producto_form = ProductoForm(instance=producto)
+        producto_form = FormularioProducto(instance=producto)
 
     return render(request, 'producto/mod_prod.html', {
         'producto_form': producto_form,
         'producto': producto,
     })
+
 
 
 @login_required
@@ -876,30 +959,43 @@ def licencia_vencida(request):
 # / / / / / / / / / / / / / / / / / #
 #####################################
 #MANEJO DE NEGOCIOS
+#Fx mixta - lista y creación negocio/almacén
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def list_negocios(request):
     negocios = Negocio.objects.all()
 
     if request.method == 'POST':
-        form = NegocioForm(request.POST, request.FILES)
+        form = NegocioForm(request.POST)
         if form.is_valid():
-            form.save()
+            negocio = form.save(commit=True) 
+
+            almacen_direccion = form.cleaned_data['almacen_direccion']
+            Almacen.objects.create(direccion=almacen_direccion, negocio=negocio)
+
+            messages.success(request, 'Negocio y almacén creados exitosamente.')
             return redirect('list_negocios')
+        else:
+            
+            print(f"Errores del formulario (Datos POST): {request.POST}")
+            print(f"Errores del formulario (Errores específicos): {form.errors}")
+            for field, errors in form.errors.items():
+                messages.error(request, f"Error en el campo {field}: {', '.join(errors)}")
     else:
         form = NegocioForm()
 
     return render(request, 'administration/negocio/list_negocios.html', {
         'form': form,
-        'negocios': negocios
+        'negocios': negocios,
     })
+
 
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def mod_negocio(request, negocio_id):
     negocio = get_object_or_404(Negocio, pk=negocio_id)
-    almacen = Almacen.objects.filter(negocio=negocio).first()  # Obtener el almacén asociado
+    almacen = Almacen.objects.filter(negocio=negocio).first() 
 
     if request.method == 'POST':
         form = NegocioForm(request.POST, request.FILES, instance=negocio)
@@ -932,6 +1028,40 @@ def erase_negocio(request, negocio_id):
         return redirect('list_negocios')
 
     return render(request, 'administration/negocio/erase_negocio.html', {'negocio': negocio})
+
+# Método para cambiar el estado del negocio y las cuentas afiliadas
+def cambiar_estado_negocio_y_cuentas(negocio_id, estado):
+    try:
+        negocio = Negocio.objects.get(id=negocio_id)
+        negocio.is_active = estado  # Cambiar el estado del negocio
+        negocio.save()
+
+        # Cambiar el estado de las cuentas afiliadas
+        usuarios_afiliados = User.objects.filter(staffprofile__negocio=negocio)
+        usuarios_afiliados.update(is_active=estado)  # Sincronizar el estado con el negocio
+
+        return True
+    except Negocio.DoesNotExist:
+        return False
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def cambiar_estado_negocio(request, negocio_id):
+    try:
+        negocio = Negocio.objects.get(id=negocio_id)
+        nuevo_estado = not negocio.is_active  # Alternar el estado actual
+        if cambiar_estado_negocio_y_cuentas(negocio_id, nuevo_estado):
+            if nuevo_estado:
+                messages.success(request, 'Negocio y cuentas afiliadas activados.')
+            else:
+                messages.success(request, 'Negocio y cuentas afiliadas inactivados.')
+        else:
+            messages.error(request, 'No se pudo cambiar el estado del negocio.')
+    except Negocio.DoesNotExist:
+        messages.error(request, 'El negocio no existe.')
+
+    return redirect('list_negocios')
+
 
 #####################################
 # / / / / / / / / / / / / / / / / / #

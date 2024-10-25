@@ -16,6 +16,7 @@ handler500 = 'app.views.error_500'
 
 urlpatterns = [
     path('', home, name='home'),
+    path('registrar-producto/', reg_prod, name='reg_prod'),
 
     path('compra/exitosa/<int:compra_id>/', compra_exitosa, name='compra_exitosa'),
     
@@ -25,7 +26,6 @@ urlpatterns = [
     path('carrito/eliminar/<int:item_id>/', eliminar_del_carrito, name='eliminar_del_carrito'),
     path('compra/confirmar/', confirmar_compra, name='confirmar_compra'),
     path('compra/confirmar/invitado/', confirmar_compra_invitado, name='confirmar_compra_invitado'),
-    path('registrar-cliente/', registrar_cliente, name='registrar_cliente'),
 
     path('bodega/operaciones/', operaciones_bodega, name='operaciones_bodega'),
 
@@ -51,11 +51,12 @@ urlpatterns = [
     path('change_password/', change_password, name='change_password'),
     path('password_success/', password_success, name='password_success'),
 
-
-
-    path('negocios/', list_negocios, name='list_negocios'),
+    #Mod cuenta y perfil staff
+    path('negocios/', list_negocios, name='list_negocios'), #Método 2 en 1
     path('negocio/modificar/<int:negocio_id>/', mod_negocio, name='mod_negocio'),
     path('negocio/borrar/<int:negocio_id>/', erase_negocio, name='erase_negocio'),
+    path('negocio/desactivar/<int:negocio_id>/', cambiar_estado_negocio, name='cambiar_estado_negocio'),
+
 
     path('proveedores/agregar/', add_proveedor, name='add_proveedor'),
     path('proveedores/', list_proveedores, name='list_proveedores'),

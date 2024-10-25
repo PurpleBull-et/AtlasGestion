@@ -4,13 +4,6 @@ from django.contrib.auth.models import User
 from django.forms.widgets import DateInput
 from .models import *
 
-# forms.py
-
-from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from django.contrib.auth.models import User
-from .models import StaffProfile
-
 class UserForm(UserCreationForm):
     class Meta:
         model = User
@@ -28,7 +21,7 @@ class UserForm(UserCreationForm):
         disable_username = kwargs.pop('disable_username', False)
         super(UserForm, self).__init__(*args, **kwargs)
         if disable_username:
-            self.fields['username'].disabled = True  # Bloquea el campo si se indica
+            self.fields['username'].disabled = True
  
 
 class AdminProfileForm(forms.ModelForm):
@@ -56,25 +49,49 @@ class CategoriaForm(forms.ModelForm):
         model = Categoria
         fields = ['nombre']
 
-#PRODUCTO
-class ProductoForm(forms.ModelForm):
-    proveedores = forms.ModelMultipleChoiceField(queryset=Proveedor.objects.all(), required=False)
-
-class ProductoForm(forms.ModelForm):
+#PRODUCTO para mayorista y minorista
+class ProductoFormMayorista(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['nombre', 'marca', 'categoria', 'descripcion']  # Campos limitados
+        fields = [
+            'sku', 
+            'nombre', 
+            'marca', 
+            'categoria', 
+            'costo_unitario', 
+            'descuento',       
+        ]
 
     def save(self, commit=True):
         producto = super().save(commit=False)
-        # Solo establecer stock a 0 si el producto es nuevo (es decir, si no tiene un ID)
+        
         if not producto.pk:
-            producto.stock = 0  # Stock por defecto en 0 al crear
-            producto.precio = 0  # Precio por defecto en 0 al crear
+            producto.stock = 0 
+            producto.precio = 0  
         if commit:
             producto.save()
-            self.save_m2m()  # Guardar relaciones many-to-many si las hay
         return producto
+
+class ProductoFormMinorista(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = [
+            'sku', 
+            'nombre', 
+            'marca', 
+            'categoria'
+        ]
+
+    def save(self, commit=True):
+        producto = super().save(commit=False)
+        
+        if not producto.pk:
+            producto.stock = 0  
+            producto.precio = 0 
+        if commit:
+            producto.save()
+        return producto
+
 
 class ActualizarPrecioForm(forms.ModelForm):
     class Meta:
@@ -86,27 +103,6 @@ class ActualizarPrecioForm(forms.ModelForm):
         widgets = {
             'precio': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
         }
-
-
-
-class ImagenProductoForm(forms.ModelForm):
-    class Meta:
-        model = Imagen
-        fields = ['imagen']
-        labels = {
-            'imagen': 'Imagen del Producto',
-        }
-        widgets = {
-            'imagen': forms.ClearableFileInput(attrs={'accept': 'image/*'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # If editing, make the image non-mandatory
-        if self.instance and self.instance.pk:
-            self.fields['imagen'].required = False
-
-
 
 class CarritoProductoForm(forms.ModelForm):
     class Meta:
@@ -139,20 +135,20 @@ class EntradaBodegaForm(forms.ModelForm):
             )
 
 class NegocioForm(forms.ModelForm):
-    almacen_direccion = forms.CharField(label="Dirección del Almacén", max_length=255)
+    almacen_direccion = forms.CharField(max_length=255, required=True, label="Dirección del Almacén")
 
     class Meta:
         model = Negocio
-        fields = ['nombre', 'direccion', 'telefono', 'region', 'provincia', 'logo']
+        fields = ['nombre', 'direccion', 'telefono', 'region', 'provincia', 'rut_empresa', 'is_mayorista','almacen_direccion']
+        
+        widgets = {
+            'is_mayorista': forms.CheckboxInput(),  # checkbox para is_mayorista
+        }
 
     def save(self, commit=True):
-        negocio = super().save(commit=False)
-        if commit:
-            negocio.save()
-
-            Almacen.objects.create(direccion=self.cleaned_data['almacen_direccion'], negocio=negocio)
-        
+        negocio = super().save(commit=commit)
         return negocio
+
 
 
 class ProveedorForm(forms.ModelForm):
