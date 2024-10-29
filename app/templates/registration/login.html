@@ -8,35 +8,61 @@
     <title>Iniciar Sesión</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+ 
 </head>
 <body>
-    <section class="ftco-section">
+
+    
+   {% comment %}  <section class="ftco-section"> {% endcomment %}
         <div class="container">
+            {% comment %}  <div class="text-wrap p-4 p-lg-5 d-flex img" 
+                        style=
+                        "background-image: url({% static 'app/img/logoAtlasNegro.png' %});"
+                        
+                        > {% endcomment %}
+        
+
+   {% comment %}  <img  class="logoLogin" src={% static 'app/img/logoAtlasNegro.png' %}> {% endcomment %}
             <div class="row justify-content-center">
                 <div class="col-md-12">
                     <div class="wrap d-md-flex">
-                        <div class="text-wrap p-4 p-lg-5 d-flex img" style="background-image: url({% static 'app/img/bg.jpg' %});">
+                        {% comment %} IMAGEN DEL LOGIN {% endcomment %}
+                      
+
                             <div class="text w-100">
-                                <h2 class="mb-4">Bienvenido a Atlas Gestión</h2>
-                                <p>Atlas Gestión, la solución integral para administrar y escalar tus negocios de forma segura y eficiente. Con herramientas avanzadas, simplificamos tus operaciones diarias para que puedas concentrarte en lo más importante: el crecimiento de tu empresa.</p>
+                                <h2 class="mb-4">{% comment %} Bienvenido a Atlas Gestión {% endcomment %}</h2>
+                               {% comment %}  <p>Atlas Gestión, la solución integral para administrar y escalar tus negocios de forma segura y eficiente. Con herramientas avanzadas, simplificamos tus operaciones diarias para que puedas concentrarte en lo más importante: el crecimiento de tu empresa.</p> {% endcomment %}
                             </div>
                         </div>
                         <div class="login-wrap p-4 p-md-5">
                             <div class="row justify-content-center py-md-5">
                                 <div class="col-lg-9">
                                     <form action="" method="post" class="signin-form">
-                                        {% csrf_token %}
+                                        {% csrf_token %} 
                                         {{ form|crispy }}
-                                        <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+                                        <a>¿Olvidasrte tu contraseña?</a>
+                                    
+                                        {% comment %} <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button> {% endcomment %}
+                                        <button class="button">
+                                            <span class="button_lg">
+                                                <span class="button_sl"></span>
+                                                <span class="button_text">Iniciar Sesión</span>
+                                            </span>
+                                        </button>
                                     </form>
                                 </div>
                             </div>
+
+                        
+                   
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    {% comment %} </section> {% endcomment %}
 </body>
 </html>
 {% endblock %}

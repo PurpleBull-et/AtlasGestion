@@ -2,40 +2,59 @@
 {% load static %}
 {% block contenido %}
 
-<div class="card">
+{% comment %} <div class="card">
     <div class="row">
         <!-- Sección de productos -->
         <div class="col-md-8 cart">
             <div class="title">
                 <div class="row">
                     <div class="col">
-                        <h4><b>Lista de Productos</b></h4>
+                       
                     </div>
                 </div>
             </div>
-            <ul class="list-unstyled">
-                {% for producto in productos %}
-                <li class="product-item row main align-items-center border-top border-bottom py-3">
-                    <div class="col-2">
-                        <div class="row text-muted">{{ producto.nombre }}</div>
-                    </div>
-                    <div class="col">
-                        <div class="row">{{ producto.descripcion }}</div>
-                    </div>
-                    <div class="col">
-                        <span class="product-price">{{ producto.precio }} CLP</span>
-                    </div>
-                    <div class="col product-actions">
-                        <form method="post" action="{% url 'agregar_al_carrito' producto.producto_id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success">Añadir al carrito</button>
-                        </form>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
+            <ul class="list-unstyled"> {% endcomment %}
 
+       
+            {% comment %} ================== encerrar en un div y ajustar css ================================={% endcomment %}    
+            <h4><b>Lista de Productos</b></h4>
+<div class="card-container">
+   
+    {% for producto in productos %}
+   
+    <div class="card">
+        
+        <div class="card-content">
+            
+           
+                 <h4>{{ producto.nombre }} </h4> 
+                   
+                 <p>{{ producto.descripcion }}</p>
+                  
+                 <p>{{ producto.precio }} CLP</p>
+                 
+                        
+            {% comment %}  <div class="col product-actions"> {% endcomment %}
+                <form method="post" action="{% url 'agregar_al_carrito' producto.producto_id %}">
+                    {% csrf_token %}
+                    {% comment %} <button type="submit" class="botonCarro">Añadir al carrito</button> {% endcomment %}
+                    <button class="button">
+                        <span class="button_lg">
+                            <span class="button_sl"></span>
+                            <span class="button_text">Añadir al carrito</span>
+                        </span>
+                    </button>
+                </form>
+        
+                 
+                        
+         </div> 
+     
+    </div>   
+    {% endfor %} 
+</div>
+
+{% comment %} ====================================================================================== {% endcomment %}      
         <!-- Sección del carrito -->
         <div class="col-md-4 summary">
             <div><h5><b>Resumen del carrito</b></h5></div>
@@ -70,13 +89,19 @@
             </div>
             <form method="post" action="{% url 'confirmar_compra' %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-success w-100 mt-3">Confirmar Compra</button>
+                {% comment %} <button type="submit" class="btn btn-success w-100 mt-3">Confirmar Compra</button> {% endcomment %}
+                <button class="button">
+                    <span class="button_lg">
+                        <span class="button_sl"></span>
+                        <span class="button_text">Confirmar Compra</span>
+                    </span>
+                </button>
             </form>
             {% else %}
             <p>Tu carrito está vacío.</p>
             {% endif %}
         </div>
-    </div>
-</div>
+    {% comment %} </div> {% endcomment %}
+{% comment %} </div> {% endcomment %}
 <script src="{% static 'app/js/carro.js' %}"></script>
 {% endblock %}

@@ -10,7 +10,8 @@ body.dark-mode {
   --green: #37b24d;
   --teal: #20c997;
   --cyan: #18b2c9;
-  --white: #e9ecef; 
+  --white: #16cd16; 
+  --titulos: red;
   --gray: #adb5bd;
   --gray-dark: #495057;
   --primary: #bb86fc;
@@ -23,7 +24,9 @@ body.dark-mode {
   --dark: #121212;
   
   background-color: var(--dark); 
-  color: var(--white); 
+
+  /* titulos */
+  color: var(--titulos); 
 }
 
 body.dark-mode * {
@@ -50,6 +53,7 @@ body.dark-mode .text-wrap,
 body.dark-mode .login-wrap {
   width: 100%;
   color: rgba(255, 255, 255, 0.85);
+  
 }
 
 body.dark-mode .text-wrap {
@@ -59,6 +63,7 @@ body.dark-mode .text-wrap {
 
 body.dark-mode .text-wrap:after {
   background: var(--primary);
+  
   position: absolute;
   top: 0;
   left: 0;
@@ -83,7 +88,9 @@ body.dark-mode .text-wrap:after {
 
 body.dark-mode .text-wrap .text {
   color: rgba(255, 255, 255, 0.8);
+ /*  color: #18b2c9; */
 }
+
 
 body.dark-mode .text-wrap .text h2 {
   font-weight: 700;

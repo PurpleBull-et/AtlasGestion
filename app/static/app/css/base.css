@@ -1,23 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Outfit:wght@100..900&display=swap');
+
+/*navBar=============================*/
 .app-header {
     position: fixed;
     top: 0;
     width: 100%;
-    height: 56px;
-    background-color: #303030;
-    z-index: 1030;
+    height: 66px;
+    padding-top: 10px;
+  /*   background-color: #303030; */
+  /*  background-color: #1499a3; */
+
+  background: rgb(0,0,0);
+  background: linear-gradient(90deg, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 28%, rgba(20,153,163,1) 51%, rgba(0,0,0,1) 77%, rgba(0,0,0,1) 91%);
+
+z-index: 1030;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 15px;
+    -webkit-box-shadow: -1px 7px 5px -3px rgba(0,0,0,0.75);
+    -moz-box-shadow: -1px 7px 5px -3px rgba(0,0,0,0.75);
+    box-shadow: -1px 7px 5px -3px rgba(0,0,0,0.75);
+    /* border-radius: 5px; */
+    border: solid 2px #1f3636;
 }
 
+/*TITULO ATLAS EN EL NAVBAR*/
 .navbar-logo {
-    font-size: 1.25rem;
+    font-size: 3.25rem;
     font-weight: bold;
-    color: white;
+    /* color: rgb(231, 12, 12); */
+   /* color: rgb(247, 250, 248); */
     text-transform: uppercase;
     flex-grow: 1; 
     text-align: center;
+    font-family: "Kalam", cursive;
+    font-weight: 700;
+    font-style: normal;
+    color: white;
+
+}
+
+.navbar-logo:hover{
+    color: white;
 }
 
 .navbar-user {
@@ -90,6 +115,9 @@
     transition: width 0.3s ease; 
     justify-content: flex-start;
     z-index: 1020;
+    border-right: 8px solid #1499a3;
+    /* transition:all .5s ease-in-out; */
+    transition:all 600ms ease-in-out;
 }
 
 @media screen and (min-width: 601px) {
@@ -119,24 +147,29 @@
     padding: 15px 20px;
     text-decoration: none;
     color: white;
-    transition: background-color 0.3s ease;
+    transition: background-color 1.2s ease;
+
 }
 
 .navbar-side a i {
     font-size: 24px;
-    margin-right: 10px;
+    margin-right: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 40px;
-    height: 40px;
+    height: 35px;
     line-height: 40px;
 }
 
 .navbar-side a:hover {
-    background-color: #575757;
-    width: 100%;
-    padding-right: 30px;
+    /* background-color: #d4cac8; */
+    background-color: #1499a3;
+    width: 260px;
+    /* padding-right: 190px; */
+    border: 4px solid #d4cac8;
+    transform: scale(1.1);
+    transition: background-color 1.2s ease;
 }
 
 .navbar-side a .sidebar-text {
@@ -146,9 +179,11 @@
     transform: translateY(-50%);
     white-space: nowrap;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    /* transition: opacity 0.3s ease; */
     z-index: 2;
     pointer-events: none;
+    color: white;
+    transition:all .5s ease-in-out;
 }
 
 .navbar-side.show a .sidebar-text {
@@ -173,7 +208,9 @@
     background-color: transparent;
     border: none;
     display: none; 
-    transition: background-color 0.3s ease;
+   /*  transition: background-color  .3s ease; */
+   transition: all 6000ms ease;
+
 }
 
 @media (max-width: 767px) {
@@ -182,7 +219,9 @@
         position: fixed;
         top: 15px;
         left: 15px; 
-        z-index: 1040; 
+        z-index: 1080; 
+        background-color: rgb(145, 25, 214);
+        
     }
 
     .navbar-side {
@@ -202,7 +241,7 @@
 
 .sidebar-toggle:hover {
     color: #fff;
-    background-color: #00635a;
+    background-color: #c4f123;
 }
 
 .main-content {
@@ -211,6 +250,7 @@
     flex-grow: 1;
     transition: margin-left 0.3s ease; 
     margin-top: 60px;
+    /* border-radius: 50px; */
 }
 
 .navbar-side.show ~ .main-content {
@@ -222,3 +262,129 @@
         margin-left: 0;
     }
 }
+
+
+
+/*BOTON CERRAR SESION==================*/
+/* From Uiverse.io by mrhyddenn */ 
+.CerrarSesion {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    background: none;
+    color: #0f1923;
+    cursor: pointer;
+    position: relative;
+    padding: 8px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 14px;
+    transition: all .15s ease;
+    top: 10px;
+    
+  }
+  
+  .CerrarSesion::before,
+  .CerrarSesion::after {
+    content: '';
+    display: block;
+    position: absolute;
+    right: 0;
+    left: 0;
+    height: calc(50% - 5px);
+    border: 1px solid #7D8082;
+    transition: all .15s ease;
+  }
+  
+  .CerrarSesion::before {
+    top: 0;
+    border-bottom-width: 0;
+  }
+  
+  .CerrarSesion::after {
+    bottom: 0;
+    border-top-width: 0;
+  }
+  
+  .CerrarSesion:active,
+  .CerrarSesion:focus {
+    outline: none;
+  }
+  
+  .CerrarSesion:active::before,
+  .CerrarSesion:active::after {
+    right: 3px;
+    left: 3px;
+  }
+  
+  .CerrarSesion:active::before {
+    top: 3px;
+  }
+  
+  .CerrarSesion:active::after {
+    bottom: 3px;
+  }
+  
+  .CerrarSesion_lg {
+    position: relative;
+    display: block;
+    padding: 10px 20px;
+    color: #fff;
+    background-color: #0f1923;
+    overflow: hidden;
+    box-shadow: inset 0px 0px 0px 1px transparent;
+  }
+  
+  .CerrarSesion_lg::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 2px;
+    background-color: #0f1923;
+  }
+  
+  .CerrarSesion_lg::after {
+    content: '';
+    display: block;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 4px;
+    height: 4px;
+    background-color: #0f1923;
+    transition: all .2s ease;
+  }
+  
+  .CerrarSesion_sl {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: -1px;
+    left: -8px;
+    width: 0;
+    background-color: #ff4655;
+    transform: skew(-15deg);
+    transition: all .2s ease;
+  }
+  
+  .CerrarSesion_text {
+    position: relative;
+  }
+  
+  .CerrarSesion:hover {
+    color: #0f1923;
+  }
+  
+  .CerrarSesion:hover .CerrarSesion_sl {
+    width: calc(100% + 15px);
+  }
+  
+  .CerrarSesion:hover .CerrarSesion_lg::after {
+    background-color: #fff;
+  }
+  

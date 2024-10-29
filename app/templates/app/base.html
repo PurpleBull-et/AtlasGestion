@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   {% comment %} tiutlo de la pestaña {% endcomment %}
     <title>{% block title %}Atlas Management{% endblock title %}</title>
 
     <!-- Font Awesome for Icons -->
@@ -24,19 +25,31 @@
 </head>
 <body>
     <header class="app-header">
-        <a class="navbar-logo" href="#">ATLAS GESTION</a>
+        {% comment %} TITULO PRINCIPAL {% endcomment %}
+        <a class="navbar-logo" href="#"> <img  class="logoLogin" src={% static 'app/img/logoAtlasNegro.png' %} alt="Descripción de la imagen"></a>
+       
         <div class="navbar-user">
             {% if request.user.is_authenticated %}
-                <span>Bienvenido {{ request.user.username }}</span>
+            {% comment %} MENSAJE QUE ACOMPAÑA A LA CATEGORIA DE Usuario {% endcomment %}
+                <span>Bienvenido_{{ request.user.username }}</span>
                 <form method="post" action="{% url 'logout' %}" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger btn-sm">Cerrar sesión</button>
+                   {% comment %}  <button type="submit" class="CerrarSesion">Cerrar sesión</button> {% endcomment %}
+
+                    <button class="CerrarSesion">
+                        <span class="CerrarSesion_lg">
+                            <span class="CerrarSesion_sl"></span>
+                            <span class="CerrarSesion_text">Cerrar sesión</span>
+                        </span>
+                    </button>
+                    
                 </form>
             
         </div>        
-        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">88</button>
             {% endif %}
-            <button id="dark-mode-toggle">Cambiar modo</button>
+            {% comment %} BOTON CAMBIO DE MODO CLARO/OSCURO {% endcomment %}
+            {% comment %} <button id="dark-mode-toggle">🌓</button> {% endcomment %}
     </header>
     
     {% if request.user.is_authenticated %}
@@ -82,6 +95,7 @@
             </a>
             {% endif %}
             <div class="sidebar-logo">LOGO EMPRESA</div>
+            {% comment %} <button type="submit" class="btn btn-danger btn-sm">Cerrar sesión</button> {% endcomment %}
         </div>
     </div>
     {% endif %}
