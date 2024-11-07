@@ -32,19 +32,19 @@
     <tbody>
         {% for negocio in negocios %}
         <tr>
-            <td>{{ negocio.id }}</td>
-            <td>
+            <td data-label="ID">{{ negocio.id }}</td>
+            <td data-label="Logo">
                 {% if negocio.logo %}
                 <img src="{{ negocio.logo.url }}" alt="{{ negocio.nombre }}" width="50" height="50">
                 {% else %}
                 <p>Sin logo</p>
                 {% endif %}
             </td>
-            <td>{{ negocio.nombre }}</td>
-            <td>{{ negocio.direccion }}</td>
-            <td>{{ negocio.telefono }}</td>
-            <td>{{ negocio.almacen_set.first.direccion }}</td> 
-            <td>
+            <td data-label="Nombre">{{ negocio.nombre }}</td>
+            <td data-label="Direccion">{{ negocio.direccion }}</td>
+            <td data-label="Telefono">{{ negocio.telefono }}</td>
+            <td data-label="DirecionAlmacen">{{ negocio.almacen_set.first.direccion }}</td> 
+            <td data-label="Acciones">
                 <a href="{% url 'mod_negocio' negocio.id %}" class="btn btn-warning">Modificar</a>
                 <a href="{% url 'erase_negocio' negocio.id %}" class="btn btn-danger">Eliminar</a>
             </td>

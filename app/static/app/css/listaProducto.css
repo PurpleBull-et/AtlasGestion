@@ -1,0 +1,178 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body{
+    /* background-color: #32322f; */
+    /* background-color: #dfdf78; */
+    font-family: sans-serif;
+}
+.formDos .labelProducto{
+    color: #f6f8f4;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+   font-weight: 500;
+    width: 110px;
+    height: 50px;
+    border: 1px solid #245096;
+}
+.formDos ul{
+list-style-type: none;/*borra el punto*/
+/* width: 180vh; */
+background-color: #73c713;
+}
+.formDos ul li {
+    background-color: #245096;
+}
+.formDos ul li label{
+    text-align: center;
+    /* display: no; */
+    width: 300px;
+    height: 30px;
+   background-color: #1499a3;
+   margin-left: 12%;
+
+}
+.formDos ul li select{
+    text-align: center;
+   transform: translateY(-10px);
+   background-color: #1499a3;
+   width: 130px;
+   height: 50px;
+   border-radius: 10px
+  /*  margin-left: 15%; */
+
+} 
+.table-container{
+    padding: 0 10%;
+    margin: 40px auto 0;
+}
+.heading{
+    font-size: 40px;
+    text-align: center;
+    color: #f1f1f1;
+    margin-bottom: 40px;
+}
+.table{
+    width: 100%;
+    border-collapse: collapse;
+}
+/* .table thead{background-color: #ee2828;} */
+.table thead{background-color: #79d60e;}
+.table thead tr th{
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.35px;
+    color: #FFFFFF;
+    opacity: 1;
+    padding: 12px;
+    vertical-align: top;
+    border: 1px solid #dee2e685;
+}
+.table tbody tr td{
+    font-size: 14px;
+    letter-spacing: 0.35px;
+    font-weight: normal;
+    color: #f1f1f1;
+    /* background-color: #3c3f44; */
+    background-color: #245096;
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #dee2e685;
+}
+.table tbody tr td:hover{
+    color: #FFFFFF;
+}
+.table tbody tr td .btn{
+    width: 70px;
+    text-decoration: none;
+    line-height: 35px;
+    display: inline-block;
+    margin-bottom: 5px;
+    background-color: #FF1046;
+    font-weight: medium;
+    color: #FFFFFF;
+    text-align: center;
+    /* vertical-align: middle; */
+    user-select: none;
+    border: 1px solid transparent;
+    font-size: 14px;
+    opacity: 1;
+    background-color: #1499a3;
+}
+@media(max-width: 760px){
+    .table thead{
+        display: none;
+    }
+    .table, .table tbody, .table tr, .table td{
+        display: block;
+        width: 100%;
+        /* right: 50px; */
+
+    }
+ /*    .table, .table tbody, .table tr, .table td, .btn{
+        display:inline-block;
+        width: 100%;
+    } */
+    .table tr{
+        margin-bottom: 15px;
+    }
+    .table tbody tr td{
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+    .table td:before{
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 50%;
+        padding-left: 15px;
+        font-weight: 600;
+        font-size: 14px;
+        text-align: left;
+    }
+}
+@media(max-width: 322px){
+    .table thead{
+        display: none;
+    }
+    .table, .table tbody, .table tr, .table td{
+        display: block;
+        width: 148%;
+        /* right: 50px; */
+
+    }
+ /*    .table, .table tbody, .table tr, .table td, .btn{
+        display:inline-block;
+        width: 100%;
+    } */
+    .table tr{
+        margin-bottom: 15px;
+    }
+    .table tbody tr td{
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+    .table td:before{
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 50%;
+        padding-left: 15px;
+        font-weight: 600;
+        font-size: 14px;
+        text-align: left;
+    }
+}
+/* button{
+    width: 200px;
+    background-color: #dee2e685;
+} */
+
+/* .d-flex{
+    width: 100px;
+    display: flex;
+    background-color: #FF1046;
+} */

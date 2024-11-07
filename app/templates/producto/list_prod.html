@@ -1,24 +1,26 @@
 {% extends 'app/base.html' %}
 {% block contenido %}
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Lista de Productos</h1>
-        <a href="{% url 'add_prod' %}" class="btn btn-success">Agregar Producto</a>
-    </div>
+{% comment %} <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4"> {% endcomment %}
+        <h1>Lista de productos</h1>
+        <a href="{% url 'add_prod' %}" class="btn">Agregar Producto</a>
+    {% comment %} </div> {% endcomment %}
 
-    <div class="mb-4">
-        <form method="get" class="d-flex align-items-center">
-            <label for="estado" class="me-2">Filtrar por estado:</label>
-            <select name="estado" id="estado" class="form-select w-auto me-3" onchange="this.form.submit();">
+   {% comment %}  <div class="mb-4"> {% endcomment %}
+        <form method="get" class="formDos">
+            <ul>
+                <li>
+            <label for="estado" class="labelProducto" >Filtrar por estado:</label>
+            <select name="estado" id="estado" class="" onchange="this.form.submit();">
                 <option value="">Todos</option>
                 <option value="disponible" {% if estado_filtro == 'disponible' %}selected{% endif %}>Disponible</option>
                 <option value="sin_stock" {% if estado_filtro == 'sin_stock' %}selected{% endif %}>Sin Stock</option>
                 <option value="registrado_reciente" {% if estado_filtro == 'registrado_reciente' %}selected{% endif %}>Nuevo</option>
             </select>
 
-            <label for="categoria" class="me-2">Filtrar por categoría:</label>
-            <select name="categoria" id="categoria" class="form-select w-auto me-3" onchange="this.form.submit();">
+            <label for="categoria" class="labelProducto">Filtrar por categoría:</label>
+            <select name="categoria" id="categoria" class="" onchange="this.form.submit();">
                 <option value="">Todas</option>
                 {% for categoria in categorias %}
                     <option value="{{ categoria.id }}" {% if categoria_filtro == categoria.id %}selected{% endif %}>
@@ -29,22 +31,24 @@
             
 
             {% if request.user.is_superuser %}
-            <label for="negocio" class="me-2">Filtrar por negocio:</label>
-            <select name="negocio" id="negocio" class="form-select w-auto" onchange="this.form.submit();">
-                <option value="">Todos los negocios</option>
+            <label for="negocio" class="labelProducto">Filtrar por negocio:</label>
+            <select name="negocio" id="negocio" class="" onchange="this.form.submit();">
+                <option value="">Todos</option>
                 {% for negocio in negocios %}
                     <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>
                         {{ negocio.nombre }}
                     </option>
                 {% endfor %}
             </select>
+        </li>
+        </ul>
             {% endif %}
         </form>
-    </div>
+  {% comment %}   </div> {% endcomment %}
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead class="table-dark">
+    <div class="table-container">
+        <table class="table">
+            <thead >
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
@@ -60,19 +64,19 @@
             <tbody>
                 {% for producto in productos %}
                     <tr class="{% if producto.estado == 'sin_stock' %}table-danger{% elif producto.estado == 'registrado_reciente' %}table-warning {% else %}table-success{% endif %}">
-                        <td>{{ producto.producto_id }}</td>
-                        <td>{{ producto.nombre }}</td>
-                        <td>{{ producto.marca }}</td>
-                        <td>{{ producto.categoria }}</td>
-                        <td>{{ producto.precio }}</td>
-                        <td>
+                        <td data-label="ID">{{ producto.producto_id }}</td>
+                        <td data-label="Nombre">{{ producto.nombre }}</td>
+                        <td data-label="Marca">{{ producto.marca }}</td>
+                        <td data-label="Categoria">{{ producto.categoria }}</td>
+                        <td data-label="Precio">{{ producto.precio }}</td>
+                        <td data-label= "Stock">
                             {% if producto.stock > 0 %}
                                 {{ producto.stock }}
                             {% else %}
                                 <span class="text-danger">Sin Stock</span>
                             {% endif %}
-                        </td>
-                        <td>
+                        </td >
+                        <td data-label="Estado">
                             {% if producto.estado == 'disponible' %}
                                 <span class="badge bg-success">Disponible</span>
                             {% elif producto.estado == 'sin_stock' %}
@@ -81,17 +85,17 @@
                                 <span class="badge bg-warning">Nuevo</span>
                             {% endif %}
                         </td>
-                        <td>{{ producto.descripcion }}</td>
-                        <td>
-                            <a href="{% url 'mod_prod' producto.producto_id %}" class="btn btn-primary btn-sm">Editar</a>
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#precioModal{{ producto.producto_id }}" class="btn btn-info btn-sm">Asignar Precio</a>
+                        <td data-label="Descripcion">{{ producto.descripcion }}</td>
+                        <td data-label="Acciones">
+                            <a href="{% url 'mod_prod' producto.producto_id %}" class="btn">Editar</a>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#precioModal{{ producto.producto_id }}" class="btn btn-info btn-sm">Asignar$</a>
 
                             <!-- Modal para actualizar precio -->
                             <div class="modal fade" id="precioModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="precioModalLabel{{ producto.producto_id }}" aria-hidden="true">
-                                <div class="modal-dialog">
+                                <div class="modal-dialog" style="color:black">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="precioModalLabel{{ producto.producto_id }}">Asignar Precio a {{ producto.nombre }}</h5>
+                                            <h5 class="modal-title" id="precioModalLabel{{ producto.producto_id }}">Asignar Precio : _{{ producto.nombre }}</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <form method="POST" action="{% url 'actualizar_precio_prod' producto.producto_id %}">
@@ -115,7 +119,7 @@
                             <a href="#" data-bs-toggle="modal" data-bs-target="#devolverModal{{ producto.producto_id }}" class="btn btn-warning btn-sm">Devolver</a>
 
                             <div class="modal fade" id="devolverModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="devolverModalLabel" aria-hidden="true">
-                                <div class="modal-dialog">
+                                <div class="modal-dialog" style="color:black">
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title" id="devolverModalLabel">Devolver Producto - {{ producto.nombre }}</h5>
@@ -135,7 +139,7 @@
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <button type="submit" class="btn btn-primary">Devolver</button>
+                                                <button type="submit" class="btn">Devolver</button>
                                             </div>
                                         </form>
                                     </div>

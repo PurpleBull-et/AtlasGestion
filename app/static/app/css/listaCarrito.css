@@ -1,0 +1,174 @@
+
+* {
+    box-sizing: border-box;
+    
+  }
+  .header {
+    border: 1px solid red;
+    padding: 15px;
+  }
+  /* menu izquierdo */
+  .menu {
+    display: flex;
+    flex-direction: column;
+      width: 60%;
+      float: left;
+      padding: 20px;
+      border: 1px solid red;
+      height: 580px;
+    }
+    .menu .scroll-box{
+      /* Estilos para la caja con scroll horizontal */
+    .scroll-box {
+      display: flex; /* Ordenar elementos en fila */
+      flex-direction: column; /* Ordenar en columna */
+      height: 100%; /* Llenar la altura del contenedor */
+      overflow-x: auto; /* Habilitar scroll horizontal */
+      background-color: #791c1c; /* Color de fondo */
+      padding: 10px; /* Espacio interior */
+      box-sizing: border-box; /* Incluye el padding y borde en el tamaño */
+    }
+    }
+    
+    
+  
+  
+  /* Estilos para el contenedor */
+  .container {
+    
+    /* width: 620px; */ /* Ancho del contenedor */
+    height: 450px; /* Alto del contenedor */
+   /*  border: 2px solid #000;  *//* Borde de la caja */
+    overflow: hidden; /* Ocultar cualquier desbordamiento */
+    display: flex;
+  flex-direction: column;
+    width: 100%;
+  }
+  
+  /* Estilos para la caja con scroll horizontal */
+  .scroll-box {
+    display: flex; /* Ordenar elementos en fila */
+    flex-direction: column; /* Ordenar en columna */
+    height: 100%; /* Llenar la altura del contenedor */
+    overflow-x: auto; /* Habilitar scroll horizontal */
+    background-color: #e9d6d6; /* Color de fondo */
+    padding: 10px; /* Espacio interior */
+    box-sizing: border-box; /* Incluye el padding y borde en el tamaño */
+  }
+  
+  /* Estilos para los elementos */
+  .item {
+    
+    /* flex: 0 0 100px; /* Alto fijo para los elementos */ 
+    width: 99%; /* Ancho fijo para los elementos */
+    
+    background-color: #90a391; /* Color de fondo */
+    color: white; /* Color del texto */
+    margin: 5px; /* Margen entre elementos */
+    font-size: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center; /* Centrar texto */ 
+  }
+.item li{
+    display: flex;
+    background: rgba(255, 255, 255, .1);
+    padding: 10px 20px;
+    color: #fff;
+    margin: 5px 0;
+    transition: .5s;
+    font-size: 10px;
+}
+.item li span:nth-child(1){
+    width: 300px;
+}
+.item li span:nth-child(2){
+    width: 200px;
+}
+.item span:nth-child(3){
+    width: 100px;
+    /* text-align: right; */
+}
+.item li span:nth-child(4){
+    width: 70px;
+   /*  text-align: right; */
+}
+  .item:hover{
+    background-color: #4bc1c5;
+  }
+  
+  .main {
+/*width: 40%;
+    float: left;*/
+    /* padding: 15px; */ 
+    border: 1px solid red;
+    height: 580px;
+  
+  }
+   .main .containerCarrito{
+    border: #791c1c solid 2px;
+    height: 200px;
+    width: 500px;
+   }
+  
+
+  .main .containerCarrito-box .item li span{
+    font-size: px;
+    height: 50vh;
+    transition: all ease .5s;
+  }
+    /*
+  .main .container .scroll-box .item button{
+    width: 65px;
+    font-size: 10px; */
+    /* margin-bottom: 10px; 
+  }
+  
+  
+  
+  
+  .main .container .scroll-box .item:hover{
+    background-color: #4bc1c5;
+    transform: scale(1.1);
+  
+  }
+  
+  .main .cajaInferior{
+    transform: translateY(2px);
+  width: 100%;
+  float: left;
+  padding: 15px;
+  border: 1px solid red;
+  height: 320px;
+  
+  }
+  .main .cajaInferior .cajaInterna{
+    transform: translateY(2px);
+  width: 100%;
+  float: left;
+  padding: 15px;
+  border: 1px solid red;
+  height: 290px;
+  
+  }
+   .main .cajaInferior .cajaInterna .item{
+  right: 150px;
+  width: 120px;
+  display: inline-block;
+  
+  }
+  .main .cajaInferior .cajaInterna .cajaBotones{
+    height: 150px;
+    width: 100%;
+    display: inline-block;
+    border: 1px solid red;
+    
+    }
+   .main .cajaInferior .cajaInterna .cajaBotones button{
+    right: 50px;
+    width: 220px;
+    margin: 5px;
+    
+    }
+   */

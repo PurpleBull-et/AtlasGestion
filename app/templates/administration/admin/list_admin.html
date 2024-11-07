@@ -15,11 +15,11 @@
     <tbody>
         {% for admin in admin_list %}
         <tr>
-            <td>{{ admin.id }}</td>
-            <td>{{ admin.username }}</td>
-            <td>{{ admin.first_name }} {{ admin.last_name }}</td>
-            <td>{{ admin.email }}</td>
-            <td>
+            <td data-label="ID">{{ admin.id }}</td>
+            <td data-label="Nombre Usuario">{{ admin.username }}</td>
+            <td data-label="Nombre Completo">{{ admin.first_name }} {{ admin.last_name }}</td>
+            <td data-label="Correo">{{ admin.email }}</td>
+            <td data-label="Acciones">
                 <!-- Botón para modificar perfil -->
                 <a href="{% url 'mod_admin_profile' admin.id %}" class="btn btn-info">Perfil</a>
                 <!-- Botón para modificar cuenta -->

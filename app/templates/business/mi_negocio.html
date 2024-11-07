@@ -63,17 +63,17 @@
         <tbody>
             {% for compra in compras %}
             <tr>
-                <td>{{ compra.id }}</td>
-                <td>{{ compra.fecha }}</td>
-                <td>{{ compra.total }}</td>
-                <td>
+                <td data-label="ID Compra">{{ compra.id }}</td>
+                <td data-label="Fecha">{{ compra.fecha }}</td>
+                <td data-label="Total">{{ compra.total }}</td>
+                <td data-label="Productos">
                     <ul>
                         {% for detalle in compra.detalles.all %}
                         <li>{{ detalle.producto.nombre }} ({{ detalle.cantidad }} x {{ detalle.precio_unitario }})</li>
                         {% endfor %}
                     </ul>
                 </td>
-                <td>
+                <td data-label="Acciones">
                     <a href="#" class="btn btn-warning btn-sm">Anular Boleta</a>
                 </td>
             </tr>

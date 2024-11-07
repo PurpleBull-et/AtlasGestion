@@ -1,0 +1,120 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body{
+    font-family: sans-serif;
+    display: flex;
+    min-height: 100vh;
+   /*  background-color: rgb(246, 236, 255); */
+}
+.form{
+    transform: translateY(50px);
+    color:#faf8f8;
+    background-color: #030303;
+    margin: auto;
+    width: 90%;
+    max-width: 400px;
+    padding: 4.5em 3em;
+    border-radius: 10px;
+    box-shadow: 0 5px 10px -5px rgb(0 0 0 -30%);
+    text-align: center;
+    border: 4px solid rgb(70, 141, 141);
+    transition: all ease .5s;
+    -webkit-box-shadow: 10px 10px 16px 3px rgba(0,0,0,0.75);
+    -moz-box-shadow: 10px 10px 16px 3px rgba(0,0,0,0.75);
+    box-shadow: 10px 10px 16px 3px rgba(0,0,0,0.75);
+} 
+.form:hover{
+    /* transform: scale(.3em); */
+    border-radius: 0px 55px 0px 55px;
+-moz-border-radius: 0px 55px 0px 55px;
+-webkit-border-radius: 0px 55px 0px 55px;
+border: 4px solid rgb(70, 141, 141);
+}
+
+.form_title{
+    font-size: 3rem;
+    margin-bottom: .5rem;
+}
+.form_container{
+    margin-top: 3em;
+    display: grid;
+    gap: 2.5em;
+}
+.form_group{
+    position: relative;
+    --color: #5757577e;
+}
+.form_input{
+    width: 100%;
+    background:#b44b4b ;
+    font-size: 1rem;
+    padding: .6em .3em;
+    border: none;
+    outline: none;
+    border-bottom: 1px solid var(--color);
+}
+
+.form_input:not(:placeholder-shown)
+{
+    color: #5757577e;
+}
+
+
+.form_input:focus + .form_label,
+.form_input:not(:placeholder-shown) + .form_label
+{
+    transform: translateY(-12px) scale(.7);
+    transform-origin: left top;
+    color: blue;
+}
+.form_label{
+    color: var(--color);
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    left: 5px;
+    transform: translateY(10px);
+    transition: transform .5s, color .3s;
+}
+/* .form_submit{
+    background-color: aqua;
+    color: #faf8f8;
+    font-family: sans-serif;
+    font-weight: 300;
+    font-size: 1rem;
+    padding: .8em 0;
+    border: none;
+    border-radius: .5em;
+} */
+.form_line{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color:  blue; ;
+    transform: scale(0);
+    transform: left bottom;
+    transition: transform .4s;
+}
+.form_input:focus ~ .form_line,
+.form_input:not(:placeholder-shown) ~ .form_line
+{
+    transform: scale(1);
+}
+
+@media (max-width){
+    .form_title{
+        font-size: 1.8rem;
+    }
+}
+
+/* ojitoooo*/
+.bx{
+    font-size: 30px;
+    cursor: pointer;
+    transform: translate(180px, -4rem);
+}
