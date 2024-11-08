@@ -43,13 +43,24 @@ class StaffProfileForm(forms.ModelForm):
             'negocio': 'Negocio',
         }
 
-
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
         fields = ['nombre']
 
+class MarcaForm(forms.ModelForm):
+    class Meta:
+        model = Marca
+        fields = ['nombre']
+
+class TipoProductoForm(forms.ModelForm):
+    class Meta:
+        model = TipoProducto
+        fields = ['tipo', 'nombre']
+
+
 #PRODUCTO para mayorista y minorista
+# En forms.py
 class ProductoFormMayorista(forms.ModelForm):
     class Meta:
         model = Producto
@@ -58,19 +69,22 @@ class ProductoFormMayorista(forms.ModelForm):
             'nombre', 
             'marca', 
             'categoria', 
-            'costo_unitario', 
-            'descuento',       
+            'precio',           
+            'precio_mayorista',   
+            'descuento', 
+            'descuento_mayorista'
         ]
 
     def save(self, commit=True):
         producto = super().save(commit=False)
         
         if not producto.pk:
-            producto.stock = 0 
+            producto.stock = 0  
             producto.precio = 0  
         if commit:
             producto.save()
         return producto
+
 
 class ProductoFormMinorista(forms.ModelForm):
     class Meta:
@@ -155,3 +169,18 @@ class ProveedorForm(forms.ModelForm):
     class Meta:
         model = Proveedor
         fields = ['nombre', 'rut_empresa', 'telefono', 'direccion']
+
+
+class ProductoFormBoleta(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['nombre', 'marca', 'categoria', 'precio', 'stock']
+        widgets = {
+            'marca': forms.Select(attrs={'class': 'form-control'}),
+            'categoria': forms.Select(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'precio': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+        }
+
+

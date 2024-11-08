@@ -48,27 +48,46 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+class Marca(models.Model):
+    id = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=100, unique=True)
+    negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE, related_name='marcas')
 
+    def __str__(self):
+        return self.nombre
 
-# En el archivo models.py
+class TipoProducto(models.Model):
+    TIPO_CLASIFICACION_CHOICES = [
+        ('unidad', 'Unidad de Medida'),    # Para litros, cm, kg, etc.
+        ('talla', 'Talla de Ropa'),        # Para S, M, L, XL, etc.
+    ]
+    
+    tipo = models.CharField(max_length=50, choices=TIPO_CLASIFICACION_CHOICES)
+    nombre = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return f"{self.get_tipo_display()}: {self.nombre}"
+
 class Producto(models.Model):
     producto_id = models.AutoField(primary_key=True)
-    sku = models.CharField(max_length=50, unique=True, null=True, blank=True)  # SKU para productos mayoristas
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
-    ESTADO_CHOICES = [
+    sku = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    categoria = models.ForeignKey('Categoria', on_delete=models.SET_NULL, null=True, blank=True)
+    marca = models.ForeignKey('Marca', on_delete=models.SET_NULL, null=True, blank=True)
+    tipo = models.ForeignKey('TipoProducto', on_delete=models.SET_NULL, null=True, blank=True)
+    nombre = models.CharField(max_length=100)
+    precio = models.IntegerField(default=0)  # Precio unitario minorista
+    precio_mayorista = models.IntegerField(null=True, blank=True)  # Precio especial mayorista
+    descuento = models.IntegerField(null=True, blank=True)  # Descuento minorista en porcentaje
+    descuento_mayorista = models.IntegerField(null=True, blank=True)  # Descuento mayorista en porcentaje
+    stock = models.IntegerField(default=0)
+    almacen = models.ForeignKey('Almacen', on_delete=models.CASCADE, null=True, blank=True)
+    estado = models.CharField(max_length=20, choices=[
         ('registrado_reciente', 'Registrado Reciente'),
         ('disponible', 'Disponible'),
         ('sin_stock', 'Sin Stock'),
-        ('ingresado_manual', 'Ingresado Manual'),
-    ]
-    nombre = models.CharField(max_length=100)
-    marca = models.CharField(max_length=50)
-    precio = models.IntegerField(default=0)
-    costo_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Solo para mayoristas
-    descuento = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)  # Solo para mayoristas
-    stock = models.IntegerField(default=0)
-    almacen = models.ForeignKey('Almacen', on_delete=models.CASCADE, null=True, blank=True)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='registrado_reciente')
+        ('ingresado_manual', 'Ingresado Manual')
+    ], default='registrado_reciente')
 
     def __str__(self):
         return self.nombre
@@ -147,7 +166,35 @@ class Carrito(models.Model):
     productos = models.ManyToManyField(Producto, through='CarritoProducto')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     total = models.IntegerField(default=0)  
+    tipo = models.CharField(max_length=10, choices=[('boleta', 'Boleta'), ('factura', 'Factura')])  
 
+    def actualizar_total(self):
+        subtotal = 0
+        descuento_total = 0
+        iva_total = 0
+
+        for item in self.carritoproducto_set.all():
+            
+            descuento = item.producto.descuento / 100  # Convertir el porcentaje a decimal
+            precio_descuento = item.precio_unitario * (1 - descuento)
+            
+            # Calcular subtotal acumulado
+            subtotal += precio_descuento * item.cantidad
+            
+            # Acumular el total de descuento y el IVA
+            descuento_total += (item.precio_unitario - precio_descuento) * item.cantidad
+            iva_total += precio_descuento * item.cantidad * 0.19  # 19% de IVA
+
+        # Asignar valores redondeados y asegurarse de que no sean None
+        self.subtotal = round(subtotal) if subtotal else 0
+        self.descuento_total = round(descuento_total) if descuento_total else 0
+        self.iva_total = round(iva_total) if iva_total else 0
+        self.total = round(subtotal + iva_total) if (subtotal + iva_total) else 0
+        self.save()
+
+
+
+        
     def __str__(self):
         return f'Carrito de {self.usuario.username}'
 
@@ -157,6 +204,7 @@ class CarritoProducto(models.Model):
     carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
+    precio_unitario = models.IntegerField()  
 
     def total_precio(self):
         return self.cantidad * self.producto.precio
@@ -172,6 +220,16 @@ class Compra(models.Model):
     total = models.IntegerField()  
     correo = models.EmailField(null=True, blank=True) 
     nombre_staff = models.CharField(max_length=255, null=True, blank=True)
+    medio_pago = models.CharField(max_length=20, choices=[
+        ('transferencia', 'Transferencia Bancaria'),
+        ('tarjeta', 'Tarjeta de Crédito o Débito'),
+        ('efectivo', 'Efectivo')
+    ], default='efectivo')
+    glosa = models.TextField(null=True, blank=True)
+    subtotal = models.IntegerField(default=0)  
+    descuento_total = models.IntegerField(default=0) 
+    iva_total = models.IntegerField(default=0) 
+    
 
     def __str__(self):
         return f'Compra #{self.id} - {self.usuario}'

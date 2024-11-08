@@ -83,10 +83,10 @@ WSGI_APPLICATION = 'atlasManagement.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'ddbb_atlas',
+        'NAME': 'ddbb_atlas1',
         'USER': 'sa',
-        'PASSWORD': 'asdasdqweqwe',
-        'HOST': 'DESKTOP-RDDBT2K\SQLEXPRESS',
+        'PASSWORD': 'qweqweqwe123123',
+        'HOST': 'AlanPC\SQLEXPRESS',
         'PORT': '',
 
         'OPTIONS': {

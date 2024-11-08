@@ -25,63 +25,266 @@ def es_ajax(request):
 
 @login_required
 def home(request):
-    palabra_clave = request.GET.get('buscar', '')  # Filtro por palabra clave, vacío por defecto
-    categoria_filtro = request.GET.get('categoria', None)  # Para el filtro por categoría
-    negocio_filtro = request.GET.get('negocio', None)  # Para el filtro por negocio (solo admin)
+    return render(request, 'app/home.html', {})
 
-    # Si el usuario es superusuario (admin), puede ver todos los productos
+def es_ajax(request):
+    return request.headers.get('x-requested-with') == 'XMLHttpRequest'
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+# BOLETA
+@login_required
+def boleta(request):
+    palabra_clave = request.GET.get('buscar', '')
+    categoria_filtro = request.GET.get('categoria', None)
+    negocio_filtro = request.GET.get('negocio', None)
+
     if request.user.is_superuser:
-        productos = Producto.objects.exclude(precio=0)  # Excluir productos con precio 0
+        productos = Producto.objects.exclude(precio=0)
+        categorias = Categoria.objects.all()
+        marcas = Marca.objects.all()
+        proveedores = Proveedor.objects.all()
+        negocios = Negocio.objects.all()
     else:
-        # Los usuarios staff solo ven los productos de su negocio
         staff_profile = StaffProfile.objects.get(user=request.user)
         productos = Producto.objects.filter(almacen__negocio=staff_profile.negocio).exclude(precio=0)
+        categorias = Categoria.objects.filter(negocio=staff_profile.negocio)
+        marcas = Marca.objects.filter(negocio=staff_profile.negocio)
+        proveedores = Proveedor.objects.filter(negocio=staff_profile.negocio)
+        negocios = None
 
-    # Filtro por palabra clave (en nombre o descripción)
     if palabra_clave:
-        productos = productos.filter(
-            Q(nombre__icontains=palabra_clave) |
-            Q(descripcion__icontains=palabra_clave)
-        )
+        productos = productos.filter(Q(nombre__icontains=palabra_clave))
 
-    # Filtro por categoría
     if categoria_filtro and categoria_filtro.isdigit():
         productos = productos.filter(categoria_id=int(categoria_filtro))
 
-    # Filtro por negocio (solo para administradores)
     if request.user.is_superuser and negocio_filtro and negocio_filtro.isdigit():
         productos = productos.filter(almacen__negocio_id=int(negocio_filtro))
 
-    # Obtener el carrito del usuario
-    carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
+    carrito, _ = Carrito.objects.get_or_create(usuario=request.user, tipo="boleta")
+    carrito.actualizar_total()
 
-    # Si es una solicitud AJAX, devolvemos solo el HTML de los productos filtrados
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        html = ''
-        for producto in productos:
-            html += f'''
-            <li class="product-item row main align-items-center border-top border-bottom py-3">
-                <div class="col-2">
-                    <div class="row text-muted">{producto.nombre}</div>
-                </div>
-                <div class="col">
-                    <div class="row">{producto.descripcion}</div>
-                </div>
-                <div class="col">
-                    <span class="product-price">{producto.precio} CLP</span>
-                </div>
-                <div class="col product-actions">
-                    <form method="post" action="/carrito/agregar/{producto.producto_id}/">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="{csrf.get_token(request)}">
-                        <button type="submit" class="btn btn-success">Añadir al carrito</button>
-                    </form>
-                </div>
-            </li>
-            '''
-        return JsonResponse({'html': html})
+    
+    return render(request, 'caja/boleta.html', {
+        'productos': productos,
+        'carrito_items': carrito.carritoproducto_set.all(),
+        'carrito_subtotal': carrito.subtotal,
+        'carrito_descuento_total': carrito.descuento_total,
+        'carrito_iva': carrito.iva_total,
+        'carrito_total': carrito.total,
+        'categorias': categorias,
+        'marcas': marcas,
+        'proveedores': proveedores,
+        'negocios': negocios,
+        'categoria_filtro': categoria_filtro,
+        'negocio_filtro': negocio_filtro,
+        'palabra_clave': palabra_clave,
+    })
 
-    # Renderizado normal para solicitudes no AJAX
-    return render(request, 'app/home.html', {
+
+@login_required
+def agregar_al_carrito_boleta(request, producto_id):
+    producto = get_object_or_404(Producto, producto_id=producto_id)
+    carrito, _ = Carrito.objects.get_or_create(usuario=request.user, tipo="boleta")
+
+    carrito_producto, created = CarritoProducto.objects.get_or_create(
+        carrito=carrito,
+        producto=producto,
+        defaults={'cantidad': 1, 'precio_unitario': producto.precio}
+    )
+
+    if not created:
+        carrito_producto.cantidad += 1
+    carrito_producto.save()
+    carrito.actualizar_total()
+    return redirect('boleta')
+
+@require_POST
+@login_required
+def eliminar_del_carrito_boleta(request, item_id):
+    carrito_producto = get_object_or_404(CarritoProducto, id=item_id, carrito__usuario=request.user, carrito__tipo="boleta")
+    carrito_producto.delete()
+    carrito_producto.carrito.actualizar_total()
+    return redirect('boleta')
+
+@login_required
+def confirmar_compra_boleta(request):
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+        correo = request.POST.get('correo', '').strip()
+        medio_pago = request.POST.get('medio_pago', '')
+
+        carrito = get_object_or_404(Carrito, usuario=request.user, tipo="boleta")
+        carrito_items = carrito.carritoproducto_set.all()
+
+        if carrito_items:
+            perfil_cliente, _ = PerfilClientes.objects.get_or_create(correo=correo) if correo else (None, None)
+
+            # Calcular subtotal, descuentos y IVA
+            subtotal = sum(item.producto.precio * item.cantidad for item in carrito_items)
+            descuento_total = sum(item.producto.precio * item.cantidad * item.producto.descuento / 100 for item in carrito_items)
+            iva_total = (subtotal - descuento_total) * 0.19
+            total = subtotal - descuento_total + iva_total
+
+            # Crear la instancia de compra con los valores calculados
+            compra = Compra.objects.create(
+                usuario=request.user,
+                subtotal=subtotal,
+                descuento_total=descuento_total,
+                iva_total=iva_total,
+                total=total,
+                nombre_staff=request.user.get_full_name(),
+                correo=perfil_cliente.correo if perfil_cliente else None,
+                medio_pago=medio_pago
+            )
+
+            # Procesar cada item en el carrito
+            for item in carrito_items:
+                producto = item.producto
+                if producto.stock >= item.cantidad:
+                    producto.stock -= item.cantidad
+                    producto.save()
+
+                    DetalleCompra.objects.create(
+                        compra=compra,
+                        producto=producto,
+                        cantidad=item.cantidad,
+                        precio_unitario=producto.precio
+                    )
+                else:
+                    messages.error(request, f"No hay suficiente stock para {producto.nombre}.")
+                    return redirect('boleta')
+
+            # Limpiar el carrito después de la compra
+            carrito.carritoproducto_set.all().delete()
+            carrito.actualizar_total()
+            messages.success(request, 'La compra ha sido confirmada.')
+            return redirect('compra_exitosa_boleta', compra_id=compra.id)
+        else:
+            messages.warning(request, 'El carrito está vacío.')
+            return redirect('boleta')
+
+
+
+@require_POST
+@login_required
+def restar_producto_boleta(request, producto_id):
+    producto = get_object_or_404(Producto, producto_id=producto_id)
+    carrito = get_object_or_404(Carrito, usuario=request.user, tipo="boleta")
+    carrito_producto = get_object_or_404(CarritoProducto, carrito=carrito, producto=producto)
+
+    if carrito_producto.cantidad > 1:
+        carrito_producto.cantidad -= 1
+        carrito_producto.save()
+    else:
+        carrito_producto.delete()
+
+    carrito.actualizar_total()    # Actualizar el total del carrito después de restar
+    return redirect('boleta')
+
+@login_required
+@permission_required('app.add_producto', raise_exception=True)
+def reg_prod_boleta(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        marca_id = request.POST.get('marca')
+        categoria_id = request.POST.get('categoria')
+        stock = int(request.POST.get('stock', 0))
+        precio = int(request.POST.get('precio', 0))
+
+        almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()
+
+        producto = Producto.objects.create(
+            nombre=nombre,
+            marca_id=marca_id,
+            categoria_id=categoria_id,
+            stock=stock,
+            precio=precio,
+            almacen=almacen,
+            estado='ingresado_manual',
+            descuento=0
+        )
+
+        carrito, _ = Carrito.objects.get_or_create(usuario=request.user, tipo="boleta")
+        carrito_producto, created = CarritoProducto.objects.get_or_create(
+            carrito=carrito,
+            producto=producto,
+            defaults={'cantidad': 1, 'precio_unitario': producto.precio}
+        )
+        if not created:
+            carrito_producto.cantidad += 1
+        carrito_producto.save()
+
+        carrito.actualizar_total()
+        messages.success(request, f'El producto {producto.nombre} ha sido registrado y agregado al carrito de boleta.')
+        return redirect('boleta')
+
+    marcas = Marca.objects.filter(negocio=staff_profile.negocio)
+    categorias = Categoria.objects.filter(negocio=staff_profile.negocio)
+
+    return render(request, 'caja/boleta.html', {
+        'marcas': marcas,
+        'categorias': categorias
+    })
+
+
+@login_required
+@permission_required('app.change_producto', raise_exception=True)
+def actualizar_descuento_boleta(request, producto_id):
+    producto = get_object_or_404(Producto, producto_id=producto_id)
+    
+    if request.method == 'POST':
+        nuevo_descuento = request.POST.get('descuento', 0)  
+        
+        if nuevo_descuento:
+            producto.descuento = int(nuevo_descuento)
+        
+        producto.save()
+        messages.success(request, f"El descuento de '{producto.nombre}' han sido actualizados.")
+
+
+    return redirect('boleta')
+
+@login_required
+def vaciar_carrito_boleta(request):
+    carrito = Carrito.objects.filter(usuario=request.user, tipo="boleta").first()
+    if carrito:
+        carrito.carritoproducto_set.all().delete()  
+        carrito.actualizar_total() 
+    messages.success(request, "El carrito ha sido vaciado.")
+    return redirect('boleta')  
+
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+# FACTURA
+@login_required
+def factura(request):
+    palabra_clave = request.GET.get('buscar', '')
+    categoria_filtro = request.GET.get('categoria', None)
+    negocio_filtro = request.GET.get('negocio', None)
+
+    if request.user.is_superuser:
+        productos = Producto.objects.exclude(precio=0)
+    else:
+        staff_profile = StaffProfile.objects.get(user=request.user)
+        productos = Producto.objects.filter(almacen__negocio=staff_profile.negocio).exclude(precio=0)
+
+    if palabra_clave:
+        productos = productos.filter(Q(nombre__icontains=palabra_clave))
+
+    if categoria_filtro and categoria_filtro.isdigit():
+        productos = productos.filter(categoria_id=int(categoria_filtro))
+
+    if request.user.is_superuser and negocio_filtro and negocio_filtro.isdigit():
+        productos = productos.filter(almacen__negocio_id=int(negocio_filtro))
+
+    carrito, _ = Carrito.objects.get_or_create(usuario=request.user, tipo="factura")
+
+    return render(request, 'caja/factura.html', {
         'productos': productos,
         'carrito_items': carrito.carritoproducto_set.all(),
         'carrito_total': carrito.total,
@@ -94,60 +297,67 @@ def home(request):
 
 
 @login_required
-def ver_carrito(request):
-    carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
-    carrito_items = carrito.carritoproducto_set.all()
+def agregar_al_carrito_factura(request, producto_id):
+    producto = get_object_or_404(Producto, producto_id=producto_id)
+    carrito, _ = Carrito.objects.get_or_create(usuario=request.user, tipo="factura")
 
-    if not carrito_items.exists():
-        return render(request, 'app/home.html', {
-            'carrito_items': [],
-            'carrito_total': 0,
-            'carrito_total_cantidad': 0,
-            'mensaje_carrito_vacio': 'Tu carrito está vacío.'
-        })
+    carrito_producto, created = CarritoProducto.objects.get_or_create(
+        carrito=carrito,
+        producto=producto,
+        defaults={'cantidad': 1, 'precio_unitario': producto.precio}
+    )
 
-    return render(request, 'app/home.html', {
-        'carrito_items': carrito_items,
-        'carrito_total': carrito.total,
-        'carrito_total_cantidad': carrito_items.count(),
-    })
+    if not created:
+        carrito_producto.cantidad += 1
+    carrito_producto.save()
+    carrito.actualizar_total()
+    return redirect('factura')
+
+
+@require_POST
+@login_required
+def eliminar_del_carrito_factura(request, item_id):
+    carrito_producto = get_object_or_404(CarritoProducto, id=item_id, carrito__usuario=request.user, carrito__tipo="factura")
+    carrito_producto.delete()
+    carrito_producto.carrito.actualizar_total()
+    return redirect('factura')
 
 
 @login_required
-def confirmar_compra(request):
+def confirmar_compra_factura(request):
     if request.method == 'POST':
         accion = request.POST.get('accion')
         correo = request.POST.get('correo', '').strip()
+        medio_pago = request.POST.get('medio_pago', '')
 
-        carrito = get_object_or_404(Carrito, usuario=request.user)
+        carrito = get_object_or_404(Carrito, usuario=request.user, tipo="factura")
         carrito_items = carrito.carritoproducto_set.all()
 
         if carrito_items:
-            # Verificar si el correo ingresado pertenece a un perfil de cliente existente
-            perfil_cliente = None
-            if correo:
-                try:
-                    perfil_cliente = PerfilClientes.objects.get(correo=correo)
-                except PerfilClientes.DoesNotExist:
-                    # Si no existe el perfil, crear uno nuevo
-                    perfil_cliente = PerfilClientes.objects.create(correo=correo)
+            perfil_cliente, _ = PerfilClientes.objects.get_or_create(correo=correo) if correo else (None, None)
 
-            # Crear la compra, registrando el correo del cliente si existe un perfil asociado
+            subtotal = sum(item.producto.precio * item.cantidad for item in carrito_items)
+            descuento_total = sum(item.producto.precio * item.cantidad * item.producto.descuento / 100 for item in carrito_items)
+            iva_total = (subtotal - descuento_total) * 0.19
+            total = subtotal - descuento_total + iva_total
+
             compra = Compra.objects.create(
                 usuario=request.user,
-                total=carrito.total,
+                subtotal=subtotal,
+                descuento_total=descuento_total,
+                iva_total=iva_total,
+                total=total,
                 nombre_staff=request.user.get_full_name(),
-                correo=perfil_cliente.correo if perfil_cliente else None  # Guardar el correo del perfil
+                correo=perfil_cliente.correo if perfil_cliente else None,
+                medio_pago=medio_pago
             )
 
             for item in carrito_items:
                 producto = item.producto
                 if producto.stock >= item.cantidad:
                     producto.stock -= item.cantidad
-                    producto.actualizar_estado()
                     producto.save()
 
-                    # Crear detalle de la compra
                     DetalleCompra.objects.create(
                         compra=compra,
                         producto=producto,
@@ -155,39 +365,23 @@ def confirmar_compra(request):
                         precio_unitario=producto.precio
                     )
                 else:
-                    messages.error(request, f"No hay suficiente stock para {producto.nombre}. Solo quedan {producto.stock} unidades disponibles.")
-                    return redirect('home')
+                    messages.error(request, f"No hay suficiente stock para {producto.nombre}.")
+                    return redirect('factura')
 
-            # Vaciar el carrito
             carrito.carritoproducto_set.all().delete()
-            carrito.total = 0
-            carrito.save()
-
+            carrito.actualizar_total()
             messages.success(request, 'La compra ha sido confirmada.')
-            return redirect('compra_exitosa', compra_id=compra.id)
-
+            return redirect('compra_exitosa_factura', compra_id=compra.id)
         else:
             messages.warning(request, 'El carrito está vacío.')
-            return redirect('home')
-
-@login_required
-def agregar_al_carrito(request, producto_id):
-    producto = get_object_or_404(Producto, producto_id=producto_id)
-    carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
-    carrito_producto, created = CarritoProducto.objects.get_or_create(carrito=carrito, producto=producto)
-    
-    if not created:
-        carrito_producto.cantidad += 1
-    carrito_producto.save()
-    
-    actualizar_total_carrito(carrito)
-    return redirect('home')
+            return redirect('factura')
+            
 
 @require_POST
 @login_required
-def restar_producto(request, producto_id):
+def restar_producto_factura(request, producto_id):
     producto = get_object_or_404(Producto, producto_id=producto_id)
-    carrito = get_object_or_404(Carrito, usuario=request.user)
+    carrito = get_object_or_404(Carrito, usuario=request.user, tipo="factura")
     carrito_producto = get_object_or_404(CarritoProducto, carrito=carrito, producto=producto)
 
     if carrito_producto.cantidad > 1:
@@ -196,46 +390,102 @@ def restar_producto(request, producto_id):
     else:
         carrito_producto.delete()
 
-    actualizar_total_carrito(carrito)
-    return redirect('home')
-
-# Función para eliminar un producto del carrito
-@require_POST
-@login_required
-def eliminar_del_carrito(request, item_id):
-    carrito_producto = get_object_or_404(CarritoProducto, id=item_id, carrito__usuario=request.user)
-    carrito_producto.delete()
-
-    carrito = carrito_producto.carrito
-    actualizar_total_carrito(carrito)
-
-    return redirect('home')
-
-# Función para actualizar el total del carrito
-def actualizar_total_carrito(carrito):
-    """
-    Recalcula el total del carrito sumando los precios de todos los productos.
-    """
-    total = sum(item.producto.precio * item.cantidad for item in carrito.carritoproducto_set.all())
-    carrito.total = total
-    carrito.save()
+    carrito.actualizar_total()
+    return redirect('factura')
 
 
 @login_required
-def compra_exitosa(request, compra_id):
+@permission_required('app.add_producto', raise_exception=True)
+def reg_prod_factura(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        marca_id = request.POST.get('marca')
+        categoria_id = request.POST.get('categoria')
+        stock = int(request.POST.get('stock', 0))
+        precio = int(request.POST.get('precio', 0))
+
+        almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()
+
+        producto = Producto.objects.create(
+            nombre=nombre,
+            marca_id=marca_id,
+            categoria_id=categoria_id,
+            stock=stock,
+            precio=precio,
+            almacen=almacen,
+            estado='ingresado_manual',
+            descuento=0
+        )
+
+        carrito, _ = Carrito.objects.get_or_create(usuario=request.user, tipo="factura")
+        carrito_producto, created = CarritoProducto.objects.get_or_create(
+            carrito=carrito,
+            producto=producto,
+            defaults={'cantidad': 1, 'precio_unitario': producto.precio}
+        )
+        if not created:
+            carrito_producto.cantidad += 1
+        carrito_producto.save()
+
+        carrito.actualizar_total()
+        messages.success(request, f'El producto {producto.nombre} ha sido registrado y agregado al carrito de factura.')
+        return redirect('factura')
+
+    marcas = Marca.objects.filter(negocio=staff_profile.negocio)
+    categorias = Categoria.objects.filter(negocio=staff_profile.negocio)
+
+    return render(request, 'caja/factura.html', {
+        'marcas': marcas,
+        'categorias': categorias
+    })
+
+
+@login_required
+@permission_required('app.change_producto', raise_exception=True)
+def actualizar_descuento_factura(request, producto_id):
+    producto = get_object_or_404(Producto, producto_id=producto_id)
+    
+    if request.method == 'POST':
+        nuevo_descuento = request.POST.get('descuento', 0)  
+        
+        if nuevo_descuento:
+            producto.descuento = int(nuevo_descuento)
+        
+        producto.save()
+        messages.success(request, f"El descuento de '{producto.nombre}' han sido actualizados.")
+
+
+    return redirect('factura')
+
+@login_required
+def vaciar_carrito_factura(request):
+    carrito = Carrito.objects.filter(usuario=request.user, tipo="factura").first()
+    if carrito:
+        carrito.carritoproducto_set.all().delete()  
+        carrito.actualizar_total() 
+    messages.success(request, "El carrito ha sido vaciado.")
+    return redirect('factura')  
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+# VENTA EXISTOSA
+@login_required
+def compra_exitosa_boleta(request, compra_id):
     compra = get_object_or_404(Compra, id=compra_id)
 
     detalles = compra.detalles.all()
 
     if 'pdf' in request.GET:
-        template_path = 'payment/compra_exitosa_pdf.html'
+        template_path = 'comprobante/boleta_pdf.html'
         context = {
             'compra': compra,
             'detalles': detalles
         }
 
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="comprobante.pdf"'
+        response['Content-Disposition'] = 'attachment; filename="comprobante_boleta.pdf"'
 
         template = get_template(template_path)
         html = template.render(context)
@@ -246,10 +496,42 @@ def compra_exitosa(request, compra_id):
 
         return response
 
-    return render(request, 'payment/compra_exitosa.html', {
+    return render(request, 'comprobante/compra_exitosa_boleta.html', {
         'compra': compra,
         'detalles': detalles
     })
+
+
+@login_required
+def compra_exitosa_factura(request, compra_id):
+    compra = get_object_or_404(Compra, id=compra_id)
+
+    detalles = compra.detalles.all()
+
+    if 'pdf' in request.GET:
+        template_path = 'comprobante/factura_pdf.html'
+        context = {
+            'compra': compra,
+            'detalles': detalles
+        }
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="comprobante_factura.pdf"'
+
+        template = get_template(template_path)
+        html = template.render(context)
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('Hubo un error al generar el PDF <pre>%s</pre>' % html)
+
+        return response
+
+    return render(request, 'comprobante/compra_exitosa_factura.html', {
+        'compra': compra,
+        'detalles': detalles
+    })
+
 
 def confirmar_compra_invitado(request):
     email = request.POST.get('email_invitado')
@@ -272,42 +554,6 @@ def confirmar_compra_invitado(request):
         carrito.save()
 
         return redirect('compra_exitosa', compra_id=compra.id)
-
-    return redirect('home')
-
-@login_required
-@permission_required('app.add_producto', raise_exception=True)
-def reg_prod(request):
-    staff_profile = StaffProfile.objects.get(user=request.user) 
-
-    if request.method == 'POST':
-        nombre = request.POST.get('nombre', '').strip()
-        stock = int(request.POST.get('stock', 0))
-        precio = float(request.POST.get('precio', 0.0))
-
-        almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()
-
-        producto = Producto.objects.create(
-            nombre=nombre,
-            stock=stock,
-            precio=precio,
-            categoria=None,
-            marca='Marca no registrada',
-            descripcion='Sin descripción',
-            estado='ingresado_manual', 
-            almacen=almacen
-        )
-
-        # Agregar el producto manualmente al carrito
-        carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
-        carrito_producto, created = CarritoProducto.objects.get_or_create(carrito=carrito, producto=producto)
-        
-        if not created:
-            carrito_producto.cantidad += 1
-        carrito_producto.save()
-
-        actualizar_total_carrito(carrito)
-        messages.success(request, f'El producto {producto.nombre} ha sido registrado y agregado al carrito.')
 
     return redirect('home')
 
@@ -593,7 +839,7 @@ def actualizar_precio_prod(request, producto_id):
 #####################################
 # Error de pago
 def error_pago(request):
-    return render(request, 'payment/pay_error.html')
+    return render(request, 'comprobante/pay_error.html')
 
 
 def error_400(request, exception=None):
@@ -1173,7 +1419,6 @@ def erase_proveedor(request, proveedor_id):
 # / / / / / / / / / / / / / / / / / #
 #####################################
 #MANEJO DE CATEGORIAS
-
 @login_required
 @permission_required('app.view_categoria', raise_exception=True)
 def list_categorias(request):
@@ -1270,3 +1515,133 @@ def erase_categoria(request, categoria_id):
         return redirect('list_categorias')
 
     return render(request, 'categorias/erase_categoria.html', {'categoria': categoria})
+
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+#MANEJO DE MARCAS
+
+@login_required
+@permission_required('app.add_marca', raise_exception=True)
+def add_marca(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio  # Obtener el negocio del usuario
+
+    if request.method == 'POST':
+        form = MarcaForm(request.POST)
+        if form.is_valid():
+            marca = form.save(commit=False)
+            marca.negocio = negocio  # Asociar la marca al negocio del usuario
+            marca.save()
+            return redirect('list_marcas')
+    else:
+        form = MarcaForm()
+
+    return render(request, 'marca/add_marca.html', {'form': form})
+
+@login_required
+@permission_required('app.view_marca', raise_exception=True)
+def list_marcas(request):
+    if request.user.is_superuser:
+        marcas = Marca.objects.all()
+        form = None
+    else:
+        staff_profile = StaffProfile.objects.get(user=request.user)
+        negocio = staff_profile.negocio
+        marcas = Marca.objects.filter(negocio=negocio)
+
+        if request.method == 'POST':
+            form = MarcaForm(request.POST)
+            if form.is_valid():
+                marca = form.save(commit=False)
+                marca.negocio = negocio 
+                marca.save()
+                return redirect('list_marcas')
+        else:
+            form = MarcaForm()
+
+    return render(request, 'marca/list_marcas.html', {
+        'marcas': marcas,
+        'form': form  
+    })
+
+
+@login_required
+@permission_required('app.change_marca', raise_exception=True)
+def mod_marca(request, marca_id):
+    marca = get_object_or_404(Marca, id=marca_id)
+
+    # Verificar que la marca pertenece al negocio del staff
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    if not request.user.is_superuser and marca.negocio != staff_profile.negocio:
+        return HttpResponseForbidden("No tienes permiso para modificar esta marca.")
+
+    if request.method == 'POST':
+        form = MarcaForm(request.POST, instance=marca)
+        if form.is_valid():
+            form.save()
+            return redirect('list_marcas')
+    else:
+        form = MarcaForm(instance=marca)
+
+    return render(request, 'marca/mod_marca.html', {'form': form, 'marca': marca})
+
+@login_required
+@permission_required('app.delete_marca', raise_exception=True)
+def erase_marca(request, marca_id):
+    marca = get_object_or_404(Marca, id=marca_id)
+
+    # Verificar que la marca pertenece al negocio del staff
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    if not request.user.is_superuser and marca.negocio != staff_profile.negocio:
+        return HttpResponseForbidden("No tienes permiso para eliminar esta marca.")
+
+    if request.method == 'POST':
+        marca.delete()
+        return redirect('list_marcas')
+
+    return render(request, 'marca/erase_marca.html', {'marca': marca})
+
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+# MANEJO DE TIPO DE PRODUCTO
+@login_required
+@permission_required('app.view_tipoproducto', raise_exception=True)
+def list_tipos_producto(request):
+    tipos = TipoProducto.objects.all()
+    return render(request, 'tipoproducto/list_tipos_producto.html', {'tipos': tipos})
+
+@login_required
+@permission_required('app.add_tipoproducto', raise_exception=True)
+def add_tipo_producto(request):
+    if request.method == 'POST':
+        form = TipoProductoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('list_tipos_producto')
+    else:
+        form = TipoProductoForm()
+    return render(request, 'tipoproducto/add_tipo_producto.html', {'form': form})
+
+@login_required
+@permission_required('app.change_tipoproducto', raise_exception=True)
+def mod_tipo_producto(request, tipo_id):
+    tipo = get_object_or_404(TipoProducto, id=tipo_id)
+    if request.method == 'POST':
+        form = TipoProductoForm(request.POST, instance=tipo)
+        if form.is_valid():
+            form.save()
+            return redirect('list_tipos_producto')
+    else:
+        form = TipoProductoForm(instance=tipo)
+    return render(request, 'tipoproducto/mod_tipo_producto.html', {'form': form, 'tipo': tipo})
+
+@login_required
+@permission_required('app.delete_tipoproducto', raise_exception=True)
+def erase_tipo_producto(request, tipo_id):
+    tipo = get_object_or_404(TipoProducto, id=tipo_id)
+    if request.method == 'POST':
+        tipo.delete()
+        return redirect('list_tipos_producto')
+    return render(request, 'tipoproducto/erase_tipo_producto.html', {'tipo': tipo})

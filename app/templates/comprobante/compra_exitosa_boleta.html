@@ -1,0 +1,120 @@
+{% extends 'app/base.html' %}
+{% block contenido %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boleta de Compra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .boleta-container {
+            width: 350px;
+            margin: auto;
+            font-size: 14px;
+        }
+        .section {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 10px;
+            border-top: 1px solid black;
+            padding-top: 10px;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        .item-list, .summary {
+            text-align: left;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="boleta-container">
+        <!-- Sección 1 -->
+        <div class="section-title"></div>
+        <div class="section">
+            <p>R.U.T.: {{ compra.usuario.staffprofile.negocio.rut_empresa }}</p>
+            <p><strong>BOLETA ELECTRÓNICA</strong></p>
+            <p>NRO: {{ compra.id }}</p>
+        </div>
+
+        <!-- Sección 2 -->
+        <div class="section-title"></div>
+        <div class="section">
+            <p>{{ compra.usuario.staffprofile.negocio.nombre }}</p>
+            <p>{{ compra.usuario.staffprofile.negocio.direccion }}</p>
+            <p>{{ compra.usuario.staffprofile.negocio.provincia }} - {{ compra.usuario.staffprofile.negocio.region }}</p>
+            <p>VENTA AL POR MENOR</p>
+        </div>
+
+        <!-- Sección 3 -->
+        <div class="section-title"></div>
+        <div class="section">
+            <p>Fecha: {{ compra.fecha|date:"d/m/Y" }} &nbsp; Hora: {{ compra.fecha|date:"H:i" }}</p>
+            <p>Cajero: {{ compra.nombre_staff }}</p>
+        </div>
+
+        <!-- Sección 4 -->
+        <div class="section-title">DESCRIPCIÓN PRODUCTO</div>
+        <div class="item-list">
+            <div class="summary-item">
+                <span>PRODUCTO</span>
+                <span>CANT</span>
+                <span>PRECIO</span>
+                <span>SUBTOTAL</span>
+            </div>
+            {% for detalle in compra.detalles.all %}
+            <div class="summary-item">
+                <span>{{ detalle.producto.nombre }}</span>
+                <span>{{ detalle.cantidad }}</span>
+                <span>{{ detalle.precio_unitario|floatformat:0 }} CLP</span>
+                <span>{{ detalle.subtotal|floatformat:0 }} CLP</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Sección 5 -->
+        <div class="section-title">RESUMEN</div>
+        <div class="summary">
+            <div class="summary-item">
+                <span>Subtotal</span>
+                <span>{{ compra.subtotal|floatformat:0 }} CLP</span>
+            </div>
+            <div class="summary-item">
+                <span>Total Dsctos</span>
+                <span>{{ compra.descuento_total|floatformat:0 }} CLP</span>
+            </div>
+            <div class="summary-item">
+                <span>Total Venta</span>
+                <span>{{ compra.total|floatformat:0 }} CLP</span>
+            </div>
+            <div class="summary-item">
+                <span>IVA (19%)</span>
+                <span>{{ compra.iva_total|floatformat:0 }} CLP</span>
+            </div>
+        </div>
+
+        <!-- Sección 6 -->
+        <div class="section">
+            <p>Forma de pago: <strong>{{ compra.medio_pago }}</strong></p>
+        </div>
+
+        <!-- Botones de acciones -->
+        <div class="section">
+            <a href="?pdf=1" class="btn btn-secondary btn-sm">Descargar Boleta (PDF)</a>
+            <a href="{% url 'boleta' %}" class="btn btn-primary btn-sm">Volver al inicio</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
+{% endblock %}

@@ -44,8 +44,18 @@
         <div class="sidebar-content">
             <a href="{% url 'home' %}" title="Caja y ventas">
                 <i class="fas fa-cash-register"></i>
-                <span class="sidebar-text">Caja</span>
+                <span class="sidebar-text">Home</span>
             </a>
+            <a href="{% url 'boleta' %}" title="Caja y ventas">
+                <i class="fas fa-cash-register"></i>
+                <span class="sidebar-text">Boleta</span>
+            </a>
+            <!--Validación/-->
+            <a href="{% url 'factura' %}" title="Caja y ventas">
+                <i class="fas fa-cash-register"></i>
+                <span class="sidebar-text">Factura</span>
+            </a>
+            <!--Validación/-->
             <a href="{% url 'list_prod' %}" title="Inventario actual y disponibilidad de productos">
                 <i class="fas fa-box-open"></i>
                 <span class="sidebar-text">Inventario</span>
@@ -61,6 +71,10 @@
             <a href="{% url 'list_categorias' %}" title="Gestión de Categorías">
                 <i class="fas fa-tags"></i>
                 <span class="sidebar-text">Categorías</span>
+            </a>
+            <a href="{% url 'list_marcas' %}" title="Gestión de Marcas">
+                <i class="fas fa-tags"></i>
+                <span class="sidebar-text">Marcas</span>
             </a>
             <a href="{% url 'list_proveedores' %}" title="Gestión de Proveedores">
                 <i class="fas fa-truck"></i>

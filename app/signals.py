@@ -23,6 +23,7 @@ def create_user_groups(sender, **kwargs):
         'view_imagen', 'add_imagen', 'change_imagen', 'delete_imagen',
         'view_devolucionproveedor', 'add_devolucionproveedor', 'change_devolucionproveedor', 'delete_devolucionproveedor',
         'view_categoria', 'add_categoria', 'change_categoria', 'delete_categoria',
+        'view_marca', 'add_marca', 'change_marca', 'delete_marca',
         'view_proveedor', 'add_proveedor', 'change_proveedor', 'delete_proveedor',
         'view_productosdevueltos', 'add_productosdevueltos', 'change_productosdevueltos', 'delete_productosdevueltos'
     ]
