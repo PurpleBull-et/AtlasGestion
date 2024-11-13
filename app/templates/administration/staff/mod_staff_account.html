@@ -3,15 +3,16 @@
 {% block contenido %}
 <h1>Modificar Usuario Staff</h1>
 
-<form method="post">
+<h4>Datos del Usuario</h4>
+<form method="post" class="formModStaff">
     {% csrf_token %}
     
-    <h4>Datos del Usuario</h4>
     {{ user_form.as_p }}
     
     
     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    <a href="{% url 'change_password' %}" class="btn btn-secondary mt-3">Cambiar Contraseña</a>
 </form>
 <!-- Botón para cambiar la contraseña -->
-<a href="{% url 'change_password' %}" class="btn btn-secondary mt-3">Cambiar Contraseña</a>
+
 {% endblock %}

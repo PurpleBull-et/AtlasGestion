@@ -2,7 +2,7 @@
 {% block contenido %}
 <h1>Modificar Producto</h1>
 
-<form method="post">
+<form method="post" class="formModProd">
     {% csrf_token %}
     
     <fieldset>
@@ -10,7 +10,7 @@
         {{ producto_form.as_p }}
     </fieldset>
 
-    <button type="submit">Guardar Cambios</button>
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
 </form>
 
 {% endblock %}

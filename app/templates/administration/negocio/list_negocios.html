@@ -13,7 +13,6 @@
         <tr>
             <th>ID</th>
             <th>Nombre</th>
-            <th>Giro</th>
             <th>RUT Empresa</th>
             <th>Dirección</th>
             <th>Teléfono</th>
@@ -26,28 +25,27 @@
     <tbody>
         {% for negocio in negocios %}
         <tr>
-            <td>{{ negocio.id }}</td>
-            <td>{{ negocio.nombre }}</td>
-            <td>{{ negocio.giro }}</td>
-            <td>{{ negocio.rut_empresa }}</td>
-            <td>{{ negocio.direccion }}</td>
-            <td>{{ negocio.telefono }}</td>
-            <td>{{ negocio.almacen_set.first.direccion }}</td>
-            <td>
+            <td data-label="ID">{{ negocio.id }}</td>
+            <td data-label="Nombre">{{ negocio.nombre }}</td>
+            <td data-label="RUT">{{ negocio.rut_empresa }}</td>
+            <td data-label="Dirección">{{ negocio.direccion }}</td>
+            <td data-label="Teléfono">{{ negocio.telefono }}</td>
+            <td data-label="Almacen">{{ negocio.almacen_set.first.direccion }}</td>
+            <td data-label="Estado">
                 {% if negocio.is_active %}
                     Activo
                 {% else %}
                     Inactivo
                 {% endif %}
             </td>
-            <td>
+            <td data-label="Mayorista">
                 {% if negocio.is_mayorista %}
                     Sí
                 {% else %}
                     No
                 {% endif %}
             </td>
-            <td>
+            <td data-label="Acciones">
                 <a href="{% url 'mod_negocio' negocio.id %}" class="btn btn-warning">Modificar</a>
                 <a href="{% url 'erase_negocio' negocio.id %}" class="btn btn-danger">Eliminar</a>
                 {% if negocio.is_active %}

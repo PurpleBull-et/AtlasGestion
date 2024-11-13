@@ -5,7 +5,7 @@
 
 <div class="card mb-5">
     <div class="card-body">
-        <form method="post">
+        <form method="post" class="formModProv">
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" class="btn btn-primary">Guardar Cambios</button>

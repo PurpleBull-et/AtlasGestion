@@ -36,9 +36,9 @@
     <tbody>
         {% for categoria in categorias %}
         <tr>
-            <td>{{ categoria.id }}</td>
-            <td>{{ categoria.nombre }}</td>
-            <td>
+            <td data-label="ID">{{ categoria.id }}</td>
+            <td data-label="Nombre">{{ categoria.nombre }}</td>
+            <td data-label="Acciones">
                 <a href="{% url 'mod_categoria' categoria.id %}" class="btn btn-warning">Modificar</a>
                 <a href="{% url 'erase_categoria' categoria.id %}" class="btn btn-danger">Eliminar</a>
             </td>

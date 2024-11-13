@@ -42,11 +42,11 @@
         {% if staff_list %}
             {% for user in staff_list %}
                 <tr>
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.first_name }} {{ user.last_name }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>
+                    <td data-label="ID">{{ user.id }}</td>
+                    <td data-label="Nombre Usuario">{{ user.username }}</td>
+                    <td data-label="Nombre Completo">{{ user.first_name }} {{ user.last_name }}</td>
+                    <td data-label="Correo">{{ user.email }}</td>
+                    <td data-label="Acciones">
                         <!-- Botón para modificar perfil -->
                         <a href="{% url 'mod_staff_profile' user.id %}" class="btn btn-info">Perfil</a>
                         <!-- Botón para modificar cuenta -->

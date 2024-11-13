@@ -5,25 +5,35 @@
 {% block contenido %}
 <h1>Registrar Nuevo Usuario Staff</h1>
 
-<form method="post">
+<form method="post" class="formstaff">
+    <div class="form_containerStaff">
+        <div class="form_groupStaff">
     {% csrf_token %}
     
     <h4>Datos del Usuario</h4>
-    {{ user_form.as_p }}
+    <br></br>
+    <div class="staff">{{ user_form.as_p }}</div>
     {% if user_form.errors %}
         <div class="alert alert-danger">
             {{ user_form.errors }}
         </div>
     {% endif %}
+</div>
+<h4>Datos del Perfil de Staff</h4>
     
-    <h4>Datos del Perfil de Staff</h4>
-    {{ profile_form.as_p }}
+    <div class="personales">{{ profile_form.as_p }}</div>
     {% if profile_form.errors %}
         <div class="alert alert-danger">
             {{ profile_form.errors }}
+           
         </div>
-    {% endif %}
-    
-    <button type="submit" class="btn btn-primary">Registrar</button>
+        
+    {% endif %} 
+    <button type="submit" class="btnStaff">Registrar</button>
+  
 </form>
+</div>
+
+
+
 {% endblock %}

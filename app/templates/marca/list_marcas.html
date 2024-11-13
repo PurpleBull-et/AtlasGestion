@@ -33,9 +33,9 @@
     <tbody>
         {% for marca in marcas %}
         <tr>
-            <td>{{ marca.id }}</td>
-            <td>{{ marca.nombre }}</td>
-            <td>
+            <td data-label="ID">{{ marca.id }}</td>
+            <td data-label="Nombre">{{ marca.nombre }}</td>
+            <td data-label="Acciones">
                 <a href="{% url 'mod_marca' marca.id %}" class="btn btn-warning">Modificar</a>
                 <a href="{% url 'erase_marca' marca.id %}" class="btn btn-danger">Eliminar</a>
             </td>

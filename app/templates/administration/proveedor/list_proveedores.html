@@ -36,12 +36,12 @@
     <tbody>
         {% for proveedor in proveedores %}
         <tr>
-            <td>{{ proveedor.id }}</td>
-            <td>{{ proveedor.nombre }}</td>
-            <td>{{ proveedor.rut_empresa }}</td>
-            <td>{{ proveedor.telefono }}</td>
-            <td>{{ proveedor.direccion }}</td>
-            <td>
+            <td data-label="ID">{{ proveedor.id }}</td>
+            <td data-label="Nombre">{{ proveedor.nombre }}</td>
+            <td data-label="RUT">{{ proveedor.rut_empresa }}</td>
+            <td data-label="Teléfono">{{ proveedor.telefono }}</td>
+            <td data-label="Dirección">{{ proveedor.direccion }}</td>
+            <td data-label="Acciones">
                 <a href="{% url 'mod_proveedor' proveedor.id %}" class="btn btn-warning">Modificar</a>
                 <a href="{% url 'erase_proveedor' proveedor.id %}" class="btn btn-danger">Eliminar</a>
             </td>

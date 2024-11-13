@@ -3,9 +3,10 @@
 {% block contenido %}
 <h1>Eliminar Proveedor</h1>
 
-<p>¿Estás seguro de que deseas eliminar el proveedor {{ proveedor.nombre }}?</p>
+{% comment %} <p>¿Estás seguro de que deseas eliminar el proveedor {{ proveedor.nombre }}?</p> {% endcomment %}
 
-<form method="post">
+<form method="post" class="form">
+    <p>¿Estás seguro de que deseas eliminar el proveedor {{ proveedor.nombre }}?</p>
     {% csrf_token %}
     <button type="submit" class="btn btn-danger">Eliminar</button>
     <a href="{% url 'list_proveedores' %}" class="btn btn-secondary">Cancelar</a>

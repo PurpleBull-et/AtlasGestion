@@ -1,0 +1,671 @@
+.formstaff{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  background-color: #f4f4f9;
+  border-radius: 5px;
+  border: 1px solid #ccc;   
+
+}
+.formstaff .staff{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f4f4f9;
+  border-radius: 5px;
+  border: 1px solid #ccc;   
+  margin-top: -20px;
+}
+
+.formstaff ul{
+  display: none;
+}
+.formstaff span{
+    color: #f3e9e9;
+   display: none;
+}
+.formstaff label {
+ /*  background-color: aquamarine;  */
+  display: flex;
+
+}
+.formstaff .btnStaff{
+  border: none;
+  color: white;
+  width: 200px;
+  height: 50px;
+  background-color: rgb(94, 204, 204);
+  position: relative;
+  border-radius: 5px;
+ /*  transform: translate(400px, -100px); */
+}
+.formstaff input{
+  padding: 10px; 
+  border: 1px solid #ccc;
+   border-radius: 5px; 
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */ 
+   min-width: 200px;
+}
+.formstaff select{
+  padding: 10px; 
+  border: 1px solid #ccc;
+   border-radius: 5px; 
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */ 
+   min-width: 200px;
+    
+}
+.formstaff .personales{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  background-color: #f4f4f9;
+  border-radius: 5px;
+  border: 1px solid #ccc;   
+
+}
+.form_containerStaff{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  background-color: #f4f4f9;
+  border-radius: 5px;
+  border: 1px solid #ccc;   
+
+}
+.form_containerStaff input{
+  padding: 10px; 
+  border: 1px solid #ccc;
+   border-radius: 5px; 
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */ 
+   min-width: 200px;
+}
+/*=========================================================================================*/
+.formNegocio{
+  
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  background-color: #f4f4f9;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  
+} 
+.formNegocio label {
+ display: flex;
+}
+.formNegocio input{
+ padding: 10px;
+  border: 1px solid #ccc;
+   border-radius: 5px; 
+   flex: 1;
+
+ }
+@media (max-width: 600px) {
+ .formNegocio { 
+  flex-direction: column; /* Cambia la dirección a columna en pantallas pequeñas */ 
+}
+/* .formNegocio input{
+  transform: translateX(50px);
+}
+.formNegocio label{
+  transform: translateX(50px);
+} */
+ }
+ /*=================================================================*/
+ .formAdmin{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  background-color: #f4f4f9;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+ }
+.formAdmin label {
+   
+    
+    /*  background-color: aquamarine;  */
+     display: block;
+}
+.formAdmin span{
+  display: none;
+}
+.formAdmin ul{
+    display: none;
+}
+.formAdmin input{
+  flex: 1;
+  border: 1px solid #ccc;
+  text-align: center;
+  color: #030303;
+  border-radius: 5px; 
+  padding: 10px;
+     /* place-content: 'damian */
+
+
+ }
+ @media (max-width: 600px) {
+  .formAdmin { 
+   flex-direction: column; /* Cambia la dirección a columna en pantallas pequeñas */ 
+ }
+  .formAdmin input{
+    transform: translateX(50px);
+  }
+  .formAdmin label{
+    transform: translateX(50px);
+  }
+}
+ /*==========================================================*/
+ .formProducto fieldset{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  background-color: #f4f4f9;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+ }
+ .formProducto label {
+   
+    
+   color: rgb(0, 5, 3); 
+     display: block;
+}
+.formProducto span{
+    display: none;
+}
+.formProducto fieldset input{
+  /* width: 400px; */
+  flex: 1;
+  width: 280px;
+  border: 1px solid #ccc;
+  text-align: center;
+  color: #030303;
+  border-radius: 5px; 
+  padding: 10px;
+ }
+
+ .formProducto select{
+  flex: 1;
+  border: 1px solid #ccc;
+  text-align: center;
+  color: #030303;
+  border-radius: 5px; 
+  padding: 10px;
+    
+}
+ /*==========================================================*/
+ .formProv{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  background-color: #f4f4f9;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+ }
+.formProv label {
+   
+    
+    /*  background-color: aquamarine;  */
+     display: block;
+}
+.formProv span{
+  display: none;
+}
+.formProv ul{
+    display: none;
+}
+.formProv input{
+  flex: 1;
+  border: 1px solid #ccc;
+  text-align: center;
+  color: #030303;
+  border-radius: 5px; 
+  padding: 10px;
+     /* place-content: 'damian */
+
+
+ }
+ 
+ 
+
+
+ .formProducto select{
+    background-color: aquamarine;
+    color: #030303;
+    width: 280px;
+    
+}
+/*==========================================================*/
+.formBodega{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  background-color: #f4f4f9;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+ }
+
+ .formBodega label {
+   
+    color: rgb(1, 10, 19);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formBodega .form-group input{
+  flex: 1;
+  border: 1px solid #ccc;
+  text-align: center;
+  color: #030303;
+  border-radius: 5px; 
+  padding: 10px;
+}
+
+ .formBodega .form-group select{
+  width: 200px;
+  flex: 1;
+  border: 1px solid #ccc;
+  text-align: center;
+  color: #030303;
+  border-radius: 5px; 
+  padding: 10px;
+    
+}
+/*==========================================================*/
+.formCat{
+  display: flex; 
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+   gap: 10px; /* Espacio entre los inputs */ 
+   padding: 20px; /* Espaciado interno del contenedor */ 
+   background-color: #f4f4f9; /* Color de fondo */ 
+   border-radius: 5px; /* Bordes redondeados */ 
+   border: 1px solid #ccc;
+
+ }
+
+ .formCat label {
+   
+    color: rgb(0, 6, 12);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formCat input{
+  padding: 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */
+    min-width: 200px;
+}
+/*==========================================================*/
+.formMarca{
+  display: flex; 
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+   gap: 10px; /* Espacio entre los inputs */ 
+   padding: 20px; /* Espaciado interno del contenedor */ 
+   background-color: #f4f4f9; /* Color de fondo */ 
+   border-radius: 5px; /* Bordes redondeados */ 
+   border: 1px solid #ccc;
+  
+ }
+
+ .formMarca label {
+   
+    color: rgb(0, 4, 7);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formMarca input{
+  padding: 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */
+    min-width: 200px;
+}
+/*===========================================================*/
+.formModificarStaff{
+  display: flex; 
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+   gap: 10px; /* Espacio entre los inputs */ 
+   padding: 20px; /* Espaciado interno del contenedor */ 
+   background-color: #f4f4f9; /* Color de fondo */ 
+   border-radius: 5px; /* Bordes redondeados */ 
+   border: 1px solid #ccc;
+}
+
+
+.formModificarStaff label {
+   
+    color: rgb(0, 14, 26);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formModificarStaff input{
+  padding: 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */
+    min-width: 200px;
+}
+.formModificarStaff  select{
+ 
+  
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 5px;
+     flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */
+      min-width: 200px;
+
+    
+}
+/*=============================================================*/
+.formModProd fieldset{
+  display: flex; 
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+   gap: 10px; /* Espacio entre los inputs */ 
+   padding: 20px; /* Espaciado interno del contenedor */ 
+   background-color: #f4f4f9; /* Color de fondo */ 
+   border-radius: 5px; /* Bordes redondeados */ 
+   border: 1px solid #ccc;
+}
+
+.formModProd label {
+   
+    color: rgb(0, 7, 14);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formModProd input{
+  padding: 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */
+    min-width: 200px;
+}
+.formModProd select{
+  padding: 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */
+    min-width: 200px;
+    
+
+    
+}
+/* ================================================================ */
+.formModMarca{
+    
+  display: flex; 
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+   gap: 10px; /* Espacio entre los inputs */ 
+   padding: 20px; /* Espaciado interno del contenedor */ 
+   background-color: #f4f4f9; /* Color de fondo */ 
+   border-radius: 5px; /* Bordes redondeados */ 
+   border: 1px solid #ccc;
+}
+
+.formModMarca label {
+   
+    color: rgb(1, 8, 15);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formModMarca input{
+  padding: 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */
+    min-width: 200px;
+}
+/*==========================================================================*/
+.formModCat{
+  display: flex; 
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+   gap: 10px; /* Espacio entre los inputs */ 
+   padding: 20px; /* Espaciado interno del contenedor */ 
+   background-color: #f4f4f9; /* Color de fondo */ 
+   border-radius: 5px; /* Bordes redondeados */ 
+   border: 1px solid #ccc;
+}
+
+.formModCat label {
+   
+    color: rgb(1, 8, 15);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formModCat input{
+  padding: 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */
+    min-width: 200px;
+  background-color: #d4cbcb;
+}
+/*===================================================================*/
+.formModProv{
+
+  display: flex; flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+  
+  gap: 10px;   /* Espacio entre los inputs */ 
+
+padding: 20px; /* Espaciado interno del contenedor */
+background-color: #f4f4f9; /* Color de fondo */
+border-radius: 5px; /* Bordes redondeados */ 
+border: 1px solid #ccc; /* Borde */
+}
+
+.formModProv label {
+   
+    color: rgb(0, 5, 8);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formModProv input{
+  padding: 10px;
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */ 
+   min-width: 200px; /* Ancho mínimo para los inputs */
+}
+/*=================================================*/
+.formModNeg{
+ 
+  display: flex; flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+  
+   gap: 10px;   /* Espacio entre los inputs */ 
+ 
+padding: 20px; /* Espaciado interno del contenedor */
+background-color: #f4f4f9; /* Color de fondo */
+border-radius: 5px; /* Bordes redondeados */ 
+border: 1px solid #ccc; /* Borde */
+
+}
+
+.formModNeg label {
+   
+  color: #030303;
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formModNeg input{
+  padding: 10px;
+   border: 1px solid #ccc; 
+   border-radius: 5px;
+    flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */ 
+    min-width: 200px; /* Ancho mínimo para los inputs */
+ 
+}
+@media (max-width: 600px) { 
+  .form-container { 
+    flex-direction: column; /* Cambia la dirección a columna en pantallas pequeñas */ 
+}
+.formModNeg label{
+  transform: translateX(50px);
+}
+.formModNeg input{
+  transform: translateX(50px);
+}
+}
+/*================================================*/
+.formModPass{
+  display: flex; flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+  
+   gap: 10px;   /* Espacio entre los inputs */ 
+ 
+padding: 20px; /* Espaciado interno del contenedor */
+background-color: #f4f4f9; /* Color de fondo */
+border-radius: 5px; /* Bordes redondeados */ 
+border: 1px solid #ccc; /* Borde */
+
+}
+.formModPass ul{
+  display: none;
+}
+.formModPass label {
+   
+    color: rgb(0, 3, 5);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+
+.formModPass input{
+  padding: 10px;
+   border: 1px solid #ccc; 
+   border-radius: 5px;
+    flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */ 
+    min-width: 200px; /* Ancho mínimo para los inputs */
+ 
+}
+/*===================================================*/
+.formModStaff{
+  display: flex; 
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */
+   gap: 10px; /* Espacio entre los inputs */
+    padding: 20px; /* Espaciado interno del contenedor */
+     background-color: #f4f4f9; /* Color de fondo */
+      border-radius: 5px; /* Bordes redondeados */ 
+      border: 1px solid #ccc;
+  
+}
+
+.formModStaff label {
+   
+    color: rgb(1, 9, 17);
+    /*  background-color: aquamarine;  */
+    display: block; 
+}
+.formModStaff span{
+    display: none;
+}
+.formModStaff ul{
+  display: none;
+}
+
+.formModStaff input{
+  padding: 10px; 
+  border: 1px solid #ccc; 
+  border-radius: 5px; 
+  flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */
+   min-width: 200px;
+  }
+
+
+/*=?=====================================================================================*/
+.formModAdmin{
+  display: flex; 
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */ 
+  gap: 10px; /* Espacio entre los inputs */
+   padding: 20px; /* Espaciado interno del contenedor */ 
+   background-color: #f4f4f9; /* Color de fondo */
+    border-radius: 5px; /* Bordes redondeados */ 
+    border: 1px solid #ccc; /* Borde */
+}
+
+.formModAdmin label {
+   
+    color: rgb(2, 15, 27);
+    /*  background-color: aquamarine;  */
+    display: flex; 
+}
+.formModAdmin span{
+    display: none;
+}
+.formModAdmin ul{
+  display: none;
+}
+
+.formModAdmin input{
+  padding: 10px;
+   border: 1px solid #ccc;
+    border-radius: 5px; 
+    flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */ 
+    min-width: 200px; /* Ancho mínimo para los inputs */
+}
+@media (max-width:600){
+  .formModAdmin{
+    flex-direction: column;
+  }
+  .formModAdmin input{
+    transform: translateX(50px);
+  }
+  .formModAdmin label{
+    transform: translateX(50px);
+  }
+}
+/*========================================================*/
+.formModProfile{
+
+  display: flex; 
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en una nueva línea */ 
+  gap: 10px; /* Espacio entre los inputs */
+   padding: 20px; /* Espaciado interno del contenedor */ 
+   background-color: #f4f4f9; /* Color de fondo */
+    border-radius: 5px; /* Bordes redondeados */ 
+    border: 1px solid #ccc; /* Borde */
+}
+
+.formModProfile label {
+   
+    color: rgb(1, 6, 10);
+    /*  background-color: aquamarine;  */
+    display: flex; 
+}
+.formModProfile span{
+    display: none;
+}
+
+.formModProfile input{
+  padding: 10px;
+  border: 1px solid #ccc;
+   border-radius: 5px; 
+   flex: 1; /* Hace que los inputs ocupen el mismo espacio disponible */ 
+   min-width: 200px;
+}
+
+@media (max-width:600){
+  .formModProfile p{
+    flex-direction: column;
+  }
+  .formModProfile p input{
+    transform: translateX(50px);
+  }
+  .formModProfile label{
+    transform: translateX(50px);
+  }
+}

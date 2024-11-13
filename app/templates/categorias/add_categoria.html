@@ -2,7 +2,7 @@
 <div class="card mb-5">
     <div class="card-body">
         <h4 class="card-title">Registrar Nueva Categoría</h4>
-        <form method="post">
+        <form method="post" class="formCat" style="transform: translateY(-5px);" >
             {% csrf_token %}
             {{ form.as_p }} <!-- Mostrar el formulario -->
             <button type="submit" class="btn btn-primary">Registrar</button>

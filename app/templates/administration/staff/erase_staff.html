@@ -3,9 +3,9 @@
 {% block contenido %}
 <h1>Eliminar Usuario Staff</h1>
 
-<p>¿Estás seguro de que deseas eliminar a <strong>{{ staff.username }}</strong>?</p>
 
-<form method="post">
+<form method="post" class="form">
+    <p>¿Estás seguro de que deseas eliminar a <strong>{{ staff.username }}</strong>?</p>
     {% csrf_token %}
     <button type="submit" class="btn btn-danger">Eliminar</button>
     <a href="{% url 'list_staff' %}" class="btn btn-secondary">Cancelar</a>

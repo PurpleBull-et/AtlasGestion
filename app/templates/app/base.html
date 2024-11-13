@@ -12,9 +12,10 @@
     <link rel="stylesheet" href="{% static 'app/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'app/css/style.css' %}">
     <link rel="stylesheet" href="{% static 'app/css/style-dark.css' %}">
-    <link rel="stylesheet" href="{% static 'app/css/cart.css' %}"> <!-- Ahora el último -->
-    
-    
+    <link rel="stylesheet" href="{% static 'app/css/cart.css' %}">
+    <link rel="stylesheet" href="{% static 'app/css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'app/css/listaProducto.css' %}">
+    <link rel="stylesheet" href="{% static 'app/css/formularios.css' %}">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -32,11 +33,11 @@
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger btn-sm">Cerrar sesión</button>
                 </form>
-            
         </div>        
         <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
             {% endif %}
-            <button id="dark-mode-toggle">Cambiar modo</button>
+            {% comment %} <button id="dark-mode-toggle">Cambiar Modo</button> {% endcomment %}
+            <a class="navbarCircle" href="#"> <img  class="logoLogin" src={% static 'app/img/logoAtlasNegro.png' %} alt="Descripción de la imagen"></a>
     </header>
     
     {% if request.user.is_authenticated %}
