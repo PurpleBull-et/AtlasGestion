@@ -3,7 +3,6 @@
 
 {% block contenido %}
 <div class="container mt-4">
-        <!-- Filtrado por negocio solo para administradores -->
         {% if request.user.is_superuser %}
         <form method="get" class="mb-3">
             <label for="negocio" class="me-2">Filtrar por negocio:</label>
@@ -19,104 +18,57 @@
         {% endif %}
     
     <h1 class="text-center">Operaciones de Bodega</h1>
-
-    <!-- Formulario de registro de entrada de productos -->
     {% if not request.user.is_superuser %}
     <div class="form-wrapper">
         <h2>Registrar Entrada de Productos</h2>
-        <form method="post" class="login-wrap">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="producto">Producto:</label>
-                {{ form.producto|add_class:"form-control" }}
-            </div>
-            <div class="form-group">
-                <label for="cantidad_recibida">Cantidad recibida:</label>
-                {{ form.cantidad_recibida|add_class:"form-control" }}
-            </div>
-            <div class="form-group">
-                <label for="proveedor">Proveedor:</label>
-                {{ form.proveedor|add_class:"form-control" }}
-            </div>
-            <div class="form-group">
-                <label for="precio_unitario">Precio unitario:</label>
-                {{ form.precio_unitario|add_class:"form-control" }}
-            </div>
-            <div class="form-group">
-                <label for="lote">Lote:</label>
-                {{ form.lote|add_class:"form-control" }}
-            </div>
-            <div class="form-group">
-                <label for="medio_pago">Medio de pago:</label>
-                {{ form.medio_pago|add_class:"form-control" }}
-            </div>
-            <button type="submit" class="btn btn-primary">Registrar Entrada</button>
-        </form>
-    </div>
+            <form method="post" id="entradaBodegaForm">
+                {% csrf_token %}
+
+                <!-- Fecha de recepción -->
+                <div class="mb-3">
+                    <label for="fecha_recepcion" class="form-label">Fecha de Recepción</label>
+                    <input type="date" class="form-control" id="fecha_recepcion" name="fecha_recepcion" required>
+                </div>
+
+                <!-- Formulario de EntradaBodega -->
+                {{ entrada_form.as_p }}
+                {{ producto_formset.management_form }}
+
+                    <div id="productos-container">
+                        {% for form in producto_formset %}
+                            <div class="producto-form">
+                                {{ form.as_p }}
+                                <button type="button" class="btn btn-danger" onclick="this.closest('.producto-form').remove()">Eliminar Producto</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="agregarProducto()">Agregar Otro Producto</button>
+                    <button type="submit" class="btn btn-primary">Registrar Entrada</button>
+                </form>
+        </div>
     {% endif %}
 
-    <!-- Tabla de productos recibidos -->
-    <h2 class="mt-5 text-center">Productos Recibidos</h2>
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Producto</th>
-                <th>Cantidad Recibida</th>
-                <th>Proveedor</th>
-                <th>Lote</th>
-                <th>Precio Unitario</th>
-                <th>Precio Total</th>
-                <th>Fecha de Entrada</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for entrada in entradas %}
-            <tr>
-                <td>{{ entrada.producto.nombre }}</td>
-                <td>{{ entrada.cantidad_recibida }}</td>
-                <td>{{ entrada.proveedor.nombre }}</td>
-                <td>{{ entrada.lote }}</td>
-                <td>${{ entrada.precio_unitario }}</td>
-                <td>${{ entrada.total_entrada }}</td>
-                <td>{{ entrada.fecha_entrada }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <script>
+        function agregarProducto() {
+            const container = document.getElementById('productos-container');
+            const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+            const formIdx = container.querySelectorAll('.producto-form').length;
     
-    <!-- Sección: Registro de Productos Devueltos -->
-    <h2 class="mt-5">Registro de Productos Devueltos</h2>
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Producto</th>
-                <th>Cantidad Devuelta</th>
-                <th>Proveedor</th>
-                <th>Lote</th>
-                <th>Precio Unitario</th>
-                <th>Motivo de Devolución</th>
-                <th>Fecha de Devolución</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if devoluciones %}
-            {% for devolucion in devoluciones %}
-            <tr>
-                <td>{{ devolucion.producto.nombre }}</td>
-                <td>{{ devolucion.cantidad_devuelta }}</td>
-                <td>{{ devolucion.proveedor.nombre }}</td>
-                <td>{{ devolucion.lote }}</td>
-                <td>${{ devolucion.entrada_bodega.precio_unitario }}</td>
-                <td>{{ devolucion.motivo_devolucion }}</td>
-                <td>{{ devolucion.fecha_devolucion }}</td>
-            </tr>
-            {% endfor %}
-            {% else %}
-            <tr>
-                <td colspan="7" class="text-center">No hay productos devueltos registrados.</td>
-            </tr>
-            {% endif %}
-        </tbody>
-    </table>
-</div>
+            const newForm = container.querySelector('.producto-form').cloneNode(true);
+            newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formIdx);
+            
+            newForm.querySelectorAll('input, select, textarea').forEach(input => {
+                const name = input.getAttribute('name').replace(/-\d+-/, `-${formIdx}-`);
+                const id = input.getAttribute('id').replace(/-\d+-/, `-${formIdx}-`);
+                input.setAttribute('name', name);
+                input.setAttribute('id', id);
+                input.value = '';  // Limpia el valor de los campos en el nuevo formulario
+            });
+    
+            container.appendChild(newForm);
+            totalForms.value = parseInt(totalForms.value) + 1;  // Incrementa el contador total de formularios
+        }
+    </script>
+    
+    
 {% endblock %}

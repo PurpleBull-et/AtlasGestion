@@ -1,0 +1,26 @@
+<form method="post" id="mod-prod-form-{{ producto.producto_id }}">
+    {% csrf_token %}
+    {{ producto_form.as_p }}
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+</form>
+
+<script>
+    // Procesar el envío del formulario de modificar producto mediante AJAX
+    $('#mod-prod-form-{{ producto.producto_id }}').submit(function (e) {
+        e.preventDefault();
+        $.ajax({
+            url: "{% url 'mod_prod_modal' producto.producto_id %}",
+            type: "POST",
+            data: $(this).serialize(),
+            success: function (data) {
+                if (data.success) {
+                    $('#modProdModal{{ producto.producto_id }}').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modal-body-content-{{ producto.producto_id }}').html(data.html_form);
+                }
+            }
+        });
+    });
+</script>

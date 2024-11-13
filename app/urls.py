@@ -17,11 +17,6 @@ handler500 = 'app.views.error_500'
 urlpatterns = [
     path('', home, name='home'),
     
-    #path('carrito/ver/', ver_carrito, name='ver_carrito'),
-    #path('carrito/agregar/<int:producto_id>/', agregar_al_carrito, name='agregar_al_carrito'),
-    #path('carrito/restar/<int:producto_id>/', restar_producto, name='restar_producto'),
-    #path('carrito/eliminar/<int:item_id>/', eliminar_del_carrito, name='eliminar_del_carrito'),
-    #path('compra/confirmar/', confirmar_compra, name='confirmar_compra'),
     path('compra/confirmar/invitado/', confirmar_compra_invitado, name='confirmar_compra_invitado'),
 
     path('boleta/', boleta, name='boleta'),
@@ -32,11 +27,7 @@ urlpatterns = [
     path('reg-producto/boleta', reg_prod_boleta, name='reg_prod_boleta'),
     path('producto/boleta/actualizar_descuento/<int:producto_id>/', actualizar_descuento_boleta, name='actualizar_descuento_boleta'),
     path('carrito/boleta/vaciar/', vaciar_carrito_boleta, name='vaciar_carrito_boleta'),
-    
     path('compra/boleta/<int:compra_id>/', compra_exitosa_boleta, name='compra_exitosa_boleta'),
-
-
-
 
     path('factura/', factura, name='factura'),
     path('carrito/factura/agregar/<int:producto_id>/', agregar_al_carrito_factura, name='agregar_al_carrito_factura'),
@@ -47,8 +38,19 @@ urlpatterns = [
     path('producto/factura/actualizar_descuento/<int:producto_id>/', actualizar_descuento_factura, name='actualizar_descuento_factura'),
     path('carrito/factura/vaciar/', vaciar_carrito_factura, name='vaciar_carrito_factura'),
     path('compra/factura/<int:compra_id>/', compra_exitosa_factura, name='compra_exitosa_factura'),
-
+    
     path('bodega/operaciones/', operaciones_bodega, name='operaciones_bodega'),
+    path('bodega/entrada/', listar_entradas_bodega, name='listar_entradas_bodega'),
+    path('bodega/entrada/<int:entrada_id>/', detalle_entrada_bodega, name='detalle_entrada_bodega'),
+    path('bodega/entrada/<int:entrada_id>/producto/<int:producto_id>/', detalle_prod_entrada_bodega, name='detalle_prod_entrada_bodega'),
+    path('bodega/entrada/<int:entrada_id>/devolucion/', devolver_factura, name='devolver_factura'),
+    path('bodega/devoluciones/', historial_devoluciones, name='historial_devoluciones'),
+
+
+    path('socios/cuentas/', list_clientes, name='list_clientes'),
+    path('socios/cuentas/agregar/', add_cliente, name='add_cliente'),
+    path('socios/cuentas/modificar/<int:cliente_id>/', mod_cliente, name='mod_cliente'),
+    path('socios/cuentas/eliminar/<int:cliente_id>/', erase_cliente, name='erase_cliente'),
 
     path('mi_negocio/', mi_negocio, name='mi_negocio'),
 
@@ -60,8 +62,6 @@ urlpatterns = [
     #Mod cuenta y perfil staff
     path('perfil/modificar/<int:staff_id>/', mod_staff_profile, name='mod_staff_profile'),
     path('cuenta/modificar/<int:staff_id>/', mod_staff_account, name='mod_staff_account'),
-
-
 
     path('administradores/', list_admin, name='list_admin'),
     path('administradores/registrar/', register_admin, name='register_admin'),
@@ -114,6 +114,9 @@ urlpatterns = [
     path('productos/eliminar/<producto_id>/', erase_prod, name='erase_prod'),
     path('productos/devolver/<int:producto_id>/', devolver_prod, name='devolver_prod'),
     path('producto/<int:producto_id>/actualizar_precio/', actualizar_precio_prod, name='actualizar_precio_prod'),
+    path('add_prod_modal/', add_prod_modal, name='add_prod_modal'),
+    path('producto/modificar_modal/<int:producto_id>/', mod_prod_modal, name='mod_prod_modal'),
+    path('bodega/operaciones_modal/', operaciones_bodega_modal, name='operaciones_bodega_modal'),
 
     
 

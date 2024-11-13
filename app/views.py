@@ -19,6 +19,9 @@ from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import Group, User
+from django.forms import modelformset_factory
+from django.db import transaction
+
 
 def es_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest'
@@ -268,10 +271,10 @@ def factura(request):
     negocio_filtro = request.GET.get('negocio', None)
 
     if request.user.is_superuser:
-        productos = Producto.objects.exclude(precio=0)
+        productos = Producto.objects.exclude(precio_mayorista=0)
     else:
         staff_profile = StaffProfile.objects.get(user=request.user)
-        productos = Producto.objects.filter(almacen__negocio=staff_profile.negocio).exclude(precio=0)
+        productos = Producto.objects.filter(almacen__negocio=staff_profile.negocio).exclude(precio_mayorista=0)
 
     if palabra_clave:
         productos = productos.filter(Q(nombre__icontains=palabra_clave))
@@ -283,10 +286,14 @@ def factura(request):
         productos = productos.filter(almacen__negocio_id=int(negocio_filtro))
 
     carrito, _ = Carrito.objects.get_or_create(usuario=request.user, tipo="factura")
-
+    carrito.actualizar_total_mayorista()  
+    
     return render(request, 'caja/factura.html', {
         'productos': productos,
         'carrito_items': carrito.carritoproducto_set.all(),
+        'carrito_subtotal': carrito.subtotal,
+        'carrito_descuento_total': carrito.descuento_total,
+        'carrito_iva': carrito.iva_total,
         'carrito_total': carrito.total,
         'categorias': Categoria.objects.all(),
         'negocios': Negocio.objects.all() if request.user.is_superuser else None,
@@ -294,6 +301,7 @@ def factura(request):
         'negocio_filtro': negocio_filtro,
         'palabra_clave': palabra_clave,
     })
+
 
 
 @login_required
@@ -304,13 +312,13 @@ def agregar_al_carrito_factura(request, producto_id):
     carrito_producto, created = CarritoProducto.objects.get_or_create(
         carrito=carrito,
         producto=producto,
-        defaults={'cantidad': 1, 'precio_unitario': producto.precio}
+        defaults={'cantidad': 1, 'precio_unitario': producto.precio_mayorista}
     )
 
     if not created:
         carrito_producto.cantidad += 1
     carrito_producto.save()
-    carrito.actualizar_total()
+    carrito.actualizar_total_mayorista()
     return redirect('factura')
 
 
@@ -319,28 +327,34 @@ def agregar_al_carrito_factura(request, producto_id):
 def eliminar_del_carrito_factura(request, item_id):
     carrito_producto = get_object_or_404(CarritoProducto, id=item_id, carrito__usuario=request.user, carrito__tipo="factura")
     carrito_producto.delete()
-    carrito_producto.carrito.actualizar_total()
+    carrito_producto.carrito.actualizar_total_mayorista()
     return redirect('factura')
-
 
 @login_required
 def confirmar_compra_factura(request):
     if request.method == 'POST':
-        accion = request.POST.get('accion')
-        correo = request.POST.get('correo', '').strip()
         medio_pago = request.POST.get('medio_pago', '')
-
+        glosa = request.POST.get('glosa', '').strip()
+        correo = request.POST.get('correo', '').strip()
+        
         carrito = get_object_or_404(Carrito, usuario=request.user, tipo="factura")
         carrito_items = carrito.carritoproducto_set.all()
 
         if carrito_items:
-            perfil_cliente, _ = PerfilClientes.objects.get_or_create(correo=correo) if correo else (None, None)
+            # Gestionar el perfil del cliente si se proporciona un correo
+            perfil_cliente = None
+            if correo:
+                perfil_cliente, _ = PerfilClientes.objects.get_or_create(correo=correo)
 
-            subtotal = sum(item.producto.precio * item.cantidad for item in carrito_items)
-            descuento_total = sum(item.producto.precio * item.cantidad * item.producto.descuento / 100 for item in carrito_items)
+            # Calcular subtotal, descuentos y IVA
+            subtotal = sum(item.producto.precio_mayorista * item.cantidad for item in carrito_items)
+            descuento_total = sum(
+                item.producto.precio_mayorista * item.cantidad * item.producto.descuento_mayorista / 100 for item in carrito_items
+            )
             iva_total = (subtotal - descuento_total) * 0.19
             total = subtotal - descuento_total + iva_total
 
+            # Crear la instancia de compra con los valores calculados
             compra = Compra.objects.create(
                 usuario=request.user,
                 subtotal=subtotal,
@@ -349,9 +363,11 @@ def confirmar_compra_factura(request):
                 total=total,
                 nombre_staff=request.user.get_full_name(),
                 correo=perfil_cliente.correo if perfil_cliente else None,
-                medio_pago=medio_pago
+                medio_pago=medio_pago,
+                glosa=glosa
             )
-
+            
+            # Procesar cada item en el carrito
             for item in carrito_items:
                 producto = item.producto
                 if producto.stock >= item.cantidad:
@@ -362,20 +378,21 @@ def confirmar_compra_factura(request):
                         compra=compra,
                         producto=producto,
                         cantidad=item.cantidad,
-                        precio_unitario=producto.precio
+                        precio_unitario=producto.precio_mayorista
                     )
                 else:
                     messages.error(request, f"No hay suficiente stock para {producto.nombre}.")
                     return redirect('factura')
 
+            # Limpiar el carrito después de la compra
             carrito.carritoproducto_set.all().delete()
-            carrito.actualizar_total()
+            carrito.actualizar_total_mayorista()
             messages.success(request, 'La compra ha sido confirmada.')
             return redirect('compra_exitosa_factura', compra_id=compra.id)
         else:
             messages.warning(request, 'El carrito está vacío.')
             return redirect('factura')
-            
+
 
 @require_POST
 @login_required
@@ -390,7 +407,7 @@ def restar_producto_factura(request, producto_id):
     else:
         carrito_producto.delete()
 
-    carrito.actualizar_total()
+    carrito.actualizar_total_mayorista()
     return redirect('factura')
 
 
@@ -429,7 +446,7 @@ def reg_prod_factura(request):
             carrito_producto.cantidad += 1
         carrito_producto.save()
 
-        carrito.actualizar_total()
+        carrito.actualizar_total_mayorista()
         messages.success(request, f'El producto {producto.nombre} ha sido registrado y agregado al carrito de factura.')
         return redirect('factura')
 
@@ -464,7 +481,7 @@ def vaciar_carrito_factura(request):
     carrito = Carrito.objects.filter(usuario=request.user, tipo="factura").first()
     if carrito:
         carrito.carritoproducto_set.all().delete()  
-        carrito.actualizar_total() 
+        carrito.actualizar_total_mayorista() 
     messages.success(request, "El carrito ha sido vaciado.")
     return redirect('factura')  
 #####################################
@@ -607,6 +624,50 @@ def add_prod(request):
     return render(request, 'producto/add_prod.html', {
         'producto_form': producto_form
     })
+
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+
+@login_required
+@permission_required('app.add_producto', raise_exception=True)
+def add_prod_modal(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio
+
+    FormularioProducto = ProductoFormMayorista if negocio.is_mayorista else ProductoFormMinorista
+
+    if request.method == 'POST':
+        producto_form = FormularioProducto(request.POST)
+        if producto_form.is_valid():
+            producto = producto_form.save(commit=False)
+            producto.almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()
+            producto.save()
+            return JsonResponse({'success': True})
+    else:
+        producto_form = FormularioProducto()
+
+    html_form = render_to_string('producto/add_prod_modal_form.html', {'producto_form': producto_form}, request=request)
+    return JsonResponse({'html_form': html_form})
+
+@login_required
+@permission_required('app.change_producto', raise_exception=True)
+def mod_prod_modal(request, producto_id):
+    producto = get_object_or_404(Producto, producto_id=producto_id)
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio
+
+    FormularioProducto = ProductoFormMayorista if negocio.is_mayorista else ProductoFormMinorista
+
+    if request.method == 'POST':
+        producto_form = FormularioProducto(request.POST, instance=producto)
+        if producto_form.is_valid():
+            producto_form.save()
+            return JsonResponse({'success': True})
+    else:
+        producto_form = FormularioProducto(instance=producto)
+
+    html_form = render_to_string('producto/mod_prod_modal_form.html', {'producto_form': producto_form, 'producto': producto}, request=request)
+    return JsonResponse({'html_form': html_form})
 
 
 
@@ -841,7 +902,6 @@ def actualizar_precio_prod(request, producto_id):
 def error_pago(request):
     return render(request, 'comprobante/pay_error.html')
 
-
 def error_400(request, exception=None):
     return render(request, 'err/error_400.html', status=400)
 
@@ -867,65 +927,272 @@ def historial_bodega(request):
 
 @login_required
 @permission_required('app.add_entradabodega', raise_exception=True)
-def operaciones_bodega(request):
-    negocio_filtro = request.GET.get('negocio', None)
-    negocio_nombre = None  # Definir la variable antes de su uso
+def operaciones_bodega_modal(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio
 
-    # Si el usuario es administrador
-    if request.user.is_superuser:
-        negocios = Negocio.objects.all()  # Admin puede ver todos los negocios
-        productos_validos = Producto.objects.filter(estado__in=['disponible', 'sin_stock', 'registrado_reciente'])
-        
-        if negocio_filtro:
-            try:
-                negocio_filtro = int(negocio_filtro)
-                productos_validos = productos_validos.filter(almacen__negocio_id=negocio_filtro)
-                entradas = EntradaBodega.objects.filter(negocio_id=negocio_filtro).order_by('-fecha_entrada')
-                devoluciones = ProductosDevueltos.objects.filter(entrada_bodega__negocio_id=negocio_filtro).order_by('-fecha_devolucion')
-                negocio_nombre = Negocio.objects.get(id=negocio_filtro).nombre
-            except (ValueError, Negocio.DoesNotExist):
-                negocio_filtro = None
+    # Obtener el almacen una sola vez
+    almacen = Almacen.objects.filter(negocio=negocio).first()
+
+    EntradaBodegaProductoFormSet = modelformset_factory(
+        EntradaBodegaProducto,
+        form=EntradaBodegaProductoForm,
+        extra=1,
+    )
+
+    if request.method == 'POST':
+        entrada_form = EntradaBodegaForm(request.POST)
+        producto_formset = EntradaBodegaProductoFormSet(
+            request.POST,
+            queryset=EntradaBodegaProducto.objects.none(),
+            form_kwargs={'almacen': almacen}
+        )
+
+        if entrada_form.is_valid() and producto_formset.is_valid():
+            with transaction.atomic():
+                entrada_bodega = entrada_form.save(commit=False)
+                entrada_bodega.bodega = almacen
+                entrada_bodega.save()
+
+                for producto_form in producto_formset:
+                    if producto_form.cleaned_data:
+                        entrada_producto = producto_form.save(commit=False)
+                        entrada_producto.entrada_bodega = entrada_bodega
+                        entrada_producto.save()
+
+                        producto = entrada_producto.producto
+                        producto.stock += entrada_producto.cantidad_recibida
+                        producto.save()
+
+            return JsonResponse({'success': True})
         else:
-            # Si no se aplica el filtro, mostrar todas las entradas y devoluciones
-            entradas = EntradaBodega.objects.all().order_by('-fecha_entrada')
-            devoluciones = ProductosDevueltos.objects.all().order_by('-fecha_devolucion')
-        
-        form = None  # El admin no tiene acceso al formulario de reposición
+            html_form = render_to_string('bodega/operaciones_bodega_modal_form.html', {
+                'entrada_form': entrada_form,
+                'producto_formset': producto_formset,
+            }, request=request)
+            return JsonResponse({'html_form': html_form})
 
     else:
-        # Lógica para los usuarios staff
-        staff_profile = StaffProfile.objects.get(user=request.user)
-        negocio = staff_profile.negocio
-        
-        productos_validos = Producto.objects.filter(almacen__negocio=negocio, estado__in=['disponible', 'sin_stock', 'registrado_reciente'])
-        proveedores_validos = Proveedor.objects.filter(negocio=negocio)
-        entradas = EntradaBodega.objects.filter(negocio=negocio).order_by('-fecha_entrada')
-        devoluciones = ProductosDevueltos.objects.filter(entrada_bodega__negocio=negocio).order_by('-fecha_devolucion')
+        entrada_form = EntradaBodegaForm()
+        producto_formset = EntradaBodegaProductoFormSet(
+            queryset=EntradaBodegaProducto.objects.none(),
+            form_kwargs={'almacen': almacen}
+        )
 
-        # Formulario de reposición solo para usuarios staff
-        if request.method == 'POST':
-            form = EntradaBodegaForm(request.POST)
-            if form.is_valid():
-                entrada = form.save(commit=False)
-                entrada.negocio = negocio
-                entrada.producto.stock += entrada.cantidad_recibida
-                entrada.producto.actualizar_estado()
-                entrada.save()
-                return redirect('operaciones_bodega')
-        else:
-            form = EntradaBodegaForm()
-            form.fields['producto'].queryset = productos_validos
-            form.fields['proveedor'].queryset = proveedores_validos
+        html_form = render_to_string('bodega/operaciones_bodega_modal_form.html', {
+            'entrada_form': entrada_form,
+            'producto_formset': producto_formset,
+        }, request=request)
+        return JsonResponse({'html_form': html_form})
+
+
+
+
+@login_required
+@permission_required('app.add_entradabodega', raise_exception=True)
+def operaciones_bodega(request):
+    # Configurar el formset para manejar múltiples productos
+    EntradaBodegaProductoFormSet = modelformset_factory(
+        EntradaBodegaProducto,
+        form=EntradaBodegaProductoForm,
+        extra=1,
+        #can_delete=True  # Permitir eliminar formularios
+    )
+
+    if request.method == 'POST':
+        entrada_form = EntradaBodegaForm(request.POST)
+        producto_formset = EntradaBodegaProductoFormSet(request.POST, queryset=EntradaBodegaProducto.objects.none())
+
+        if entrada_form.is_valid() and producto_formset.is_valid():
+            with transaction.atomic():
+                # Guardar el formulario de EntradaBodega
+                entrada_bodega = entrada_form.save(commit=False)
+                entrada_bodega.fecha_recepcion = request.POST.get("fecha_recepcion")  # Obtener fecha de recepción del POST
+                entrada_bodega.save()
+
+                # Guardar cada formulario de producto asociado a esta entrada de bodega
+                for producto_form in producto_formset:
+                    if producto_form.cleaned_data:  # Verificar que el formulario contiene datos
+                        entrada_producto = producto_form.save(commit=False)
+                        entrada_producto.entrada_bodega = entrada_bodega
+                        entrada_producto.save()
+
+                        # Actualizar el stock del producto
+                        producto = entrada_producto.producto
+                        producto.stock += entrada_producto.cantidad_recibida
+                        producto.save()
+
+                messages.success(request, 'Entrada de bodega y productos registrados exitosamente.')
+            return redirect('operaciones_bodega')
+    else:
+        entrada_form = EntradaBodegaForm()
+        producto_formset = EntradaBodegaProductoFormSet(queryset=EntradaBodegaProducto.objects.none())
+        productos = Producto.objects.all()  # Esto puede servir si necesitas mostrar la lista de productos disponibles
 
     return render(request, 'bodega/operaciones_bodega.html', {
-        'form': form,
-        'entradas': entradas,
-        'devoluciones': devoluciones,
-        'negocios': negocios if request.user.is_superuser else None,  # Pasar los negocios solo si es admin
-        'negocio_filtro': negocio_filtro,  # Pasar el filtro de negocio al template
-        'negocio_nombre': negocio_nombre,  # Pasar el nombre del negocio filtrado (si corresponde)
+        'entrada_form': entrada_form,
+        'producto_formset': producto_formset,
+        'productos': productos,
     })
 
+
+
+@login_required
+@permission_required('app.view_entradabodega', raise_exception=True)
+def listar_entradas_bodega(request):
+    # Obtenemos todas las entradas de bodega
+    entradas = EntradaBodega.objects.all().order_by('-fecha_recepcion')  # Ordenar por fecha descendente
+
+    # Renderizamos un template parcial con la lista de entradas
+    return render(request, 'bodega/lista_entradas_bodega.html', {
+        'entradas': entradas,
+    })
+
+from django.db.models import F, Sum, ExpressionWrapper, IntegerField
+from django.db.models import F, Sum, ExpressionWrapper, IntegerField, Value, CharField, Case, When, Q
+
+@login_required
+@permission_required('app.view_entradabodega', raise_exception=True)
+def detalle_entrada_bodega(request, entrada_id):
+    # Obtener la entrada de bodega específica
+    entrada = get_object_or_404(EntradaBodega, id=entrada_id)
+
+    # Obtener los productos asociados a esta entrada, incluyendo las cantidades devueltas
+    productos = EntradaBodegaProducto.objects.filter(entrada_bodega=entrada).annotate(
+        subtotal=ExpressionWrapper(F('cantidad_recibida') * F('precio_unitario'), output_field=IntegerField()),
+        cantidad_devuelta=Sum(
+            'producto__devoluciones__cantidad_devuelta',
+            filter=Q(producto__devoluciones__entrada_bodega=entrada),
+            default=0
+        ),
+    ).annotate(
+        cantidad_restante=F('cantidad_recibida') - F('cantidad_devuelta'),
+        estado_devolucion=Case(
+            When(cantidad_devuelta=0, then=Value('Sin Devolución')),
+            When(cantidad_restante=0, then=Value('Devuelto Totalmente')),
+            default=Value('Devuelto Parcialmente'),
+            output_field=CharField(),
+        )
+    ).order_by('producto__nombre')
+
+    # Contar el número total de productos
+    total_productos = productos.count()
+    # Calcular el total general
+    total_general = productos.aggregate(total=Sum('subtotal'))['total'] or 0
+
+    return render(request, 'bodega/detalle_entrada_bodega.html', {
+        'entrada': entrada,
+        'productos': productos,
+        'total_productos': total_productos,
+        'total_general': total_general,
+    })
+
+
+
+@login_required
+@permission_required('app.view_entradabodega', raise_exception=True)
+def detalle_prod_entrada_bodega(request, entrada_id, producto_id):
+    # Obtener la entrada de bodega específica
+    entrada = get_object_or_404(EntradaBodega, id=entrada_id)
+    # Obtener el producto específico asociado a esta entrada
+    producto_entrada = get_object_or_404(
+        EntradaBodegaProducto,
+        entrada_bodega=entrada,
+        producto__producto_id=producto_id
+    )
+    
+    return render(request, 'bodega/detalle_prod_entrada_bodega.html', {
+        'entrada': entrada,
+        'producto_entrada': producto_entrada,
+    })
+
+from django.forms import modelformset_factory
+from django.db import transaction
+
+@login_required
+@permission_required('app.add_productosdevueltos', raise_exception=True)
+def devolver_factura(request, entrada_id):
+    entrada = get_object_or_404(EntradaBodega, id=entrada_id)
+    
+    # Obtener los productos asociados a esta entrada
+    productos_entrada = Producto.objects.filter(
+        producto_id__in=EntradaBodegaProducto.objects.filter(entrada_bodega=entrada).values_list('producto_id', flat=True)
+    )
+
+    # Configuración del Formset con can_delete=True para permitir eliminar formularios
+    DevolucionFormSet = modelformset_factory(
+        ProductosDevueltos,
+        form=DevolucionProductoForm,
+        extra=1,
+        #can_delete=True
+    )
+
+    if request.method == 'POST':
+        formset = DevolucionFormSet(
+            request.POST,
+            queryset=ProductosDevueltos.objects.none(),
+            form_kwargs={'productos_queryset': productos_entrada}
+        )
+
+        if formset.is_valid():
+            with transaction.atomic():
+                for form in formset:
+                    if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                        devolucion = form.save(commit=False)
+                        devolucion.entrada_bodega = entrada
+                        devolucion.proveedor = entrada.proveedor
+
+                        # Verificar cantidad disponible
+                        producto_entrada = EntradaBodegaProducto.objects.get(
+                            entrada_bodega=entrada,
+                            producto=devolucion.producto
+                        )
+                        cantidad_devuelta_anterior = ProductosDevueltos.objects.filter(
+                            entrada_bodega=entrada,
+                            producto=devolucion.producto
+                        ).aggregate(total=Sum('cantidad_devuelta'))['total'] or 0
+                        cantidad_disponible = producto_entrada.cantidad_recibida - cantidad_devuelta_anterior
+
+                        if devolucion.cantidad_devuelta > cantidad_disponible:
+                            messages.error(
+                                request,
+                                f"La cantidad a devolver de {devolucion.producto.nombre} excede el disponible."
+                            )
+                            return redirect('devolver_factura', entrada_id=entrada.id)
+
+                        devolucion.save()
+                        devolucion.producto.stock -= devolucion.cantidad_devuelta
+                        devolucion.producto.actualizar_estado()
+                        devolucion.producto.save()
+
+                messages.success(request, "Devolución registrada exitosamente.")
+            return redirect('detalle_entrada_bodega', entrada_id=entrada.id)
+    else:
+        formset = DevolucionFormSet(
+            queryset=ProductosDevueltos.objects.none(),
+            form_kwargs={'productos_queryset': productos_entrada}
+        )
+
+    return render(request, 'bodega/devolver_factura.html', {
+        'entrada': entrada,
+        'formset': formset,
+    })
+
+
+
+# views.py
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required, permission_required
+from .models import ProductosDevueltos
+
+@login_required
+@permission_required('app.view_productosdevueltos', raise_exception=True)
+def historial_devoluciones(request):
+    devoluciones = ProductosDevueltos.objects.select_related('producto', 'entrada_bodega', 'proveedor').order_by('-fecha_devolucion')
+
+    return render(request, 'bodega/historial_devoluciones.html', {
+        'devoluciones': devoluciones,
+    })
 
 
 #####################################
@@ -1338,11 +1605,11 @@ def add_proveedor(request):
 @permission_required('app.view_proveedor', raise_exception=True)
 def list_proveedores(request):
     negocio_filtro = request.GET.get('negocio', None)
-    negocio_nombre = None  # Inicializamos la variable para evitar el error
+    negocio_nombre = None 
 
     # Si el usuario es administrador
     if request.user.is_superuser:
-        negocios = Negocio.objects.all()  # Los administradores pueden ver todos los proveedores de todos los negocios
+        negocios = Negocio.objects.all() 
         proveedores = Proveedor.objects.all()
 
         if negocio_filtro:
@@ -1353,10 +1620,9 @@ def list_proveedores(request):
             except (ValueError, Negocio.DoesNotExist):
                 negocio_filtro = None
 
-        form = None  # Los administradores no necesitan un formulario para añadir proveedores
+        form = None 
 
     else:
-        # Si el usuario es staff, solo puede ver los proveedores de su propio negocio
         staff_profile = StaffProfile.objects.get(user=request.user)
         negocio = staff_profile.negocio
         
@@ -1645,3 +1911,53 @@ def erase_tipo_producto(request, tipo_id):
         tipo.delete()
         return redirect('list_tipos_producto')
     return render(request, 'tipoproducto/erase_tipo_producto.html', {'tipo': tipo})
+
+
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+# MANEJO DE PERFIL DE CLIENTES
+from .models import PerfilClientes
+from .forms import PerfilClientesForm
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def list_clientes(request):
+    clientes = PerfilClientes.objects.all()
+    return render(request, 'administration/cuentas/list_clientes.html', {'clientes': clientes})
+
+@login_required
+def add_cliente(request):
+    if request.method == 'POST':
+        form = PerfilClientesForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Cliente registrado con éxito.")
+            return redirect('list_clientes')
+    else:
+        form = PerfilClientesForm()
+    return render(request, 'administration/cuentas/add_cliente.html', {'form': form})
+
+@login_required
+def mod_cliente(request, cliente_id):
+    cliente = get_object_or_404(PerfilClientes, id=cliente_id)
+    if request.method == 'POST':
+        form = PerfilClientesForm(request.POST, instance=cliente)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Datos del cliente actualizados.")
+            return redirect('list_clientes')
+    else:
+        form = PerfilClientesForm(instance=cliente)
+    return render(request, 'administration/cuentas/mod_cliente.html', {'form': form, 'cliente': cliente})
+
+@login_required
+def erase_cliente(request, cliente_id):
+    cliente = get_object_or_404(PerfilClientes, id=cliente_id)
+    if request.method == 'POST':
+        cliente.delete()
+        messages.success(request, "Cliente eliminado.")
+        return redirect('list_clientes')
+    return render(request, 'administration/cuentas/erase_cliente.html', {'cliente': cliente})

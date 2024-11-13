@@ -1,0 +1,74 @@
+<form method="post" id="operaciones-bodega-form">
+    {% csrf_token %}
+
+    <!-- Fecha de recepción -->
+    <div class="mb-3">
+        <label for="fecha_recepcion" class="form-label">Fecha de Recepción</label>
+        <input type="date" class="form-control" id="fecha_recepcion" name="fecha_recepcion" required>
+    </div>
+
+    <!-- Formulario de EntradaBodega -->
+    {{ entrada_form.as_p }}
+    {{ producto_formset.management_form }}
+
+    <div id="productos-container">
+        {% for form in producto_formset %}
+            <div class="producto-form">
+                {{ form.as_p }}
+                <button type="button" class="btn btn-danger" onclick="this.closest('.producto-form').remove()">Eliminar Producto</button>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <button type="button" class="btn btn-secondary" onclick="agregarProducto()">Agregar Otro Producto</button>
+    <button type="submit" class="btn btn-primary">Registrar Entrada</button>
+</form>
+
+<script>
+    // Añadir producto adicional
+    function agregarProducto() {
+        const container = document.getElementById('productos-container');
+        const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+        const formIdx = container.querySelectorAll('.producto-form').length;
+
+        const newForm = container.querySelector('.producto-form').cloneNode(true);
+        newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formIdx);
+
+        newForm.querySelectorAll('input, select, textarea').forEach(input => {
+            const name = input.getAttribute('name').replace(/-\d+-/, `-${formIdx}-`);
+            const id = input.getAttribute('id').replace(/-\d+-/, `-${formIdx}-`);
+            input.setAttribute('name', name);
+            input.setAttribute('id', id);
+            input.value = '';
+        });
+
+        container.appendChild(newForm);
+        totalForms.value = parseInt(totalForms.value) + 1;
+    }
+
+    // Procesar el envío del formulario mediante AJAX
+    $(document).on('submit', '#operaciones-bodega-form', function (e) {
+        e.preventDefault();
+
+        const ajaxUrl = "{% url 'operaciones_bodega_modal' %}";
+        console.log("AJAX URL:", ajaxUrl);  // Verificar que esta URL sea correcta en la consola
+
+        $.ajax({
+            url: ajaxUrl,
+            type: "POST",
+            data: $(this).serialize(),
+            success: function (data) {
+                if (data.success) {
+                    $('#operacionesBodegaModal').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modal-body-content-bodega').html(data.html_form);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Error en la solicitud AJAX:", status, error);  // Mostrar el error en la consola si ocurre
+            }
+        });
+    });
+</script>
+

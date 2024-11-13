@@ -1,0 +1,51 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+
+<h1>Gestión de Entradas de Bodega</h1>
+
+<!-- Filtro por proveedor (opcional) -->
+<form method="get" class="mb-3">
+    <label for="proveedor" class="me-2">Filtrar por proveedor:</label>
+    <select name="proveedor" id="proveedor" class="form-select w-auto" onchange="this.form.submit();">
+        <option value="">Todos los proveedores</option>
+        {% for proveedor in proveedores %}
+            <option value="{{ proveedor.id }}" {% if proveedor_filtro == proveedor.id %}selected{% endif %}>
+                {{ proveedor.nombre }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
+
+<!-- Lista de entradas de bodega -->
+<h2>Entradas de Bodega Registradas</h2>
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Número de Factura</th>
+            <th>Proveedor</th>
+            <th>Fecha de Recepción</th>
+            <th>Forma de Pago</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entrada in entradas %}
+        <tr>
+            <td>{{ entrada.numero_factura }}</td>
+            <td>{{ entrada.proveedor.nombre }}</td>
+            <td>{{ entrada.fecha_recepcion }}</td>
+            <td>{{ entrada.get_forma_pago_display }}</td>
+            <td>
+                <a href="{% url 'detalle_entrada_bodega' entrada.id %}" class="btn btn-info">Ver Detalles</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">No hay entradas de bodega registradas.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

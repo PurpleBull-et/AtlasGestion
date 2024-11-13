@@ -1,0 +1,37 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h1 class="text-center">Historial de Productos Devueltos</h1>
+
+    {% if devoluciones %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad Devuelta</th>
+                    <th>Motivo de Devolución</th>
+                    <th>Fecha de Devolución</th>
+                    <th>N° Factura</th>
+                    <th>Proveedor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for devolucion in devoluciones %}
+                    <tr>
+                        <td>{{ devolucion.producto.nombre }}</td>
+                        <td>{{ devolucion.cantidad_devuelta }}</td>
+                        <td>{{ devolucion.motivo_devolucion }}</td>
+                        <td>{{ devolucion.fecha_devolucion|date:"d/m/Y H:i" }}</td>
+                        <td>{{ devolucion.numero_factura }}</td>
+                        <td>{{ devolucion.proveedor.nombre }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay devoluciones registradas.</p>
+    {% endif %}
+</div>
+{% endblock %}

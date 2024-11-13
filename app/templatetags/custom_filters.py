@@ -5,3 +5,14 @@ register = template.Library()
 @register.filter(name='add_class')
 def add_class(field, css_class):
     return field.as_widget(attrs={"class": css_class})
+
+
+register = template.Library()
+
+@register.filter
+def multiply(value, arg):
+    """Multiplica dos valores."""
+    try:
+        return value * arg
+    except (TypeError, ValueError):
+        return 0

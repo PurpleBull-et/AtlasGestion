@@ -72,15 +72,19 @@ class ProductoFormMayorista(forms.ModelForm):
             'precio',           
             'precio_mayorista',   
             'descuento', 
-            'descuento_mayorista'
+            'descuento_mayorista',
+            'tasa_ila',
         ]
+        widgets = {
+            'categoria': forms.Select(attrs={'class': 'form-control'}),
+            'tasa_ila': forms.Select(attrs={'class': 'form-control'}),
+        }
 
     def save(self, commit=True):
         producto = super().save(commit=False)
         
-        if not producto.pk:
-            producto.stock = 0  
-            producto.precio = 0  
+        if not producto.pk and producto.precio is None:
+            producto.precio = 0
         if commit:
             producto.save()
         return producto
@@ -93,18 +97,25 @@ class ProductoFormMinorista(forms.ModelForm):
             'sku', 
             'nombre', 
             'marca', 
-            'categoria'
+            'categoria',
+            'precio',           
+            'descuento', 
+            'tasa_ila',
         ]
+        widgets = {
+            'categoria': forms.Select(attrs={'class': 'form-control'}),
+            'tasa_ila': forms.Select(attrs={'class': 'form-control'}),
+        }
 
     def save(self, commit=True):
         producto = super().save(commit=False)
         
-        if not producto.pk:
-            producto.stock = 0  
+        if not producto.pk and producto.precio is None:
             producto.precio = 0 
         if commit:
             producto.save()
         return producto
+
 
 
 class ActualizarPrecioForm(forms.ModelForm):
@@ -127,33 +138,56 @@ class CarritoProductoForm(forms.ModelForm):
             'cantidad': 'Cantidad',
         }
 
-
 class PerfilClientesForm(forms.ModelForm):
     class Meta:
         model = PerfilClientes
-        fields = ['nombre', 'rut', 'direccion', 'telefono', 'region', 'provincia']
-
+        fields = ['nombre', 'rut', 'direccion', 'comuna', 'region', 'provincia', 'correo', 'telefono', 'linea_credito', 'descuento_fijo', 'dias_pago']
 
 class EntradaBodegaForm(forms.ModelForm):
     class Meta:
         model = EntradaBodega
-        fields = ['producto', 'cantidad_recibida', 'proveedor', 'precio_unitario', 'lote', 'medio_pago']
+        fields = ['numero_factura', 'proveedor', 'orden_compra', 'forma_pago']
 
     def __init__(self, *args, **kwargs):
-        almacen = kwargs.pop('almacen', None)  # Recibe el almacén como parámetro
         super(EntradaBodegaForm, self).__init__(*args, **kwargs)
+
+        
+class EntradaBodegaProductoForm(forms.ModelForm):
+    class Meta:
+        model = EntradaBodegaProducto
+        fields = ['producto', 'cantidad_recibida', 'precio_unitario']
+
+    
+    def __init__(self, *args, **kwargs):
+        almacen = kwargs.pop('almacen', None)
+        super(EntradaBodegaProductoForm, self).__init__(*args, **kwargs)
         if almacen:
             # Filtrar productos por el almacén del negocio y estado
             self.fields['producto'].queryset = Producto.objects.filter(
                 almacen=almacen, estado__in=['disponible', 'sin_stock']
             )
+            
+class DevolucionProductoForm(forms.ModelForm):
+    class Meta:
+        model = ProductosDevueltos
+        fields = ['producto', 'cantidad_devuelta', 'motivo_devolucion']
+        widgets = {
+            'motivo_devolucion': forms.Textarea(attrs={'placeholder': 'Ingrese el motivo de la devolución'}),
+            'cantidad_devuelta': forms.NumberInput(attrs={'min': 1}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        productos_queryset = kwargs.pop('productos_queryset', None)
+        super().__init__(*args, **kwargs)
+        if productos_queryset is not None:
+            self.fields['producto'].queryset = productos_queryset
 
 class NegocioForm(forms.ModelForm):
     almacen_direccion = forms.CharField(max_length=255, required=True, label="Dirección del Almacén")
 
     class Meta:
         model = Negocio
-        fields = ['nombre', 'direccion', 'telefono', 'region', 'provincia', 'rut_empresa', 'is_mayorista','almacen_direccion']
+        fields = ['nombre', 'giro', 'direccion', 'telefono', 'region', 'provincia', 'rut_empresa', 'is_mayorista','almacen_direccion']
         
         widgets = {
             'is_mayorista': forms.CheckboxInput(),  # checkbox para is_mayorista
@@ -183,4 +217,10 @@ class ProductoFormBoleta(forms.ModelForm):
             'stock': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         }
 
-
+class CompraFacturaForm(forms.ModelForm):
+    class Meta:
+        model = Compra
+        fields = ['medio_pago', 'glosa']
+        widgets = {
+            'glosa': forms.Textarea(attrs={'required': True, 'placeholder': 'Ingrese una descripción o detalles adicionales'}),
+        }

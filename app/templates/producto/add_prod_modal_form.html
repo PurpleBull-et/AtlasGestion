@@ -1,0 +1,26 @@
+<form method="post" id="add-prod-form">
+    {% csrf_token %}
+    {{ producto_form.as_p }}
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+</form>
+
+<script>
+    // Procesar el envío del formulario de agregar producto mediante AJAX
+    $('#add-prod-form').submit(function (e) {
+        e.preventDefault();
+        $.ajax({
+            url: "{% url 'add_prod_modal' %}",
+            type: "POST",
+            data: $(this).serialize(),
+            success: function (data) {
+                if (data.success) {
+                    $('#addProdModal').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modal-body-content').html(data.html_form);  
+                }
+            }
+        });
+    });
+</script>

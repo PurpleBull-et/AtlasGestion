@@ -1,0 +1,50 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h1 class="text-center">Devolver Factura {{ entrada.numero_factura }}</h1>
+
+    <form method="post" id="devolucionForm">
+        {% csrf_token %}
+        {{ formset.management_form }}
+
+        <div id="devoluciones-container">
+            {% for form in formset %}
+                <div class="devolucion-form">
+                    {{ form.as_p }}
+                    <button type="button" class="btn btn-danger" onclick="this.closest('.devolucion-form').remove()">Eliminar Devolución</button>
+                </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="agregarDevolucion()">Agregar Otra Devolución</button>
+        <button type="submit" class="btn btn-primary">Registrar Devolución</button>
+    </form>
+</div>
+
+<script>
+    function agregarDevolucion() {
+        const container = document.getElementById('devoluciones-container');
+        const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+        const formIdx = container.querySelectorAll('.devolucion-form').length;
+
+        const newForm = container.querySelector('.devolucion-form').cloneNode(true);
+        newForm.innerHTML = newForm.innerHTML.replace(/-\d+-/g, `-${formIdx}-`);
+        
+        newForm.querySelectorAll('input, select, textarea').forEach(input => {
+            const name = input.getAttribute('name').replace(/-\d+-/, `-${formIdx}-`);
+            const id = input.getAttribute('id').replace(/-\d+-/, `-${formIdx}-`);
+            input.setAttribute('name', name);
+            input.setAttribute('id', id);
+            if (input.type !== 'hidden') {
+                input.value = '';  // Limpia el valor de los campos en el nuevo formulario
+            }
+        });
+
+        container.appendChild(newForm);
+        totalForms.value = parseInt(totalForms.value) + 1;  // Incrementa el contador total de formularios
+    }
+</script>
+
+{% endblock %}
+

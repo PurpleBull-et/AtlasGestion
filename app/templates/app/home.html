@@ -2,4 +2,11 @@
 {% load static %}
 {% block contenido %}
 <h1>Bienvenido</h1>
+
+<!-- En cualquier template principal -->
+
+<div id="lista-entradas">
+    {% include 'bodega/lista_entradas_bodega.html' %}
+</div>
+
 {% endblock %}

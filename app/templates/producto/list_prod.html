@@ -4,8 +4,42 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Lista de Productos</h1>
-        <a href="{% url 'add_prod' %}" class="btn btn-success">Agregar Producto</a>
+        <a href="#" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProdModal">Agregar Producto</a>
+
+        <!-- Modal para agregar producto -->
+        <div class="modal fade" id="addProdModal" tabindex="-1" aria-labelledby="addProdModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addProdModalLabel">Agregar Producto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Aquí se cargará el formulario mediante AJAX -->
+                        <div id="modal-body-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    <!-- Botón para abrir el modal de operaciones de bodega -->
+    <a href="#" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#operacionesBodegaModal">Operaciones de Bodega</a>
+
+    <!-- Modal para operaciones de bodega -->
+    <div class="modal fade" id="operacionesBodegaModal" tabindex="-1" aria-labelledby="operacionesBodegaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="operacionesBodegaModalLabel">Operaciones de Bodega</h5>
+                    <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modal-body-content-bodega">
+                    <!-- El formulario se cargará aquí mediante AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="mb-4">
         <form method="get" class="d-flex align-items-center">
@@ -51,9 +85,11 @@
                     <th>Marca</th>
                     <th>Categoría</th>
                     <th>Precio</th>
+                    <th>Precio Mayorista</th>
+                    <th>Descuento</th>
+                    <th>Descuento Mayorista</th>
                     <th>Stock</th>
                     <th>Estado</th>
-                    <th>Descripción</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -65,6 +101,9 @@
                         <td>{{ producto.marca }}</td>
                         <td>{{ producto.categoria }}</td>
                         <td>{{ producto.precio }}</td>
+                        <td>{{ producto.precio_mayorista }}</td>
+                        <td>{{ producto.descuento }}</td>
+                        <td>{{ producto.descuento_mayorista }}</td>
                         <td>
                             {% if producto.stock > 0 %}
                                 {{ producto.stock }}
@@ -80,66 +119,23 @@
                             {% elif producto.estado == 'registrado_reciente' %}
                                 <span class="badge bg-warning">Nuevo</span>
                             {% elif producto.estado == 'ingresado_manual' %}
-                                <span class="badge bg-danger">Ingresado Manual</span> <!-- Resaltado en rojo -->
+                                <span class="badge bg-danger">Ingresado Manual</span>
                             {% endif %}
                         </td>
-                        <td>{{ producto.descripcion }}</td>
                         <td>
-                            <a href="{% url 'mod_prod' producto.producto_id %}" class="btn btn-primary btn-sm">Editar</a>
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#precioModal{{ producto.producto_id }}" class="btn btn-info btn-sm">Asignar Precio</a>
-            
-                            <!-- Modal para actualizar precio -->
-                            <div class="modal fade" id="precioModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="precioModalLabel{{ producto.producto_id }}" aria-hidden="true">
+                            <a href="#" class="btn btn-primary btn-sm edit-product" data-bs-toggle="modal" data-bs-target="#modProdModal{{ producto.producto_id }}" data-product-id="{{ producto.producto_id }}">Editar</a>
+
+                            <!-- Modal para editar producto -->
+                            <div class="modal fade" id="modProdModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="modProdModalLabel{{ producto.producto_id }}" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="precioModalLabel{{ producto.producto_id }}">Asignar Precio a {{ producto.nombre }}</h5>
+                                            <h5 class="modal-title" id="modProdModalLabel{{ producto.producto_id }}">Editar Producto - {{ producto.nombre }}</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                        <form method="POST" action="{% url 'actualizar_precio_prod' producto.producto_id %}">
-                                            {% csrf_token %}
-                                            <div class="modal-body">
-                                                <div class="mb-3">
-                                                    <label for="precio" class="form-label">Nuevo Precio</label>
-                                                    <input type="number" class="form-control" id="precio" name="precio" value="{{ producto.precio }}" required min="0">
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <button type="submit" class="btn btn-primary">Guardar</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-            
-                            <!-- Modal para devolución -->
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#devolverModal{{ producto.producto_id }}" class="btn btn-warning btn-sm">Devolver</a>
-            
-                            <div class="modal fade" id="devolverModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="devolverModalLabel" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="devolverModalLabel">Devolver Producto - {{ producto.nombre }}</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <div class="modal-body" id="modal-body-content-{{ producto.producto_id }}">
+                                            <!-- El formulario se cargará aquí mediante AJAX -->
                                         </div>
-                                        <form method="POST" action="{% url 'devolver_prod' producto.producto_id %}">
-                                            {% csrf_token %}
-                                            <div class="modal-body">
-                                                <div class="mb-3">
-                                                    <label for="lote" class="form-label">Número de Lote</label>
-                                                    <input type="text" class="form-control" id="lote" name="lote" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="motivo_devolucion" class="form-label">Motivo de Devolución</label>
-                                                    <textarea class="form-control" id="motivo_devolucion" name="motivo_devolucion" rows="3"></textarea>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <button type="submit" class="btn btn-primary">Devolver</button>
-                                            </div>
-                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -153,5 +149,67 @@
         <div class="alert alert-warning text-center mt-4">No hay productos disponibles.</div>
     {% endif %}
 </div>
+
+<!-- Incluye jQuery antes de tus scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Script para manejar modales y cargar formularios -->
+<script>
+    function bindOperacionesBodegaForm() {
+        $('#operaciones-bodega-form').on('submit', function (e) {
+            e.preventDefault();
+
+            const ajaxUrl = "{% url 'operaciones_bodega_modal' %}";
+            console.log("AJAX URL:", ajaxUrl);
+
+            $.ajax({
+                url: ajaxUrl,
+                type: "POST",
+                data: $(this).serialize(),
+                success: function (data) {
+                    if (data.success) {
+                        $('#operacionesBodegaModal').modal('hide');
+                        location.reload();
+                    } else {
+                        $('#modal-body-content-bodega').html(data.html_form);
+                        bindOperacionesBodegaForm(); // Re-vincular el manejador si el formulario se re-renderiza
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error en la solicitud AJAX:", status, error);
+                }
+            });
+        });
+    }
+
+    $(document).ready(function () {
+        // Cargar el formulario de Operaciones de Bodega cuando se abra el modal
+        $('#operacionesBodegaModal').on('show.bs.modal', function () {
+            $.get("{% url 'operaciones_bodega_modal' %}", function (data) {
+                $('#modal-body-content-bodega').html(data.html_form);
+                bindOperacionesBodegaForm(); // Vincular el manejador después de cargar el formulario
+            });
+        });
+
+        // Cargar el formulario de Agregar Producto cuando se abra el modal
+        $('#addProdModal').on('show.bs.modal', function () {
+            console.log("Cargando formulario en modal...");
+            $.get("{% url 'add_prod_modal' %}", function (data) {
+                $('#modal-body-content').html(data.html_form);
+                // No es necesario vincular el formulario aquí; se maneja en el template cargado
+            });
+        });
+
+        // Manejar la carga del formulario de edición de producto
+        $('a.edit-product').on('click', function () {
+            let productId = $(this).data('product-id');
+
+            $.get("{% url 'mod_prod_modal' 0 %}".replace('0', productId), function (data) {
+                $('#modal-body-content-' + productId).html(data.html_form);
+                // El manejador de envío se incluye en el template cargado
+            });
+        });
+    });
+</script>
 
 {% endblock %}

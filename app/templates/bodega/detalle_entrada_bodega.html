@@ -1,0 +1,59 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+{% load custom_filters %}
+
+<h1>Detalle de Entrada de Bodega</h1>
+
+<div class="mb-4">
+    <h4>Información de la Entrada</h4>
+    <ul>
+        <li><strong>Número de Factura:</strong> {{ entrada.numero_factura }}</li>
+        <li><strong>Proveedor:</strong> {{ entrada.proveedor.nombre }}</li>
+        <li><strong>Fecha de Recepción:</strong> {{ entrada.fecha_recepcion }}</li>
+        <li><strong>Forma de Pago:</strong> {{ entrada.get_forma_pago_display }}</li>
+        <li><strong>Total de Productos:</strong> {{ total_productos }}</li>
+    </ul>
+    <a href="{% url 'devolver_factura' entrada.id %}" class="btn btn-warning">Registrar Devolución</a>
+
+</div>
+
+<h4>Productos Comprados</h4>
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad Recibida</th>
+            <th>Cantidad Devuelta</th>
+            <th>Cantidad Restante</th>
+            <th>Estado de Devolución</th>
+            <th>Precio Unitario</th>
+            <th>Subtotal</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in productos %}
+            <tr>
+                <td>{{ item.producto.nombre }}</td>
+                <td>{{ item.cantidad_recibida }}</td>
+                <td>{{ item.cantidad_devuelta|default:0 }}</td>
+                <td>{{ item.cantidad_restante }}</td>
+                <td>{{ item.estado_devolucion }}</td>
+                <td>{{ item.precio_unitario }}</td>
+                <td>{{ item.subtotal }}</td>
+                <td>
+                    <a href="{% url 'detalle_prod_entrada_bodega' entrada_id=entrada.id producto_id=item.producto.producto_id %}" class="btn btn-info">Ver Detalle del Producto</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">No hay productos registrados para esta entrada.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'listar_entradas_bodega' %}" class="btn btn-primary">Volver a la Lista de Entradas</a>
+
+{% endblock %}
