@@ -108,6 +108,7 @@ body {
   font-size: 14px;
   color: var(--placeholder-color);
   margin-bottom: 0;
+/*   background-color: #1499a3; */
 }
 
 .form-control {

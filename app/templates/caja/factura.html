@@ -1,28 +1,76 @@
 {% extends 'app/base.html' %}
 {% load static %}
 {% block contenido %}
+{% load custom_filters %}
+
+<div><h1>Factura</h1></div>
+
+<div class="containerFiltros"
+    <form method="get" class="mb-3">
+        <div class="form-group">
+            <label for="buscar">Buscar producto:</label>
+            <input type="text" name="buscar" id="buscar" class="form-control" value="{{ palabra_clave }}" placeholder="Buscar producto...">
+        </div>
+
+        <div class="form-group">
+            <label for="categoria">Filtrar por categoría:</label>
+            <select name="categoria" id="categoria" class="form-control">
+                <option value="">Todas las categorías</option>
+                {% for categoria in categorias %}
+                    <option value="{{ categoria.id }}" {% if categoria_filtro == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        {% if request.user.is_superuser %}
+        <div class="form-group">
+            <label for="negocio">Filtrar por negocio:</label>
+            <select name="negocio" id="negocio" class="form-control">
+                <option value="">Todos los negocios</option>
+                {% for negocio in negocios %}
+                    <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>{{ negocio.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        
+        <button type="submit" class="btnFiltros">Aplicar Filtros</button>
+        <button type="button" class="btnFiltros" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">
+            Ingreso Manual
+        </button>
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#listClienteModal">
+            Gestionar Perfiles de Cliente
+        </button>
+        
+        
+        
+    </form>
+</div>
 <div>
-    <div class="card">
+    <div class="cardenv">{% comment %}borde exterior que encierra todo  {% endcomment %}
         <!-- Lista de productos -->
-        <div class="row">
+        <div class="row">{% comment %} hace que se alineen en horizontal {% endcomment %}
             <div class="col-md-8 cart">
                 <div class="title">
                     <h4><b>Lista de Productos</b></h4>
                 </div>
+               
                 <ul class="list-unstyled">
+                    
                     {% for producto in productos %}
                         {% if producto.stock > 0 %}
+                        
                         <li class="product-item row main align-items-center border-top border-bottom py-3">
                             <div class="col-4">{{ producto.nombre }}</div>
                             <div class="col-2">{{ producto.stock }}</div>
-                            <div class="col-2">{{ producto.precio_mayorista }}</div>
+                            <div class="col-2">{{ producto.precio_mayorista|clp }}</div>
                             <div class="col-2">{{ producto.descuento_mayorista }}%</div>
                             <div class="col-2">
                                 <form method="post" action="{% url 'agregar_al_carrito_factura' producto.producto_id %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-success">Añadir</button>
+                                    <button type="submit" class="btn btn-success" style="background-color:#1499a3">Añadir</button>
                                 </form>
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#precioDescuentoModal{{ producto.producto_id }}" class="btn btn-info btn-sm">Asignar Descuento</a>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#precioDescuentoModal{{ producto.producto_id }}" class="btn btn-info btn-sm" style="background-color: rgb(84, 104, 104); border:none;">Descuento</a>
                                 <div class="modal fade" id="precioDescuentoModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="precioDescuentoModalLabel{{ producto.producto_id }}" aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
@@ -35,7 +83,7 @@
                                                 <div class="modal-body">
                                                     <div class="mb-3">
                                                         <label for="descuento" class="form-label">Descuento (%)</label>
-                                                        <input type="number" class="form-control" id="descuento" name="descuento" value="{{ producto.descuento }}" min="0" max="100">
+                                                        <input type="number" class="form-control" id="descuento" name="descuento" value="{{ producto.descuento_mayorista }}" min="0" max="100">
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
@@ -63,21 +111,21 @@
                     <li class="cart-item d-flex justify-content-between align-items-center border-bottom py-3">
                         <div>{{ item.cantidad }}</div>
                         <div>{{ item.producto.nombre }}</div>
-                        <div>{{ item.producto.precio_mayorista }} CLP</div>
-                        <div>{{ item.total_precio }} CLP</div>
-                        <div>
+                        <div>{{ item.producto.precio_mayorista|clp }} CLP</div>
+                        <div>{{ item.total_precio|clp }} CLP</div>
+                        <div class="botones">
                             <form method="post" action="{% url 'restar_producto_factura' item.producto.producto_id %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-secondary">-</button>
+                                <button type="submit" class="btn">-</button>
                             </form>
                             <form method="post" action="{% url 'agregar_al_carrito_factura' item.producto.producto_id %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-secondary">+</button>
+                                <button type="submit" class="btn ">+</button>
                             </form>
                         </div>
                         <form method="post" action="{% url 'eliminar_del_carrito_factura' item.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger ms-3">x</button>
+                            <button type="submit" class="btn btn-secondary x">x</button>
                         </form>
                     </li>
                     {% endfor %}
@@ -88,15 +136,15 @@
                         <label for="glosa" class="form-label">Glosa</label>
                         <textarea class="form-control" id="glosa" name="glosa" placeholder="Ingrese una glosa para la factura"></textarea>
                     </div>
-                    <div class="row border-top py-3">
-                        <div class="col">Sub Total: {{ carrito_subtotal }}</div>
-                        <div class="col">Descuento: -{{ carrito_descuento_total }}</div>
-                        <div class="col">IVA: {{ carrito_iva }}</div>
-                        <div class="col text-right">Total: {{ carrito_total }}</div>
+                    <div class="border-top py-3">
+                        <div class="col">Sub Total: {{ carrito_subtotal|clp }} </div>
+                        <div class="col">Descuento: -{{ carrito_descuento_total|clp }}</div>
+                        <div class="col"> Impt. IVA: {{ carrito_iva|clp }}</div>
+                        <div class="col text-right">Total: {{ carrito_total|clp }}</div>
                     </div>
                     <div class="mb-3">
                         <label for="medio_pago" class="form-label">Medio de Pago</label>
-                        <select class="form-select" id="medio_pago" name="medio_pago" required>
+                        <select class="form-select" id="medio_pago" name="medio_pago">
                             <option value="" disabled selected>Seleccione un medio de pago</option>
                             <option value="efectivo">Efectivo</option>
                             <option value="tarjeta_debito">Tarjeta Débito</option>
@@ -104,27 +152,145 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="correo" class="form-label">Correo electrónico (opcional)</label>
-                        <input type="email" class="form-control" id="correo" name="correo" placeholder="Ingrese su correo">
+                        <div class="form-group">
+                            <label for="correo">Correo electrónico</label>
+                            <input type="email" id="correo" name="correo" class="form-control" placeholder="Escribe para buscar o crear">
+                            <input type="hidden" id="correo_id" name="correo_id">
+                            <div id="correo_suggestions" class="suggestions-box">
+                        </div>
+                            <style>
+                                .suggestions-box {
+                                    border: 1px solid #ddd;
+                                    background-color: #fff;
+                                    max-height: 200px;
+                                    overflow-y: auto;
+                                    position: absolute;
+                                    z-index: 1000;
+                                    width: 100%;
+                                    display: none;
+                                }
+                                .suggestion-item {
+                                    padding: 10px;
+                                    cursor: pointer;
+                                }
+                                .suggestion-item:hover {
+                                    background-color: #f0f0f0;
+                                }
+                                .suggestion-item.active {
+                                    background-color: #007bff;
+                                    color: #fff;
+                                }
+                            </style>
+                            
+                        </div>                            
                     </div>                 
                     <div id="mensaje-medio-pago" style="display: none; color: red; margin-top: 10px;"></div>
-                    <div class="d-flex justify-content-between w-100 mt-3">
-                        <!-- Botón para cancelar -->
-                        <form method="post" action="{% url 'vaciar_carrito_factura' %}" style="width: 49%;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger w-100">Cancelar Venta</button>
-                        </form>
+                    <div class="d-flex justify-content-between w-100 mt-3">                          
                         <!-- Botón para pagar -->
-                        <button type="submit" class="btn btn-success w-100" style="width: 49%;" id="pagar-btn">Pagar</button>
+                        <button type="submit" class="btn btn-success w-35" style="width: 30%;" id="pagar-btn">Pagar</button>
                     </div>
                 </form>
+                <form method="post" action="{% url 'vaciar_carrito_factura' %}" style="width: 49%;">
+                    {% csrf_token %}
+                    <input type="hidden" name="cancelar" value="true">
+                    <button type="submit" class="btn btn-danger w-100">Cancelar Venta</button>
+                </form>           
                 {% else %}
                 <p>Tu carrito está vacío.</p>
                 {% endif %}
             </div>
         </div>
     </div>
+    <!--Borrar cliente-->
+    <div class="modal fade" id="eraseClienteModal" tabindex="-1" aria-labelledby="eraseClienteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eraseClienteModalLabel">Eliminar Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar este cliente?</p>
+                    <form method="post" id="erase-cliente-form">
+                        {% csrf_token %}
+                        <input type="hidden" id="cliente-id" name="cliente_id">
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!--Mod cliente-->
+    <div class="modal fade" id="modClienteModal" tabindex="-1" aria-labelledby="modClienteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modClienteModalLabel">Editar Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modClienteModalBody">
+                    <!-- Formulario cargado dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!--Modal listar clientes-->
+    <div class="modal fade" id="listClienteModal" tabindex="-1" aria-labelledby="listClienteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="listClienteModalLabel">Gestión de Perfiles de Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="formAddCliente">
+                        <form method="post" id="add-cliente-form">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="correo">Correo Electrónico</label>
+                                <input type="email" id="correo" name="correo" class="form-control" placeholder="correo@ejemplo.com" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-3">Registrar Cliente</button>
+                        </form>
+                    </div>
+                    <hr>
+                    <div id="clienteList">
+                        {% for cliente in clientes %}
+                        <div class="row mb-2">
+                            <div class="col">{{ cliente.correo }}</div>
+                            <div class="col-auto">
+                                <button class="btn btn-warning btn-sm modificar-cliente" data-id="{{ cliente.id }}" data-bs-toggle="modal" data-bs-target="#modClienteModal">Editar</button>
+                                <button class="btn btn-danger btn-sm eliminar-cliente" data-id="{{ cliente.id }}" data-bs-toggle="modal" data-bs-target="#eraseClienteModal">Eliminar</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+     <!-- Modal para ingreso manual -->
+     <div class="modal fade" id="registrarProductoModal" tabindex="-1" aria-labelledby="registrarProductoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registrarProductoLabel">Registrar Producto para Factura</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="modal-body-content">
+                    <!-- El contenido dinámico del formulario se cargará aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -152,6 +318,144 @@
 </script>
 
 <script>
+    $(document).ready(function () {
+        // Envío de formulario para agregar cliente
+        $("#add-cliente-form").submit(function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: "{% url 'list_clientes' %}",
+                type: "POST",
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        alert("Cliente registrado");
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+            });
+        });
+    
+        // Cargar formulario de edición en modal
+        $(".modificar-cliente").click(function () {
+            const clienteId = $(this).data("id"); // Obtiene el id del cliente desde el atributo data-id
+            if (clienteId) {
+                $.get(`/socios/cuentas/modificar/${clienteId}/`, function (data) {
+                    $("#modClienteModalBody").html(data.html_form);
+                });
+            } else {
+                alert("No se pudo identificar el cliente.");
+            }
+        });
+        
+    
+        // Envío del formulario de edición
+        $(document).on("submit", "#mod-cliente-form", function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: $(this).attr("action"),
+                type: "POST",
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        alert("Cliente modificado");
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+            });
+        });
+    
+        // Confirmar eliminación
+        $(".eliminar-cliente").click(function () {
+            const clienteId = $(this).data("id");
+            $("#cliente-id").val(clienteId);
+        });
+    
+        // Envío del formulario de eliminación
+        $("#erase-cliente-form").submit(function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: "{% url 'erase_cliente' %}",
+                type: "POST",
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        alert("Cliente eliminado");
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+            });
+        });
+    });
+     
+</script>
+<script>
+    $(document).ready(function () {
+        function setupAutocomplete(inputSelector, hiddenSelector, suggestionsSelector, url) {
+            const $input = $(inputSelector);
+            const $hidden = $(hiddenSelector);
+            const $suggestions = $(suggestionsSelector);
+    
+            $input.on("input", function () {
+                const term = $input.val().trim();
+                if (term.length < 2) {
+                    $suggestions.hide();
+                    return;
+                }
+    
+                $.ajax({
+                    url: url,
+                    data: { term: term },
+                    dataType: "json",
+                    success: function (data) {
+                        $suggestions.empty().show();
+                        if (data.length === 0) {
+                            $suggestions.hide();
+                            return;
+                        }
+                        data.forEach((item) => {
+                            $suggestions.append(
+                                `<div class="suggestion-item" data-id="${item.id}" data-value="${item.value}">${item.label}</div>`
+                            );
+                        });
+    
+                        $(".suggestion-item").on("click", function () {
+                            const value = $(this).data("value");
+                            const id = $(this).data("id");
+    
+                            $input.val(value);
+                            $hidden.val(id);
+                            $suggestions.hide();
+                        });
+                    },
+                });
+            });
+    
+            $(document).on("click", function (e) {
+                if (!$(e.target).closest($suggestions).length && !$(e.target).is($input)) {
+                    $suggestions.hide();
+                }
+            });
+        }
+    
+        setupAutocomplete(
+            "#correo", // Input del correo
+            "#correo_id", // Campo oculto para ID del correo
+            "#correo_suggestions", // Contenedor de sugerencias
+            "/buscar_correo/" // URL de búsqueda
+        );
+    });
+    
+    
+</script>
+
+
+<script>
     document.addEventListener('DOMContentLoaded', function () {
         const productosConBajoStock = [{% for producto in productos %}{% if producto.stock < 5 %}{{ producto.producto_id }}, {% endif %}{% endfor %}];
         
@@ -160,4 +464,36 @@
         }
     });
 </script>
+
+<script>
+    $(document).ready(function () {
+        // Cargar el formulario dinámicamente al abrir el modal
+        $('#registrarProductoModal').on('show.bs.modal', function () {
+            console.log("Cargando formulario de registro de producto para factura...");
+            $.get("{% url 'reg_prod_factura' %}", function (data) {
+                $('#modal-body-content').html(data);
+            });
+        });
+
+        // Procesar el envío del formulario mediante AJAX
+        $('#modal-body-content').on('submit', '#reg-prod-factura-form', function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: "{% url 'reg_prod_factura' %}",
+                type: "POST",
+                data: $(this).serialize(),
+                success: function (data) {
+                    if (data.success) {
+                        $('#registrarProductoModal').modal('hide');
+                        location.reload();
+                    } else {
+                        $('#modal-body-content').html(data.html_form);
+                    }
+                },
+            });
+        });
+    });
+</script>
+
+
 {% endblock %}

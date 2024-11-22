@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'atlasManagement.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'ddbb_atlas12',
+        'NAME': 'ddbbAtlasGestion',
         'USER': 'sa',
         'PASSWORD': 'qweqweqwe123123',
         'HOST': 'AlanPC\SQLEXPRESS',
@@ -144,15 +144,20 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# CONFIG CORREO HAY QUE CAMBIARLO
+# Configuración del backend de correos
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = '/'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = '/@gmail.com'                
-EMAIL_HOST_PASSWORD = '/'  
+
+# Configuración SMTP basada en Ferozo
+EMAIL_HOST = 'c2661241.ferozo.com'  # Servidor SMTP indicado en tu panel
+EMAIL_PORT = 465  # Puerto para SSL
+EMAIL_USE_TLS = False  # No utilizar TLS si se usa SSL
+EMAIL_USE_SSL = True  # Activar SSL
+EMAIL_HOST_USER = 'contacto@atlasgestion.cl'  # Tu correo completo
+EMAIL_HOST_PASSWORD = 'Mnx@6vJ3iZ'  # La contraseña de tu correo
+
+# Configuración adicional opcional
+DEFAULT_FROM_EMAIL = 'contacto@atlasgestion.cl'  # Dirección predeterminada
+
 
 LOGIN_REDIRECT_URL = 'home' 
 

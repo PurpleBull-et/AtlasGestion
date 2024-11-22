@@ -6,6 +6,37 @@ from django.core.files.base import ContentFile
 import io
 from django.utils.timezone import now
 import uuid
+import re
+from django.core.exceptions import ValidationError
+from django.db.models import Q, UniqueConstraint
+
+class Region(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+class Provincia(models.Model):
+    nombre = models.CharField(max_length=100)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="provincias")
+
+    class Meta:
+        unique_together = ("nombre", "region")
+
+    def __str__(self):
+        return f"{self.nombre} - {self.region.nombre}"
+
+
+class Comuna(models.Model):
+    nombre = models.CharField(max_length=100)
+    provincia = models.ForeignKey(Provincia, on_delete=models.CASCADE, related_name="comunas")
+
+    class Meta:
+        unique_together = ("nombre", "provincia") 
+
+    def __str__(self):
+        return f"{self.nombre} - {self.provincia.nombre}, {self.provincia.region.nombre}"
+
 
 class Negocio(models.Model):
     id = models.AutoField(primary_key=True)
@@ -14,11 +45,14 @@ class Negocio(models.Model):
     giro = models.CharField(max_length=255, null=True)
     direccion = models.CharField(max_length=255)
     telefono = models.CharField(max_length=20)
-    region = models.CharField(max_length=100)
-    provincia = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
     is_mayorista = models.BooleanField(default=False, verbose_name='¿Es Mayorista?')
     #logo = models.ImageField(upload_to='negocios_logos/', blank=True, null=True)  # Campo de imagen
+    region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, related_name="negocios")
+    provincia = models.ForeignKey(Provincia, on_delete=models.SET_NULL, null=True, related_name="negocios")
+    comuna = models.ForeignKey(Comuna, on_delete=models.SET_NULL, null=True, related_name="negocios")
+
+
 
     def __str__(self):
         return self.nombre
@@ -112,7 +146,6 @@ class Producto(models.Model):
     precio_mayorista_ila_diferencia = models.IntegerField(null=True, blank=True) 
 
     def calcular_ila_diferencia(self):
-        """Calcula la diferencia del ILA para el precio y precio mayorista sin modificar los precios ingresados."""
         if self.precio is not None and self.tasa_ila is not None:
             tasa_factor = 1 + (self.tasa_ila / 100)
             precio_sin_ila = self.precio / tasa_factor
@@ -124,6 +157,22 @@ class Producto(models.Model):
             precio_mayorista_sin_ila = self.precio_mayorista / tasa_factor
             ila_mayorista_diferencia = self.precio_mayorista - precio_mayorista_sin_ila
             self.precio_mayorista_ila_diferencia = round(ila_mayorista_diferencia)
+    
+    iva_precio = models.IntegerField(default=19, verbose_name="IVA Precio (%)")
+    iva_precio_mayorista = models.IntegerField(default=19, verbose_name="IVA Precio Mayorista (%)")
+
+    def calcular_iva(self):
+        if self.precio:
+            tasa_base = 1 + (self.iva_precio / 100)
+            return round(self.precio - (self.precio / tasa_base))
+        return 0
+
+    def calcular_iva_mayorista(self):
+        if self.precio_mayorista:
+            tasa_base = 1 + (self.iva_precio_mayorista / 100)
+            return round(self.precio_mayorista - (self.precio_mayorista / tasa_base))
+        return 0
+
 
     def save(self, *args, **kwargs):
         if not self.sku:
@@ -183,24 +232,23 @@ class ProductosDevueltos(models.Model):
         
         return self.entrada_bodega.numero_factura
 
-from django.db import models
-
 class PerfilClientes(models.Model):
-    id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True) # ID autoincremental
     nombre = models.CharField(max_length=255, null=True, blank=True)
-    rut = models.CharField(max_length=12, unique=True, null=True, blank=True)
+    rut = models.CharField(max_length=12, null=True, blank=True, unique=False)
     direccion = models.CharField(max_length=255, null=True, blank=True)
     comuna = models.CharField(max_length=100, null=True, blank=True)
     region = models.CharField(max_length=100, null=True, blank=True)
     provincia = models.CharField(max_length=100, null=True, blank=True)
-    correo = models.EmailField(max_length=255, unique=True, null=True, blank=True)
+    correo = models.EmailField(max_length=255, null=True, blank=True, unique=False)
     telefono = models.CharField(max_length=20, null=True, blank=True)
-    linea_credito = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    descuento_fijo = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    linea_credito = models.IntegerField(default=0)
+    descuento_fijo = models.IntegerField(default=0)
     dias_pago = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.nombre or "Cliente sin nombre"} - {self.rut or "Sin RUT"}'
+
 
 class Carrito(models.Model):
     id = models.AutoField(primary_key=True)
@@ -211,51 +259,49 @@ class Carrito(models.Model):
     tipo = models.CharField(max_length=10, choices=[('boleta', 'Boleta'), ('factura', 'Factura')])
 
     def actualizar_total(self):
-        """Calcula el total para el tipo de carrito 'boleta' usando precios y descuentos regulares."""
-        subtotal = 0
-        descuento_total = 0
-        iva_total = 0        
-
-        for item in self.carritoproducto_set.all():
-            descuento = item.producto.descuento / 100  # Convertir el porcentaje a decimal
-            precio_descuento = item.producto.precio * (1 - descuento)
-
-            # Calcular subtotal acumulado
-            subtotal += precio_descuento * item.cantidad
-
-            # Acumular el total de descuento y el IVA
-            descuento_total += (item.producto.precio - precio_descuento) * item.cantidad
-            iva_total += precio_descuento * item.cantidad * 0.19  # 19% de IVA
-
-        # Asignar valores redondeados y asegurarse de que no sean None
-        self.subtotal = round(subtotal) if subtotal else 0
-        self.descuento_total = round(descuento_total) if descuento_total else 0
-        self.iva_total = round(iva_total) if iva_total else 0
-        self.total = round(subtotal + iva_total) if (subtotal + iva_total) else 0
-        self.save()
-
-    def actualizar_total_mayorista(self):
-        """Calcula el total para el tipo de carrito 'factura' usando precios y descuentos mayoristas."""
+        """Calcula los totales del carrito tipo boleta (precios regulares)."""
         subtotal = 0
         descuento_total = 0
         iva_total = 0
 
         for item in self.carritoproducto_set.all():
-            descuento = item.producto.descuento_mayorista / 100  # Usar descuento_mayorista
-            precio_descuento = item.producto.precio_mayorista * (1 - descuento)
+            descuento = item.producto.descuento / 100 
+            precio_con_descuento = item.producto.precio * (1 - descuento)
 
-            # Calcular subtotal acumulado
-            subtotal += precio_descuento * item.cantidad
+            subtotal += precio_con_descuento * item.cantidad
 
-            # Calcular el descuento total y el IVA
-            descuento_total += (item.producto.precio_mayorista - precio_descuento) * item.cantidad
-            iva_total += precio_descuento * item.cantidad * 0.19  # 19% de IVA
+            descuento_total += (item.producto.precio - precio_con_descuento) * item.cantidad
 
-        # Redondear y asignar valores, asegurando que no sean None
-        self.subtotal = round(subtotal) if subtotal else 0
-        self.descuento_total = round(descuento_total) if descuento_total else 0
-        self.iva_total = round(iva_total) if iva_total else 0
-        self.total = round(subtotal + iva_total) if (subtotal + iva_total) else 0
+            iva_total += item.producto.calcular_iva() * item.cantidad
+
+        self.subtotal = round(subtotal)
+        self.descuento_total = round(descuento_total)
+        self.iva_total = round(iva_total)
+
+        self.total = round(subtotal - descuento_total)
+        self.save()
+
+
+    def actualizar_total_mayorista(self):
+        subtotal = 0
+        descuento_total = 0
+        iva_total = 0
+
+        for item in self.carritoproducto_set.all():
+            descuento = item.producto.descuento_mayorista / 100  
+            precio_con_descuento = item.producto.precio_mayorista * (1 - descuento)
+
+            subtotal += precio_con_descuento * item.cantidad
+
+            descuento_total += (item.producto.precio_mayorista - precio_con_descuento) * item.cantidad
+
+            iva_total += item.producto.calcular_iva_mayorista() * item.cantidad
+
+        self.subtotal = round(subtotal)
+        self.descuento_total = round(descuento_total)
+        self.iva_total = round(iva_total)
+
+        self.total = round(subtotal - descuento_total)
         self.save()
 
 
@@ -321,36 +367,14 @@ class DetalleCompra(models.Model):
         return f'{self.cantidad} x {self.producto.nombre} en Compra {self.compra.id}'
 
 
-
-class AdminProfile(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    rut = models.CharField(max_length=12, unique=True)
-    direccion = models.CharField(max_length=255)
-    telefono = models.CharField(max_length=20)
-    region = models.CharField(max_length=100)
-    provincia = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.user.username}"
-
 class StaffProfile(models.Model):
-    MEMBRESIA_CHOICES = [
-        ('Mensual', 'Mensual'),
-        ('Semestral', 'Semestral'),
-        ('Anual', 'Anual'),
-    ]
+
     id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     rut = models.CharField(max_length=12, unique=True)
     direccion = models.CharField(max_length=255)
     telefono = models.CharField(max_length=20)
-    region = models.CharField(max_length=100)
-    provincia = models.CharField(max_length=100)
     estado = models.CharField(max_length=20, default='Activo')
-    membresia = models.CharField(max_length=20, choices=MEMBRESIA_CHOICES)
-    fecha_membresia = models.DateField(default=now, null=True, blank=True) 
-    estado_pago = models.CharField(max_length=20, default='Pendiente')
     negocio = models.ForeignKey('Negocio', on_delete=models.CASCADE, related_name='staff')
 
     def __str__(self):

@@ -6,9 +6,6 @@ register = template.Library()
 def add_class(field, css_class):
     return field.as_widget(attrs={"class": css_class})
 
-
-register = template.Library()
-
 @register.filter
 def multiply(value, arg):
     """Multiplica dos valores."""
@@ -16,3 +13,10 @@ def multiply(value, arg):
         return value * arg
     except (TypeError, ValueError):
         return 0
+
+@register.filter
+def clp(value):
+    try:
+        return f"${value:,.0f}".replace(",", ".")
+    except (ValueError, TypeError):
+        return value

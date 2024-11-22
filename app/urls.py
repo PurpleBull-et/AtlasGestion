@@ -16,15 +16,20 @@ handler500 = 'app.views.error_500'
 
 urlpatterns = [
     path('', home, name='home'),
-    
+    path('ajax/cargar-provincias/', cargar_provincias, name='cargar_provincias'),
+    path('ajax/cargar-comunas/', cargar_comunas, name='cargar_comunas'),
+
     path('compra/confirmar/invitado/', confirmar_compra_invitado, name='confirmar_compra_invitado'),
+
+    path('carrito/boleta/agregar', reg_prod_boleta, name='reg_prod_boleta'),
+    path('carrito/factura/agregar/', reg_prod_factura, name='reg_prod_factura'),
 
     path('boleta/', boleta, name='boleta'),
     path('carrito/boleta/agregar/<int:producto_id>/', agregar_al_carrito_boleta, name='agregar_al_carrito_boleta'),
     path('carrito/boleta/eliminar/<int:item_id>/', eliminar_del_carrito_boleta, name='eliminar_del_carrito_boleta'),
     path('carrito/boleta/restar/<int:producto_id>/', restar_producto_boleta, name='restar_producto_boleta'),
     path('confirmar_compra/boleta/', confirmar_compra_boleta, name='confirmar_compra_boleta'),
-    path('reg-producto/boleta', reg_prod_boleta, name='reg_prod_boleta'),
+    
     path('producto/boleta/actualizar_descuento/<int:producto_id>/', actualizar_descuento_boleta, name='actualizar_descuento_boleta'),
     path('carrito/boleta/vaciar/', vaciar_carrito_boleta, name='vaciar_carrito_boleta'),
     path('compra/boleta/<int:compra_id>/', compra_exitosa_boleta, name='compra_exitosa_boleta'),
@@ -47,10 +52,10 @@ urlpatterns = [
     path('bodega/devoluciones/', historial_devoluciones, name='historial_devoluciones'),
 
 
-    path('socios/cuentas/', list_clientes, name='list_clientes'),
     path('socios/cuentas/agregar/', add_cliente, name='add_cliente'),
+    path('socios/cuentas/', list_clientes, name='list_clientes'),
     path('socios/cuentas/modificar/<int:cliente_id>/', mod_cliente, name='mod_cliente'),
-    path('socios/cuentas/eliminar/<int:cliente_id>/', erase_cliente, name='erase_cliente'),
+    path('socios/cuentas/eliminar/', erase_cliente, name='erase_cliente'),
 
     path('mi_negocio/', mi_negocio, name='mi_negocio'),
 
@@ -117,6 +122,11 @@ urlpatterns = [
     path('add_prod_modal/', add_prod_modal, name='add_prod_modal'),
     path('producto/modificar_modal/<int:producto_id>/', mod_prod_modal, name='mod_prod_modal'),
     path('bodega/operaciones_modal/', operaciones_bodega_modal, name='operaciones_bodega_modal'),
+
+    # Busqueda dinamica
+    path('buscar_categoria/', buscar_categoria, name='buscar_categoria'),
+    path('buscar_marca/', buscar_marca, name='buscar_marca'),
+    path('buscar_correo/', buscar_correo, name='buscar_correo'),
 
     
 

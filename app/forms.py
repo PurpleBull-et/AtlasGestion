@@ -3,6 +3,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms.widgets import DateInput
 from .models import *
+from .utils import *  
+
 
 class UserForm(UserCreationForm):
     class Meta:
@@ -22,24 +24,17 @@ class UserForm(UserCreationForm):
         super(UserForm, self).__init__(*args, **kwargs)
         if disable_username:
             self.fields['username'].disabled = True
- 
-
-class AdminProfileForm(forms.ModelForm):
-    class Meta:
-        model = AdminProfile
-        fields = ['rut', 'direccion', 'telefono', 'region', 'provincia']
-        
+         
 class StaffProfileForm(forms.ModelForm):
     class Meta:
         model = StaffProfile
-        fields = ['rut', 'direccion', 'telefono', 'region', 'provincia', 'membresia', 'negocio']
+        fields = ['rut', 'direccion', 'telefono', 'negocio']
         labels = {
             'rut': 'RUT',
             'direccion': 'Dirección',
             'telefono': 'Teléfono',
             'region': 'Región',
             'provincia': 'Provincia',
-            'membresia': 'Membresía',
             'negocio': 'Negocio',
         }
 
@@ -60,15 +55,12 @@ class TipoProductoForm(forms.ModelForm):
 
 
 #PRODUCTO para mayorista y minorista
-# En forms.py
 class ProductoFormMayorista(forms.ModelForm):
     class Meta:
         model = Producto
         fields = [
             'sku', 
             'nombre', 
-            'marca', 
-            'categoria', 
             'precio',           
             'precio_mayorista',   
             'descuento', 
@@ -76,7 +68,6 @@ class ProductoFormMayorista(forms.ModelForm):
             'tasa_ila',
         ]
         widgets = {
-            'categoria': forms.Select(attrs={'class': 'form-control'}),
             'tasa_ila': forms.Select(attrs={'class': 'form-control'}),
         }
 
@@ -96,14 +87,11 @@ class ProductoFormMinorista(forms.ModelForm):
         fields = [
             'sku', 
             'nombre', 
-            'marca', 
-            'categoria',
             'precio',           
             'descuento', 
             'tasa_ila',
         ]
         widgets = {
-            'categoria': forms.Select(attrs={'class': 'form-control'}),
             'tasa_ila': forms.Select(attrs={'class': 'form-control'}),
         }
 
@@ -141,7 +129,18 @@ class CarritoProductoForm(forms.ModelForm):
 class PerfilClientesForm(forms.ModelForm):
     class Meta:
         model = PerfilClientes
-        fields = ['nombre', 'rut', 'direccion', 'comuna', 'region', 'provincia', 'correo', 'telefono', 'linea_credito', 'descuento_fijo', 'dias_pago']
+        fields = [
+            'nombre', 'rut', 'direccion', 'comuna', 'region', 'provincia',
+            'correo', 'telefono', 'linea_credito', 'descuento_fijo', 'dias_pago'
+        ]
+        widgets = {
+            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+            'comuna': forms.TextInput(attrs={'class': 'form-control'}),
+            'region': forms.TextInput(attrs={'class': 'form-control'}),
+            'provincia': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
 class EntradaBodegaForm(forms.ModelForm):
     class Meta:
@@ -156,7 +155,6 @@ class EntradaBodegaProductoForm(forms.ModelForm):
     class Meta:
         model = EntradaBodegaProducto
         fields = ['producto', 'cantidad_recibida', 'precio_unitario']
-
     
     def __init__(self, *args, **kwargs):
         almacen = kwargs.pop('almacen', None)
@@ -183,18 +181,38 @@ class DevolucionProductoForm(forms.ModelForm):
             self.fields['producto'].queryset = productos_queryset
 
 class NegocioForm(forms.ModelForm):
-    almacen_direccion = forms.CharField(max_length=255, required=True, label="Dirección del Almacén")
+    rut_empresa = forms.CharField(
+        max_length=12,
+        required=True,
+        label="RUT Empresa",
+        error_messages={
+            'required': 'Por favor, ingresa un RUT válido.',
+            'max_length': 'El RUT no puede exceder los 12 caracteres.'
+        }
+    )
+    almacen_direccion = forms.CharField(
+        max_length=255, 
+        required=True, 
+        label="Dirección del Almacén"
+    )
 
     class Meta:
         model = Negocio
-        fields = ['nombre', 'giro', 'direccion', 'telefono', 'region', 'provincia', 'rut_empresa', 'is_mayorista','almacen_direccion']
-        
+        fields = ['nombre', 'giro', 'direccion', 'telefono', 'rut_empresa', 'is_mayorista', 'almacen_direccion']
         widgets = {
-            'is_mayorista': forms.CheckboxInput(),  # checkbox para is_mayorista
+            'is_mayorista': forms.CheckboxInput(),
         }
 
+    def clean_rut_empresa(self):
+        rut = self.cleaned_data.get('rut_empresa')
+        if not validar_rut_empresa(rut):
+            raise ValidationError("El RUT ingresado no es válido.")
+        return rut
+
     def save(self, commit=True):
-        negocio = super().save(commit=commit)
+        negocio = super().save(commit=False)
+        if commit:
+            negocio.save()
         return negocio
 
 
@@ -224,3 +242,19 @@ class CompraFacturaForm(forms.ModelForm):
         widgets = {
             'glosa': forms.Textarea(attrs={'required': True, 'placeholder': 'Ingrese una descripción o detalles adicionales'}),
         }
+
+
+class RegistroUbicacionForm(forms.Form):
+    region = forms.ModelChoiceField(queryset=Region.objects.all(), required=True, label="Región")
+    provincia = forms.ModelChoiceField(queryset=Provincia.objects.none(), required=True, label="Provincia")
+    comuna = forms.ModelChoiceField(queryset=Comuna.objects.none(), required=True, label="Comuna")
+
+    def __init__(self, *args, **kwargs):
+        region_id = kwargs.pop('region_id', None)
+        provincia_id = kwargs.pop('provincia_id', None)
+        super().__init__(*args, **kwargs)
+
+        if region_id:
+            self.fields['provincia'].queryset = Provincia.objects.filter(region_id=region_id)
+        if provincia_id:
+            self.fields['comuna'].queryset = Comuna.objects.filter(provincia_id=provincia_id)

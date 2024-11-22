@@ -3,75 +3,84 @@
 
 {% block contenido %}
 <div class="container mt-4">
-        {% if request.user.is_superuser %}
-        <form method="get" class="mb-3">
-            <label for="negocio" class="me-2">Filtrar por negocio:</label>
-            <select name="negocio" id="negocio" class="form-select w-auto" onchange="this.form.submit();">
-                <option value="">Todos los negocios</option>
-                {% for negocio in negocios %}
-                    <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>
-                        {{ negocio.nombre }}
-                    </option>
-                {% endfor %}
-            </select>
-        </form>
-        {% endif %}
-    
-        <h1 class="text-center">Operaciones de Bodega</h1>
-        {% if not request.user.is_superuser %}
-        <div class="form-wrapper">
-            <h2 class="mb-4">Registrar Entrada de Productos</h2>
-            <form method="post" id="entradaBodegaForm" class="formBodega">
-                {% csrf_token %}
-        
-                <!-- Fecha de recepción -->
-                <div class="form-group mb-3">
-                    <label for="fecha_recepcion" class="form-label">Fecha de Recepción</label>
-                    <input type="date" class="form-control" id="fecha_recepcion" name="fecha_recepcion" required>
-                </div>
-        
-                <!-- Formulario de EntradaBodega -->
-                <div class="form-group mb-3">
-                    {{ entrada_form.as_p }}
-                </div>
-                {{ producto_formset.management_form }}
-        
-                <div id="productos-container">
-                    {% for form in producto_formset %}
-                        <div class="producto-form mb-3 p-3 border rounded">
-                            {{ form.as_p }}
-                            <button type="button" class="btn btn-danger mt-2" onclick="this.closest('.producto-form').remove()">Eliminar Producto</button>
+    <h1 class="text-center">Operaciones de Bodega</h1>
+    <div class="EntradaProductos">
+        {% comment %} <h2 class="mb-4">Registrar Entrada de Productos</h2> {% endcomment %}
+        <form method="post" class="entradaBodegaForm">
+            {% comment %} class="formBodega" {% endcomment %}
+            {% csrf_token %}
+
+            <!-- Fecha de recepción -->
+            <div class="form-group mb-3">
+                <label for="fecha_recepcion" class="form-label">Fecha de Recepción</label>
+                <input type="date" class="form-control" id="fecha_recepcion" name="fecha_recepcion" required>
+            </div>
+
+            <!-- Formulario de EntradaBodega -->
+            <div class="form-group mb-3">
+                {{ entrada_form.as_p }}
+            </div>
+
+            <div class="ContenedorcajaProducto">
+                <div class="table-container">
+                    {% comment %} <table class="table"> {% endcomment %}
+                    <div class="cajaProducto">
+                        {{ producto_formset.management_form }}
+                        {% comment %} </div> {% endcomment %}
+                        {% comment %} <div class="containerproductos-container"> {% endcomment %}
+                        <div id="productos-container">
+                            {% for form in producto_formset %}
+                            <div class="producto-form mb-3 p-3 border rounded">
+                                {{ form.as_p }}
+                                <button type="button" class="btn btn-danger mt-2" onclick="this.closest('.producto-form').remove()">Eliminar</button>
+                            </div>
+                            {% endfor %}
+                            <button type="button" class="btn btn-secondary mt-3" onclick="agregarProducto()">Agregar Otro Producto</button>
+                            <button type="submit" class="btn btn-primary mt-3">Registrar Entrada</button>
                         </div>
-                    {% endfor %}
+                    </div>
                 </div>
-        
-                <button type="button" class="btn btn-secondary mt-3" onclick="agregarProducto()">Agregar Otro Producto</button>
-                <button type="submit" class="btn btn-primary mt-3">Registrar Entrada</button>
             </form>
         </div>
-        {% endif %}
-        
+    </div>
+
+    {% comment %}
+    <ul id="productos-container" style="display: flex; gap: 10px; list-style: none;">
+        {% for form in producto_formset %}
+        <li class="producto-form">
+            {{ form.as_p }}
+            <button type="button" class="btn btn-danger mt-2" onclick="this.closest('.producto-form').remove()">Eliminar Producto</button>
+            <input type="text" name="producto-__prefix__-nombre" id="id_producto-__prefix__-nombre" placeholder="Nombre del producto">
+            <input type="number" name="producto-__prefix__-cantidad" id="id_producto-__prefix__-cantidad" placeholder="Cantidad">
+            <input type="number" name="producto-__prefix__-precio" id="id_producto-__prefix__-precio" placeholder="Precio">
+        {% endfor %}
+        </li>
+    </ul>
+    <button type="button" class="btn btn-secondary mt-3" onclick="agregarProducto()">Agregar Otro Producto</button>
+    <button type="submit" class="btn btn-primary mt-3">Registrar Entrada</button>
+    <input type="hidden" id="id_form-TOTAL_FORMS" value="1">
+    <button onclick="agregarProducto()">Agregar producto</button>
+    {% endcomment %}
+
     <script>
         function agregarProducto() {
             const container = document.getElementById('productos-container');
             const totalForms = document.getElementById('id_form-TOTAL_FORMS');
             const formIdx = container.querySelectorAll('.producto-form').length;
-    
+
             const newForm = container.querySelector('.producto-form').cloneNode(true);
             newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formIdx);
-            
+
             newForm.querySelectorAll('input, select, textarea').forEach(input => {
                 const name = input.getAttribute('name').replace(/-\d+-/, `-${formIdx}-`);
                 const id = input.getAttribute('id').replace(/-\d+-/, `-${formIdx}-`);
                 input.setAttribute('name', name);
                 input.setAttribute('id', id);
-                input.value = '';  // Limpia el valor de los campos en el nuevo formulario
+                input.value = ''; // Limpia el valor de los campos en el nuevo formulario
             });
-    
+
             container.appendChild(newForm);
-            totalForms.value = parseInt(totalForms.value) + 1;  // Incrementa el contador total de formularios
+            totalForms.value = parseInt(totalForms.value) + 1; // Incrementa el contador total de formularios
         }
     </script>
-    
-    
 {% endblock %}

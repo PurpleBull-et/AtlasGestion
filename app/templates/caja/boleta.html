@@ -1,6 +1,47 @@
 {% extends 'app/base.html' %}
 {% load static %}
 {% block contenido %}
+{% load custom_filters %}
+
+<div><h1>Boleta</h1></div>
+
+<div class="containerFiltros"
+    <form method="get" class="mb-3">
+        <div class="form-group">
+            <label for="buscar">Buscar producto:</label>
+            <input type="text" name="buscar" id="buscar" class="form-control" value="{{ palabra_clave }}" placeholder="Buscar producto...">
+        </div>
+
+        <div class="form-group">
+            <label for="categoria">Filtrar por categoría:</label>
+            <select name="categoria" id="categoria" class="form-control">
+                <option value="">Todas las categorías</option>
+                {% for categoria in categorias %}
+                    <option value="{{ categoria.id }}" {% if categoria_filtro == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        {% if request.user.is_superuser %}
+        <div class="form-group">
+            <label for="negocio">Filtrar por negocio:</label>
+            <select name="negocio" id="negocio" class="form-control">
+                <option value="">Todos los negocios</option>
+                {% for negocio in negocios %}
+                    <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>{{ negocio.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        
+        <button type="submit" class="btnFiltros">Aplicar Filtros</button>
+        <button type="button" class="btnFiltros" style="background-color: rgb(84, 104, 104);" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">
+            Ingreso Manual
+        </button>
+    
+    </form>
+
+</div>
 <div>
     <div class="card">
         <!-- Lista de productos -->
@@ -12,18 +53,20 @@
                 <ul class="list-unstyled">
                     {% for producto in productos %}
                         {% if producto.stock > 0 %}
+                        {% comment %} <div class="table-container">
+                            <table class="table"> {% endcomment %}
                         <li class="product-item row main align-items-center border-top border-bottom py-3">
                             <div class="col-4">{{ producto.nombre }}</div>
                             <div class="col-2">{{ producto.stock }}</div>
-                            <div class="col-2">{{ producto.precio }}</div>
+                            <div class="col-2">{{ producto.precio|clp }}</div>
                             <div class="col-2">{{ producto.descuento }}%</div>
                             <div class="col-2">
                                 <form method="post" action="{% url 'agregar_al_carrito_boleta' producto.producto_id %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-success">Añadir</button>
+                                    <button type="submit" class="btn btn-success" style="background-color:#1499a3;">Añadir</button>
                                 </form>
                                 <!-- Modal para actualizar precio y descuento -->
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#precioDescuentoModal{{ producto.producto_id }}" class="btn btn-info btn-sm">Asignar Descuento</a>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#precioDescuentoModal{{ producto.producto_id }}" class="btn btn-info btn-sm" style="background-color: rgb(84, 104, 104); border:none;">Descuento</a>
                                 <div class="modal fade" id="precioDescuentoModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="precioDescuentoModalLabel{{ producto.producto_id }}" aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
@@ -47,6 +90,7 @@
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
                         </li>
                         {% endif %}
@@ -54,6 +98,8 @@
                 </ul>
             </div>
             
+            <!-- Resumen del carrito -->
+
             <!-- Resumen del carrito -->
             <div class="col-md-4 summary">
                 <div><h5><b>Tu Carro (Items)</b></h5></div>
@@ -64,9 +110,9 @@
                     <li class="cart-item d-flex justify-content-between align-items-center border-bottom py-3">
                         <div>{{ item.cantidad }}</div>
                         <div>{{ item.producto.nombre }}</div>
-                        <div>{{ item.producto.precio }} CLP</div>
-                        <div>{{ item.total_precio }} CLP</div>
-                        <div>
+                        <div>{{ item.producto.precio|clp }}</div>
+                        <div>{{ item.total_precio|clp }}</div>
+                        <div class="botones">
                             <form method="post" action="{% url 'restar_producto_boleta' item.producto.producto_id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-outline-secondary">-</button>
@@ -83,14 +129,14 @@
                     </li>
                     {% endfor %}
                 </ul>
-                <div class="row border-top py-3">
-                    <div class="col">Sub Total: {{ carrito_subtotal }}</div>
-                    <div class="col">Descuento: -{{ carrito_descuento_total }}</div>
-                    <div class="col">IVA: {{ carrito_iva }}</div>
-                    <div class="col text-right">Total: {{ carrito_total }}</div>
-                </div>
                 <form method="POST" action="{% url 'confirmar_compra_boleta' %}">
                     {% csrf_token %}
+                    <div class="border-top py-3">
+                        <div class="col">Sub Total (sin IVA): {{ carrito_subtotal|clp }}</div>
+                        <div class="col">Descuento: -{{ carrito_descuento_total|clp }}</div>
+                        <div class="col">Impt. IVA: {{ carrito_iva|clp }}</div>
+                        <div class="col text-right">Total: {{ carrito_total|clp }}</div>
+                    </div>
                     <div class="mb-3">
                         <label for="medio_pago" class="form-label">Medio de Pago</label>
                         <select class="form-select" id="medio_pago" name="medio_pago" required>
@@ -101,141 +147,141 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="correo" class="form-label">Correo electrónico (opcional)</label>
-                        <input type="email" class="form-control" id="correo" name="correo" placeholder="Ingrese su correo">
+                        <div class="form-group">
+                            <label for="correo">Correo electrónico</label>
+                            <input type="email" id="correo" name="correo" class="form-control" placeholder="Escribe para buscar o crear">
+                            <input type="hidden" id="correo_id" name="correo_id">
+                            <div id="correo_suggestions" class="suggestions-box"></div>
+                        </div>
                     </div>
                     <div id="mensaje-medio-pago" style="display: none; color: red; margin-top: 10px;"></div>
-                    <div class="d-flex justify-content-between w-100 mt-3">
-                        <!-- Botón para cancelar -->
-                        <form method="post" action="{% url 'vaciar_carrito_boleta' %}" style="width: 49%;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger w-100">Cancelar Venta</button>
-                        </form>
+                    <div class="d-flex justify-content-between w-100 mt-3">                   
                         <!-- Botón para pagar -->
-                        <button type="submit" class="btn btn-success w-100" style="width: 49%;" id="pagar-btn" disabled>Pagar</button>
+                        <button type="submit" class="btn btn-success w-35" style="width: 30%;" id="pagar-btn">Pagar</button>
                     </div>
+                </form>
+                <!-- Botón para cancelar la venta -->
+                <form method="post" action="{% url 'vaciar_carrito_boleta' %}" style="width: 49%;">
+                    {% csrf_token %}
+                    <input type="hidden" name="cancelar" value="true">
+                    <button type="submit" class="btn btn-danger w-100">Cancelar Venta</button>
                 </form>
                 {% else %}
                 <p>Tu carrito está vacío.</p>
                 {% endif %}
             </div>
+
         </div>
     </div>
-</div>
-<form method="get" class="mb-3">
-    <div class="form-group">
-        <label for="buscar">Buscar producto:</label>
-        <input type="text" name="buscar" id="buscar" class="form-control" value="{{ palabra_clave }}" placeholder="Buscar producto...">
-    </div>
 
-    <div class="form-group">
-        <label for="categoria">Filtrar por categoría:</label>
-        <select name="categoria" id="categoria" class="form-control">
-            <option value="">Todas las categorías</option>
-            {% for categoria in categorias %}
-                <option value="{{ categoria.id }}" {% if categoria_filtro == categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
-            {% endfor %}
-        </select>
-    </div>
     
-    {% if request.user.is_superuser %}
-    <div class="form-group">
-        <label for="negocio">Filtrar por negocio:</label>
-        <select name="negocio" id="negocio" class="form-control">
-            <option value="">Todos los negocios</option>
-            {% for negocio in negocios %}
-                <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>{{ negocio.nombre }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    {% endif %}
-    
-    <button type="submit" class="btn btn-primary mt-3">Aplicar Filtros</button>
-</form>
- <!-- Botón para abrir el modal de ingreso manual -->
- <button type="button" class="btn btn-secondary w-100 mt-3" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">
-    Ingreso Manual
-</button>
-
-<!-- Modal para ingreso manual -->
-<div class="modal fade" id="registrarProductoModal" tabindex="-1" aria-labelledby="registrarProductoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{% url 'reg_prod_boleta' %}">
-                {% csrf_token %}
+    <!-- Modal para ingreso manual -->
+    <div class="modal fade" id="registrarProductoModal" tabindex="-1" aria-labelledby="registrarProductoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="registrarProductoLabel">Registrar Producto a Mano</h5>
+                    <h5 class="modal-title" id="registrarProductoLabel">Registrar Producto para Boleta</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="nombre" class="form-label">Nombre del Producto</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="marca" class="form-label">Marca</label>
-                        <select class="form-control" id="marca" name="marca" required>
-                            <option value="" disabled selected>Seleccione una marca</option>
-                            {% for marca in marcas %}
-                                <option value="{{ marca.id }}">{{ marca.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="categoria" class="form-label">Categoría</label>
-                        <select class="form-control" id="categoria" name="categoria" required>
-                            <option value="" disabled selected>Seleccione una categoría</option>
-                            {% for categoria in categorias %}
-                                <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="precio" class="form-label">Precio Venta</label>
-                        <input type="number" step="0.01" class="form-control" id="precio" name="precio" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="stock" class="form-label">Stock</label>
-                        <input type="number" class="form-control" id="stock" name="stock" min="1" required>
-                    </div>
+                <div class="modal-body" id="modal-body-content">
+                    <!-- El contenido dinámico del formulario se cargará aquí -->
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary w-100">Registrar Producto</button>
-                </div>
-            </form>                    
+            </div>
         </div>
     </div>
+    
+    
 </div>
-</div>
+
 {% comment %} 
 Mostrar alerta si existen productos con stock bajo {% endcomment %}
 <div id="alerta-bajo-stock" style="display: none; color: red; font-weight: bold; margin-top: 15px;">
     Atención: Hay productos con stock bajo (menos de 5 unidades).
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                
+<script>
+    $(document).ready(function () {
+        function setupAutocomplete(inputSelector, hiddenSelector, suggestionsSelector, url) {
+            const $input = $(inputSelector);
+            const $hidden = $(hiddenSelector);
+            const $suggestions = $(suggestionsSelector);
+
+            $input.on("input", function () {
+                const term = $input.val().trim();
+                if (term.length < 2) {
+                    $suggestions.hide();
+                    return;
+                }
+
+                $.ajax({
+                    url: url,
+                    data: { term: term },
+                    dataType: "json",
+                    success: function (data) {
+                        $suggestions.empty().show();
+                        if (data.length === 0) {
+                            $suggestions.hide();
+                            return;
+                        }
+                        data.forEach((item) => {
+                            $suggestions.append(
+                                `<div class="suggestion-item" data-id="${item.id}" data-value="${item.value}">${item.label}</div>`
+                            );
+                        });
+
+                        $(".suggestion-item").on("click", function () {
+                            const value = $(this).data("value");
+                            const id = $(this).data("id");
+
+                            $input.val(value);
+                            $hidden.val(id);
+                            $suggestions.hide();
+                        });
+                    },
+                });
+            });
+
+            $(document).on("click", function (e) {
+                if (!$(e.target).closest($suggestions).length && !$(e.target).is($input)) {
+                    $suggestions.hide();
+                }
+            });
+        }
+
+        setupAutocomplete(
+            "#correo", // Input del correo
+            "#correo_id", // Campo oculto para ID del correo
+            "#correo_suggestions", // Contenedor de sugerencias
+            "/buscar_correo/" // URL de búsqueda
+        );
+    });
+</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const medioPagoSelect = document.getElementById('medio_pago');
         const pagarBtn = document.getElementById('pagar-btn');
         const mensajeError = document.getElementById('mensaje-medio-pago');
-
-        medioPagoSelect.addEventListener('change', function () {
-            if (medioPagoSelect.value) {
-                pagarBtn.disabled = false;
+    
+        if (pagarBtn) {
+            pagarBtn.addEventListener('click', function (event) {
+                if (!medioPagoSelect.value) {
+                    event.preventDefault();
+                    mensajeError.style.display = 'block';
+                }
+            });
+        }
+    
+        // Excluir validaciones para el botón "Cancelar Venta"
+        const cancelarVentaForm = document.querySelector('form[action="{% url "vaciar_carrito_boleta" %}"]');
+        if (cancelarVentaForm) {
+            cancelarVentaForm.addEventListener('submit', function () {
                 mensajeError.style.display = 'none';
-            } else {
-                pagarBtn.disabled = true;
-                mensajeError.style.display = 'block';
-            }
-        });
-
-        pagarBtn.addEventListener('click', function (event) {
-            if (!medioPagoSelect.value) {
-                event.preventDefault();
-                mensajeError.style.display = 'block';
-            }
-        });
+            });
+        }
     });
+    
 </script>
 
 <script>
@@ -246,6 +292,98 @@ Mostrar alerta si existen productos con stock bajo {% endcomment %}
             document.getElementById('alerta-bajo-stock').style.display = 'block';
         }
     });
+</script>
+
+<script>
+    document.getElementById("submit-yes").addEventListener("click", function (event) {
+        const emailInput = document.getElementById("correo");
+        const emailError = document.getElementById("email-error");
+
+        if (!emailInput.value) {
+            event.preventDefault();
+            emailError.classList.remove("d-none");
+        } else {
+            emailError.classList.add("d-none");
+        }
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        function setupAutocomplete(inputSelector, hiddenSelector, suggestionsSelector, url) {
+            const $input = $(inputSelector);
+            const $hidden = $(hiddenSelector);
+            const $suggestions = $(suggestionsSelector);
+    
+            $input.on("input", function () {
+                const term = $input.val().trim();
+                if (term.length < 2) {
+                    $suggestions.hide();
+                    return;
+                }
+    
+                $.ajax({
+                    url: url,
+                    data: { term: term },
+                    dataType: "json",
+                    success: function (data) {
+                        $suggestions.empty().show();
+                        if (data.length === 0) {
+                            $suggestions.hide();
+                            return;
+                        }
+                        data.forEach((item) => {
+                            $suggestions.append(
+                                `<div class="suggestion-item" data-id="${item.id}" data-value="${item.value}">${item.label}</div>`
+                            );
+                        });
+    
+                        $(".suggestion-item").on("click", function () {
+                            const value = $(this).data("value");
+                            const id = $(this).data("id");
+    
+                            $input.val(value);
+                            $hidden.val(id);
+                            $suggestions.hide();
+                        });
+                    },
+                });
+            });
+    
+            $(document).on("click", function (e) {
+                if (!$(e.target).closest($suggestions).length && !$(e.target).is($input)) {
+                    $suggestions.hide();
+                }
+            });
+        }
+    
+        // Configurar autocompletado para Marca
+        setupAutocomplete(
+            "#marca_nombre",
+            "#marca_id",
+            "#marca_suggestions",
+            "{% url 'buscar_marca' %}" // Ajustar al endpoint correspondiente
+        );
+    
+        // Configurar autocompletado para Categoría
+        setupAutocomplete(
+            "#categoria_nombre",
+            "#categoria_id",
+            "#categoria_suggestions",
+            "{% url 'buscar_categoria' %}" // Ajustar al endpoint correspondiente
+        );
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        // Cargar el formulario dinámicamente al abrir el modal
+        $('#registrarProductoModal').on('show.bs.modal', function () {
+            console.log("Cargando formulario de registro de producto en modal...");
+            $.get("{% url 'reg_prod_boleta' %}", function (data) {
+                $('#modal-body-content').html(data);
+            });
+        });
+    });    
 </script>
 
 {% endblock %}

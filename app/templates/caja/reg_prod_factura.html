@@ -1,26 +1,32 @@
-<form method="post" id="add-prod-form">
+<form method="post" id="reg-prod-factura-form">
     {% csrf_token %}
-    {{ producto_form.as_p }}
-
-    <div class="form-group">
-        <label for="categoria_nombre">Categoría</label>
-        <input type="text" id="categoria_nombre" name="categoria_nombre" class="form-control" placeholder="Escribe para buscar o crear">
-        <input type="hidden" id="categoria_id" name="categoria_id">
-    
-        <!-- Contenedor para mostrar sugerencias -->
-        <div id="categoria_suggestions" class="suggestions-box"></div>
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre del Producto</label>
+        <input type="text" id="nombre" name="nombre" class="form-control" required>
     </div>
-    
-    <div class="form-group">
-        <label for="marca_nombre">Marca</label>
+    <div class="mb-3">
+        <label for="marca_nombre" class="form-label">Marca</label>
         <input type="text" id="marca_nombre" name="marca_nombre" class="form-control" placeholder="Escribe para buscar o crear">
         <input type="hidden" id="marca_id" name="marca_id">
-    
-        <!-- Contenedor para mostrar sugerencias -->
         <div id="marca_suggestions" class="suggestions-box"></div>
     </div>
+    <div class="mb-3">
+        <label for="categoria_nombre" class="form-label">Categoría</label>
+        <input type="text" id="categoria_nombre" name="categoria_nombre" class="form-control" placeholder="Escribe para buscar o crear">
+        <input type="hidden" id="categoria_id" name="categoria_id">
+        <div id="categoria_suggestions" class="suggestions-box"></div>
+    </div>
+    <div class="mb-3">
+        <label for="precio_mayorista" class="form-label">Precio Mayorista</label>
+        <input type="number" id="precio_mayorista" name="precio_mayorista" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="stock" class="form-label">Stock</label>
+        <input type="number" id="stock" name="stock" class="form-control" required>
+    </div>
 
-    <!--Estilo directo para las sugerencias-->
+    <button type="submit" class="btn btn-primary">Registrar Producto</button>
+
     <style>
         .suggestions-box {
             border: 1px solid #ddd;
@@ -32,12 +38,10 @@
             width: 100%;
             display: none;
         }
-
         .suggestion-item {
             padding: 10px;
             cursor: pointer;
         }
-
         .suggestion-item:hover {
             background-color: #f0f0f0;
         }
@@ -45,33 +49,29 @@
             background-color: #007bff;
             color: #fff;
         }
-        
     </style>
-    
-
-    <button type="submit" class="btn btn-primary">Guardar</button>
 </form>
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
 
 
 <script>
     $(document).ready(function () {
+        // Configuración del autocompletado
         function setupAutocomplete(inputSelector, hiddenSelector, suggestionsSelector, url) {
             const $input = $(inputSelector);
             const $hidden = $(hiddenSelector);
             const $suggestions = $(suggestionsSelector);
-    
+
             let currentIndex = -1;
-    
+
             $input.on("input", function () {
                 const term = $input.val().trim();
                 if (term.length < 2) {
                     $suggestions.hide();
                     return;
                 }
-    
+
                 $.ajax({
                     url: url,
                     data: { term: term },
@@ -88,11 +88,11 @@
                             );
                         });
                         currentIndex = -1;
-    
+
                         $(".suggestion-item").on("click", function () {
                             const value = $(this).data("value");
                             const id = $(this).data("id");
-    
+
                             $input.val(value);
                             $hidden.val(id);
                             $suggestions.hide();
@@ -100,10 +100,10 @@
                     },
                 });
             });
-    
+
             $input.on("keydown", function (e) {
                 const items = $suggestions.find(".suggestion-item");
-    
+
                 if (e.key === "ArrowDown") {
                     e.preventDefault();
                     if (currentIndex < items.length - 1) {
@@ -126,55 +126,33 @@
                         const selectedItem = $(items[currentIndex]);
                         const value = selectedItem.data("value");
                         const id = selectedItem.data("id");
-    
+
                         $input.val(value);
                         $hidden.val(id);
                         $suggestions.hide();
                     }
                 }
             });
-    
+
             $(document).on("click", function (e) {
                 if (!$(e.target).closest($suggestions).length && !$(e.target).is($input)) {
                     $suggestions.hide();
                 }
             });
         }
-    
+
+        // Configuración de autocompletado para categoría y marca
         setupAutocomplete(
             "#categoria_nombre",
             "#categoria_id",
             "#categoria_suggestions",
-            "{% url 'buscar_categoria' %}"
+            "{% url 'buscar_categoria' %}" // URL para buscar categorías
         );
         setupAutocomplete(
             "#marca_nombre",
             "#marca_id",
             "#marca_suggestions",
-            "{% url 'buscar_marca' %}"
+            "{% url 'buscar_marca' %}" // URL para buscar marcas
         );
-    });
-    
-</script>
-
-
-
-<script>
-    // Procesar el envío del formulario de agregar producto mediante AJAX
-    $('#add-prod-form').submit(function (e) {
-        e.preventDefault();
-        $.ajax({
-            url: "{% url 'add_prod_modal' %}",
-            type: "POST",
-            data: $(this).serialize(),
-            success: function (data) {
-                if (data.success) {
-                    $('#addProdModal').modal('hide');
-                    location.reload();
-                } else {
-                    $('#modal-body-content').html(data.html_form);  
-                }
-            }
-        });
     });
 </script>

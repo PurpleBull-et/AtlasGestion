@@ -1,0 +1,111 @@
+.containerFiltros{
+    background-color: transparent;
+    border: 1px solid #e9d9d9;
+    border-radius: 5px;
+    margin-bottom: 2px;
+}
+/* .containerLista{
+    min-width: 300px;
+    border: 1px solid #b3afaf;
+    background-color: aqua;
+}
+ */
+.form-group {
+    transform: translateX(50px);
+    display: inline-block;
+}
+.form-group label{
+    display: flex;
+}
+.form-group input{
+    width: 200px;
+    display: flex;
+}
+.form-group select{
+    width: 200px;
+}
+.btnFiltros{
+    
+    margin-bottom: 20px;
+    border: none;
+    color: #fcfafa;
+    border-radius: 5px;
+    width: 200px;
+    height: auto;
+    transform: translateX(60px);
+    background-color: rgb(86, 204, 204);
+}
+.btnFiltros:hover{
+   background-color: rgb(19, 29, 29);
+}
+/*==========================================*/
+/* .summary .row {
+    border: 2px solid rgb(241, 236, 236);
+    background-color: #ffffff;
+     transform: translateY(-30px);} */
+
+.summary .border-top div{
+   /*  border: 2px solid rgb(241, 236, 236); */
+    /* background-color: #ffffff; */
+   /*  background-color: aqua; */
+    
+}
+ 
+.summary .mia .col{
+    /* background-color: aqua; */
+    border: 1px solid #dddada;
+    text-align: right;
+    word-spacing: 200px;
+}
+/* .encabezado{
+   background-color: aqua;
+} */
+
+
+/*===== encabezados de factura y boleta=====*/
+.summary .containerEncabezado { 
+ /*    margin-left: -100px; */
+    width:100%;
+    font-size: 2vh;
+    font-weight: 600;
+    letter-spacing: 0.35px;
+    color: #130505;
+    opacity: 1;
+   /*  padding: 12px; */
+    vertical-align: top;
+    border: 1px solid #dee2e685;
+}
+
+.summary .containerEncabezado{
+    /* font-size: 14px; */
+    transform: translateY(10px);
+    font-weight: 600;
+    word-spacing: 48px;
+    /* ont-weight: normal; */
+    color: #0a0a0a;
+    /* background-color: #3c3f44; */
+    background-color: #f4f6f8;
+    height: 25px;
+    text-align: left;
+    border: 2px solid #dee2e685;
+    
+}
+.cart .containerEncabezado{
+    /* word-spacing: 45px; */
+    font-weight: 600;
+   /*  color: rgba(14, 1, 14, 0) ; */
+    /* background-color: #3c3f44; */
+    background-color: #f4f6f8;
+    padding: 2px;
+    text-align: left;
+    border: 2px solid #dee2e685;
+    word-spacing: 120px;
+    
+}
+/*  .cart .containerEncabezado{
+    padding: 20px;
+    background-color: #f9f9f9;
+     border-radius: 5px; 
+     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+} */

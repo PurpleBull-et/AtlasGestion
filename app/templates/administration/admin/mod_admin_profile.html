@@ -4,6 +4,18 @@
 <form method="post" class="formModProfile">
     {% csrf_token %}
     {{ profile_form.as_p }}
+    <div class="form-group">
+        <label for="grupo">Asignar Grupo:</label>
+        <select name="grupo" id="grupo" class="form-control">
+         {% comment %}    <option value="">Seleccionar un grupo</option> {% endcomment %}
+            {% for grupo in grupos %}
+                <option class="optionClass" value="{{ grupo.id }}" {% if grupo_actual and grupo_actual.id == grupo.id %}selected{% endif %}>
+                    {{ grupo.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
 </form>
+
 {% endblock %}

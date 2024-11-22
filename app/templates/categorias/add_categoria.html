@@ -1,12 +1,12 @@
 {% block add_categoria_form %}
 <div class="card mb-5">
     <div class="card-body">
-        <h4 class="card-title">Registrar Nueva Categoría</h4>
-        <form method="post" class="formCat" style="transform: translateY(-5px);" >
+        <form method="post" class="formCat">
             {% csrf_token %}
-            {{ form.as_p }} <!-- Mostrar el formulario -->
-            <button type="submit" class="btn btn-primary">Registrar</button>
-        </form>
+            <input type="hidden" name="form_type" value="categoria">
+            {{ categoria_form.as_p }}
+            <button type="submit" class="btn btn-primary">Registrar Categoría</button>
+        </form>          
     </div>
 </div>
 {% endblock %}

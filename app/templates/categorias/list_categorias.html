@@ -1,24 +1,4 @@
-{% extends 'app/base.html' %}
-
 {% block contenido %}
-
-<h1>Gestión de Categorías</h1>
-{% if request.user.is_superuser %}
-<form method="get" class="mb-3">
-    <label for="negocio" class="me-2">Filtrar por negocio:</label>
-    <select name="negocio" id="negocio" class="form-select w-auto" onchange="this.form.submit();">
-        <option value="">Todos los negocios</option>
-        {% for negocio in negocios %}
-            <option value="{{ negocio.id }}" {% if negocio_filtro == negocio.id %}selected{% endif %}>
-                {{ negocio.nombre }}
-            </option>
-        {% endfor %}
-    </select>
-</form>
-{% endif %}
-
-
-
 <!-- formulario de agregar categoría -->
 {% include 'categorias/add_categoria.html' %}
 
@@ -28,7 +8,6 @@
 <table class="table table-bordered table-hover">
     <thead>
         <tr>
-            <th>ID</th>
             <th>Nombre</th>
             <th>Acciones</th>
         </tr>
@@ -36,7 +15,6 @@
     <tbody>
         {% for categoria in categorias %}
         <tr>
-            <td data-label="ID">{{ categoria.id }}</td>
             <td data-label="Nombre">{{ categoria.nombre }}</td>
             <td data-label="Acciones">
                 <a href="{% url 'mod_categoria' categoria.id %}" class="btn btn-warning">Modificar</a>

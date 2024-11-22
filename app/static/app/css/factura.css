@@ -1,0 +1,176 @@
+.cardenv{
+    border-radius: 5px;
+    width: 100%;
+    height: 660px;
+    border: 2px solid hsl(240, 14%, 95%);
+    position: relative;
+}
+.cart{
+    /* width: 100%; */
+    height: 660px;
+    background-color:#ffffff;
+    border: 2px solid hsl(240, 14%, 95%);
+    border-radius: 5px;
+    
+}
+.list-unstyled{
+    width: 100%; /* Ancho fijo para el contenedor */ 
+    height: 610px; /* Altura fija para el contenedor */ 
+    overflow-y: auto; /* Muestra barra de desplazamiento vertical si es necesario */ 
+    border: 2px solid #eedddd; /* Borde del contenedor */ 
+    padding: 10px; /* Padding interno */ 
+    background-color: #f3efef; /* Color de fondo */
+    border-radius: 5px; /* Bordes redondeados */
+
+
+}
+
+
+.list-unstyled .product-item{
+    width: 102%;
+    background-color: #f3efef;
+    height: 50px;
+    display: flex;
+    flex-direction: column;
+    
+  /*   align-items: flex-start; */
+}
+.list-unstyled .product-item .col-4{
+   /*  background-color: aqua; */
+    width: 180px;
+}
+.list-unstyled .product-item a{
+    color: rgb(255, 253, 250);
+    text-align: center;
+    width: 100px;
+    height: 37px;
+    margin-left: 20px;
+    transform: translateY(-47px);
+    
+}
+@media (max-width:600px){
+    .list-unstyled .product-item a{
+       /*  width: 50px;
+        height: 10px; */
+    }
+}
+.list-unstyled .product-item button{
+    background-color: rgb(86, 204, 204);
+    transform: translate(-80px, -10px);
+    width: 90px;
+}
+
+.list-unstyled .product-item button:last-child {
+     margin-bottom: 0;
+     }
+
+li .col-4 {
+        text-align: left;
+    /* background-color: blue; */
+}
+/* li .col-2{
+    
+} */
+/*=========tu carro*/
+
+.summary .list-unstyled{
+    background-color: rgb(239, 243, 242);
+    border: 2px solid #eedddd;
+    height: 200px;
+  
+    transform: translateY(-18px);
+
+
+}
+.summary .list-unstyled .cart-item{
+    background-color: rgb(219, 214, 214);
+    margin-bottom: 2px;
+    width: 100%;
+    height: 50px;/* 
+    text-align: center; */
+    display: flex;
+    /* border: blue 1px solid; */
+   align-items: center;
+    justify-content: center;
+}
+.summary .list-unstyled .cart-item div{
+    /* border: 1px solid #c01111; */
+ /*    text-align: center;
+    transform: translateX(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center; */
+    
+}
+.summary .list-unstyled .cart-item .col-4{ 
+    border: 1px solid #f3f0f0;
+  /*   background-color: aqua; */
+    width: 55px;
+    text-align: center;
+}
+.summary .list-unstyled .cart-item .col-2{
+    border: 1px solid #f3f0f0;
+    /* background-color: rgb(43, 255, 0); */
+    text-align: center;
+    transform: translateX(5px);
+}
+
+
+
+.summary .list-unstyled .cart-item .botones form{
+
+    margin: 2px;
+    display: inline-block ;
+    /* background-color: rgb(37, 226, 37); */ 
+    color: rgb(255, 255, 255); 
+   /*  border: 1px solid rgb(37, 226, 37);  */
+    border-radius: 5px; 
+    cursor: pointer;
+    /* background-color: rgb(182, 190, 183); */
+    transform: translateX(5px);
+    
+}
+
+.summary .list-unstyled .cart-item .btn-secondary{
+    background-color: rgb(124, 120, 120);
+    color: aliceblue;
+    transform: translateX(-5px);
+    
+}
+
+/*================= glosa*/
+form .mb-3 .form-label {
+/* background-color: #cf1212; */
+    transform: translateY(-22px);
+}
+form .mb-3 textarea {
+    /* background-color: #cf1212; */
+        transform: translateY(-30px);
+}
+
+/* form .row .border-top {
+    background-color: #cf1212;
+} */ 
+
+/*================== valores finales*/
+   form .py-3 .col{
+    border: 1px solid #4444;
+    border-width: black;
+    transform: translateX(500px);
+    background-color: white;
+    transform: translateY(-55px);
+    word-spacing: 200px;
+  /*   justify-content: center; */
+    text-align: right;
+    
+   }
+   
+ 
+form .mb-3 .form-select  {
+   /*  background-color: #58588f; */
+    transform: translateY(-75px);
+}
+form .mb-3 input{
+   /*  background-color: aqua; */
+    transform: translateY(-95px);
+}

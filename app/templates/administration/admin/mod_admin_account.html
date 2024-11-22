@@ -1,10 +1,10 @@
 {% extends 'app/base.html' %}
 {% block contenido %}
-
 <h2>Modificar Cuenta de Administrador</h2>
 <form method="post" class="formModAdmin">
     {% csrf_token %}
     {{ user_form.as_p }}
+    {{ profile_form.as_p }}
     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
 </form>
 {% endblock %}

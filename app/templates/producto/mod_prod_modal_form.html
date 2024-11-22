@@ -1,9 +1,160 @@
 <form method="post" id="mod-prod-form-{{ producto.producto_id }}">
     {% csrf_token %}
     {{ producto_form.as_p }}
+
+    <div class="form-group">
+        <label for="categoria_nombre">Categoría</label>
+        <input type="text" id="categoria_nombre" name="categoria_nombre" class="form-control"
+               placeholder="Escribe para buscar o crear" value="{{ categoria_nombre }}">
+        <input type="hidden" id="categoria_id" name="categoria_id" value="{{ categoria_id }}">
+        <div id="categoria_suggestions" class="suggestions-box"></div>
+    </div>
+    
+    <div class="form-group">
+        <label for="marca_nombre">Marca</label>
+        <input type="text" id="marca_nombre" name="marca_nombre" class="form-control"
+               placeholder="Escribe para buscar o crear" value="{{ marca_nombre }}">
+        <input type="hidden" id="marca_id" name="marca_id" value="{{ marca_id }}">
+        <div id="marca_suggestions" class="suggestions-box"></div>
+    </div>
+    
+        <!--Estilo directo para las sugerencias-->
+        <style>
+            .suggestions-box {
+                border: 1px solid #ddd;
+                background-color: #fff;
+                max-height: 200px;
+                overflow-y: auto;
+                position: absolute;
+                z-index: 1000;
+                width: 100%;
+                display: none;
+            }
+    
+            .suggestion-item {
+                padding: 10px;
+                cursor: pointer;
+            }
+    
+            .suggestion-item:hover {
+                background-color: #f0f0f0;
+            }
+            .suggestion-item.active {
+                background-color: #007bff;
+                color: #fff;
+            }
+            
+        </style>
+
+
     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
 </form>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+
+
+<script>
+    $(document).ready(function () {
+        function setupAutocomplete(inputSelector, hiddenSelector, suggestionsSelector, url) {
+            const $input = $(inputSelector);
+            const $hidden = $(hiddenSelector);
+            const $suggestions = $(suggestionsSelector);
+    
+            let currentIndex = -1;
+    
+            $input.on("input", function () {
+                const term = $input.val().trim();
+                if (term.length < 2) {
+                    $suggestions.hide();
+                    return;
+                }
+    
+                $.ajax({
+                    url: url,
+                    data: { term: term },
+                    dataType: "json",
+                    success: function (data) {
+                        $suggestions.empty().show();
+                        if (data.length === 0) {
+                            $suggestions.hide();
+                            return;
+                        }
+                        data.forEach((item, index) => {
+                            $suggestions.append(
+                                `<div class="suggestion-item" data-id="${item.id}" data-value="${item.value}" tabindex="-1">${item.label}</div>`
+                            );
+                        });
+                        currentIndex = -1;
+    
+                        $(".suggestion-item").on("click", function () {
+                            const value = $(this).data("value");
+                            const id = $(this).data("id");
+    
+                            $input.val(value);
+                            $hidden.val(id);
+                            $suggestions.hide();
+                        });
+                    },
+                });
+            });
+    
+            $input.on("keydown", function (e) {
+                const items = $suggestions.find(".suggestion-item");
+    
+                if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    if (currentIndex < items.length - 1) {
+                        currentIndex++;
+                        items.removeClass("active");
+                        $(items[currentIndex]).addClass("active");
+                        $input.val($(items[currentIndex]).data("value"));
+                    }
+                } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    if (currentIndex > 0) {
+                        currentIndex--;
+                        items.removeClass("active");
+                        $(items[currentIndex]).addClass("active");
+                        $input.val($(items[currentIndex]).data("value"));
+                    }
+                } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (currentIndex >= 0) {
+                        const selectedItem = $(items[currentIndex]);
+                        const value = selectedItem.data("value");
+                        const id = selectedItem.data("id");
+    
+                        $input.val(value);
+                        $hidden.val(id);
+                        $suggestions.hide();
+                    }
+                }
+            });
+    
+            $(document).on("click", function (e) {
+                if (!$(e.target).closest($suggestions).length && !$(e.target).is($input)) {
+                    $suggestions.hide();
+                }
+            });
+        }
+    
+        setupAutocomplete(
+            "#categoria_nombre",
+            "#categoria_id",
+            "#categoria_suggestions",
+            "{% url 'buscar_categoria' %}"
+        );
+        setupAutocomplete(
+            "#marca_nombre",
+            "#marca_id",
+            "#marca_suggestions",
+            "{% url 'buscar_marca' %}"
+        );
+    });
+    
+</script>
 
 <script>
     // Procesar el envío del formulario de modificar producto mediante AJAX

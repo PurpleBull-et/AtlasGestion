@@ -20,12 +20,10 @@
             <td data-label="Nombre Completo">{{ admin.first_name }} {{ admin.last_name }}</td>
             <td data-label="Correo">{{ admin.email }}</td>
             <td data-label="Acciones">
-                <!-- Botón para modificar perfil -->
                 <a href="{% url 'mod_admin_profile' admin.id %}" class="btn btn-info">Perfil</a>
-                <!-- Botón para modificar cuenta -->
                 <a href="{% url 'mod_admin_account' admin.id %}" class="btn btn-warning">Cuenta</a>
-                <!-- Botón para eliminar con confirmación -->
                 <a href="{% url 'erase_admin' admin.id %}" class="btn btn-danger">Eliminar</a>
+        
             </td>
         </tr>
     {% endfor %}
