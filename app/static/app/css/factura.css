@@ -1,9 +1,10 @@
 .cardenv{
     border-radius: 5px;
     width: 100%;
-    height: 660px;
+    height: 720px;
     border: 2px solid hsl(240, 14%, 95%);
     position: relative;
+  /*   background-color: aqua; */
 }
 .cart{
     /* width: 100%; */
@@ -74,18 +75,19 @@ li .col-4 {
 /*=========tu carro*/
 
 .summary .list-unstyled{
-    background-color: rgb(239, 243, 242);
-    border: 2px solid #eedddd;
+    background-color: #ccc8c8;
+/*     border: 2px solid #afa9a9; */
     height: 200px;
   
     transform: translateY(-18px);
+   
 
 
 }
 .summary .list-unstyled .cart-item{
-    background-color: rgb(219, 214, 214);
+    background-color: #f8f4f4;
     margin-bottom: 2px;
-    width: 100%;
+    width: 102%;
     height: 50px;/* 
     text-align: center; */
     display: flex;
@@ -103,13 +105,13 @@ li .col-4 {
     
 }
 .summary .list-unstyled .cart-item .col-4{ 
-    border: 1px solid #f3f0f0;
-  /*   background-color: aqua; */
+    border: 1px solid #dfd5d5;
+    /* background-color: aqua; */
     width: 55px;
     text-align: center;
 }
 .summary .list-unstyled .cart-item .col-2{
-    border: 1px solid #f3f0f0;
+    border: 1px solid #c7c2c2;
     /* background-color: rgb(43, 255, 0); */
     text-align: center;
     transform: translateX(5px);

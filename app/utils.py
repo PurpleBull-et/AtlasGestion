@@ -40,3 +40,30 @@ if __name__ == "__main__":
     # RUT de empresa
     rut_empresa = "77645122-3"
     validar_rut_empresa(rut_empresa)
+
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
+
+def obtener_hora_oficial():
+    try:
+        # Realiza la solicitud al sitio de hora oficial
+        url = "https://www.horaoficial.cl/"
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        # Analiza el contenido de la página
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Encuentra el elemento que contiene la hora
+        hora_html = soup.find('span', {'id': 'reloj'}).text.strip()
+        fecha_html = soup.find('span', {'id': 'fecha'}).text.strip()
+        
+        # Convierte la hora y fecha en un objeto datetime
+        hora_completa = f"{fecha_html} {hora_html}"
+        hora_oficial = datetime.strptime(hora_completa, '%d-%m-%Y %H:%M:%S')
+        
+        return hora_oficial
+    except Exception as e:
+        print(f"Error al obtener la hora oficial: {e}")
+        return None

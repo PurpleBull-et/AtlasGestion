@@ -8,7 +8,7 @@
     
     {{ profile_form.as_p }}
     
-    <div class="form-group">
+    <div class="form-group" style="transform:translate(5px, 3px)"  >
         <label for="grupo">Asignar Grupo:</label>
         <select name="grupo" id="grupo" class="form-control">
          {% comment %}    <option value="">Seleccionar un grupo</option> {% endcomment %}
@@ -20,6 +20,6 @@
         </select>
     </div>
 
-    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <button type="submit" class="btn btn-primary" style="transform:translateX(60px)" >Guardar cambios</button>
 </form>
 {% endblock %}

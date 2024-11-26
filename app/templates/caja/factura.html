@@ -2,10 +2,8 @@
 {% load static %}
 {% block contenido %}
 {% load custom_filters %}
-
-<div><h1>Factura</h1></div>
-
-<div class="containerFiltros"
+<h2>Factura</h2>
+<div class="containerFiltros">
     <form method="get" class="mb-3">
         <div class="form-group">
             <label for="buscar">Buscar producto:</label>
@@ -34,11 +32,10 @@
         </div>
         {% endif %}
         
-        <button type="submit" class="btnFiltros">Aplicar Filtros</button>
-        <button type="button" class="btnFiltros" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">
-            Ingreso Manual
-        </button>
-        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#listClienteModal">
+        <button type="submit" class="btnFiltros" style="background-color:#1499a3; height:50px">Aplicar Filtros</button>
+        <button type="button" class="btnFiltros" style="background-color: rgb(84, 104, 104); height:50px;" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">Ingreso Manual</button>
+         
+        <button type="button" class="btn btn-info" style="height:50px; transform:translate(60px, -2px)" data-bs-toggle="modal" data-bs-target="#listClienteModal" style="transform:translateX(60px)">
             Gestionar Perfiles de Cliente
         </button>
         
@@ -50,11 +47,23 @@
     <div class="cardenv">{% comment %}borde exterior que encierra todo  {% endcomment %}
         <!-- Lista de productos -->
         <div class="row">{% comment %} hace que se alineen en horizontal {% endcomment %}
-            <div class="col-md-8 cart">
-                <div class="title">
+            <div class="col-md-7 cart">
+             {% comment %}    <div class="title">
                     <h4><b>Lista de Productos</b></h4>
-                </div>
+                </div> {% endcomment %}
                
+                <div class="containerEncabezado">               
+                    <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Stock</th>
+                        <th>Precio</th>
+                        <th>Descuento</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </div>
+
                 <ul class="list-unstyled">
                     
                     {% for producto in productos %}
@@ -76,18 +85,18 @@
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title" id="precioDescuentoModalLabel{{ producto.producto_id }}">Asignar Precio/Descuento a {{ producto.nombre }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform:translate(15px, -15px); background-color:transparent"></button>
                                             </div>
                                             <form method="POST" action="{% url 'actualizar_descuento_factura' producto.producto_id %}">
                                                 {% csrf_token %}
                                                 <div class="modal-body">
                                                     <div class="mb-3">
                                                         <label for="descuento" class="form-label">Descuento (%)</label>
-                                                        <input type="number" class="form-control" id="descuento" name="descuento" value="{{ producto.descuento_mayorista }}" min="0" max="100">
+                                                        <input type="number" class="form-control" id="descuento" name="descuento" value="{{ producto.descuento_mayorista }}" min="0" max="100" style="transform:translateY(-10px)">
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="button" class="btn bg-danger text-light " data-bs-dismiss="modal" style="transform:translate(-80px, -7.5px)">Cancelar</button>
                                                     <button type="submit" class="btn btn-primary">Guardar</button>
                                                 </div>
                                             </form>
@@ -101,31 +110,45 @@
                 </ul>
             </div>
             
+
+
             <!-- Resumen del carrito -->
-            <div class="col-md-4 summary">
-                <div><h5><b>Tu Carro (Items)</b></h5></div>
-                <hr>
+            <div class="col-md-5 summary">
+                {% comment %} <div><h5><b>Tu Carro (Items)</b></h5></div>{% endcomment %}
+                <hr> 
+
+                <div class="containerEncabezado" style="transform:translateY(-30px)">               
+                    <thead>
+                    <tr>
+                        <th>Cant.</th>
+                        <th>Prod.</th>
+                        <th>P.Mayorista</th>
+                        <th>P.Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </div>
                 {% if carrito_items %}
                 <ul class="list-unstyled">
                     {% for item in carrito_items %}
                     <li class="cart-item d-flex justify-content-between align-items-center border-bottom py-3">
-                        <div>{{ item.cantidad }}</div>
-                        <div>{{ item.producto.nombre }}</div>
-                        <div>{{ item.producto.precio_mayorista|clp }} CLP</div>
-                        <div>{{ item.total_precio|clp }} CLP</div>
+                        <div class="col-4">{{ item.cantidad }}</div>
+                        <div class="col-2">{{ item.producto.nombre }}</div>
+                        <div class="col-2">{{ item.producto.precio_mayorista|clp }}</div>
+                        <div class="col-2">{{ item.total_precio|clp }}</div>
                         <div class="botones">
                             <form method="post" action="{% url 'restar_producto_factura' item.producto.producto_id %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn">-</button>
+                                <button type="submit" class="btn btn-danger" style="transform: translateX(1px);">-</button>
                             </form>
                             <form method="post" action="{% url 'agregar_al_carrito_factura' item.producto.producto_id %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn ">+</button>
+                                <button type="submit" class="btn btn-success">+</button>
                             </form>
                         </div>
                         <form method="post" action="{% url 'eliminar_del_carrito_factura' item.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-secondary x">x</button>
+                            <button type="submit" class="btn btn-secondary x" style="background-color: rgb(84, 104, 104);">x</button>
                         </form>
                     </li>
                     {% endfor %}
@@ -133,17 +156,17 @@
                 <form method="POST" action="{% url 'confirmar_compra_factura' %}">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="glosa" class="form-label">Glosa</label>
+                        <label for="glosa" class="form-label"></label>
                         <textarea class="form-control" id="glosa" name="glosa" placeholder="Ingrese una glosa para la factura"></textarea>
                     </div>
                     <div class="border-top py-3">
-                        <div class="col">Sub Total: {{ carrito_subtotal|clp }} </div>
-                        <div class="col">Descuento: -{{ carrito_descuento_total|clp }}</div>
-                        <div class="col"> Impt. IVA: {{ carrito_iva|clp }}</div>
-                        <div class="col text-right">Total: {{ carrito_total|clp }}</div>
+                        <div class="col"><strong>SubTotal:</strong> {{ carrito_subtotal|clp }} </div>
+                        <div class="col"><strong>Descuento:</strong> -{{ carrito_descuento_total|clp }}</div>
+                        <div class="col"><strong>ImpuestoIVA:</strong> {{ carrito_iva|clp }}</div>
+                        <div class="col text-right"><strong>MontoTotal:</strong> {{ carrito_total|clp }}</div>
                     </div>
                     <div class="mb-3">
-                        <label for="medio_pago" class="form-label">Medio de Pago</label>
+                        <label for="medio_pago" class="form-label" style="transform: translateY(-65px);">Medio de Pago</label>
                         <select class="form-select" id="medio_pago" name="medio_pago">
                             <option value="" disabled selected>Seleccione un medio de pago</option>
                             <option value="efectivo">Efectivo</option>
@@ -153,10 +176,10 @@
                     </div>
                     <div class="mb-3">
                         <div class="form-group">
-                            <label for="correo">Correo electrónico</label>
-                            <input type="email" id="correo" name="correo" class="form-control" placeholder="Escribe para buscar o crear">
+                            <label for="correo" class="form-label" style="transform: translate(-48px, -85px);">Correo electrónico (opcional)</label>
+                            <input type="email" id="correo" name="correo" class="form-control" placeholder="Escribe para buscar o crear" style="width:490px; transform:translate(-48px, -85px)">
                             <input type="hidden" id="correo_id" name="correo_id">
-                            <div id="correo_suggestions" class="suggestions-box">
+                            <div id="correo_suggestions" class="suggestions-box border border-light rounded-1 border-3" style="transform:translate(-50px, -80px); height:40px; text-align:center;" ></div>
                         </div>
                             <style>
                                 .suggestions-box {
@@ -187,13 +210,13 @@
                     <div id="mensaje-medio-pago" style="display: none; color: red; margin-top: 10px;"></div>
                     <div class="d-flex justify-content-between w-100 mt-3">                          
                         <!-- Botón para pagar -->
-                        <button type="submit" class="btn btn-success w-35" style="width: 30%;" id="pagar-btn">Pagar</button>
+                        <button type="submit" class="btn btn-success w-35" style="width: 10%; transform:translate(150vh ,-10vh )"id="pagar-btn">Pagar</button>
                     </div>
                 </form>
-                <form method="post" action="{% url 'vaciar_carrito_factura' %}" style="width: 49%;">
+                <form method="post" action="{% url 'vaciar_carrito_factura' %}" style="width: 30%;">
                     {% csrf_token %}
                     <input type="hidden" name="cancelar" value="true">
-                    <button type="submit" class="btn btn-danger w-100">Cancelar Venta</button>
+                    <button type="submit" class="btn btn-danger w-30" style="transform:translate(115vh, -15vh)" >Cancelar</button>
                 </form>           
                 {% else %}
                 <p>Tu carrito está vacío.</p>
@@ -225,7 +248,7 @@
     <!--Mod cliente-->
     <div class="modal fade" id="modClienteModal" tabindex="-1" aria-labelledby="modClienteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content">
+            <div class="modal-content editar">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modClienteModalLabel">Editar Cliente</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -250,29 +273,45 @@
                         <form method="post" id="add-cliente-form">
                             {% csrf_token %}
                             <div class="form-group">
-                                <label for="correo">Correo Electrónico</label>
-                                <input type="email" id="correo" name="correo" class="form-control" placeholder="correo@ejemplo.com" required>
+                                <label for="correo" style="transform:translateY(-7px)">Correo Electrónico</label>
+                                <input type="email" id="correo" name="correo" class="form-control" placeholder="correo@ejemplo.com" required style="width:300px; transform:translateY(-2px)">
                             </div>
-                            <button type="submit" class="btn btn-primary mt-3">Registrar Cliente</button>
+                            <button type="submit" class="btn btn-primary mt-3" style="transform:translate(60px, -11px)">Registrar Cliente</button>
                         </form>
                     </div>
+
+                {% comment %}     <table class="table" style="transform:translateY(-250px);">
+                    <thead>
+                        <tr>
+                            <th>Email Cliente</th>
+                          
+                            <th>Opciones</th>
+                        </tr>
+                    </thead> {% endcomment %}
                     <hr>
-                    <div id="clienteList">
+                    <div id="clienteList" class="table-container"style="transform:translateY(50px);" >
+                        
+                  
                         {% for cliente in clientes %}
                         <div class="row mb-2">
+                          
+                           
                             <div class="col">{{ cliente.correo }}</div>
+                           
                             <div class="col-auto">
                                 <button class="btn btn-warning btn-sm modificar-cliente" data-id="{{ cliente.id }}" data-bs-toggle="modal" data-bs-target="#modClienteModal">Editar</button>
                                 <button class="btn btn-danger btn-sm eliminar-cliente" data-id="{{ cliente.id }}" data-bs-toggle="modal" data-bs-target="#eraseClienteModal">Eliminar</button>
                             </div>
                         </div>
                         {% endfor %}
-                    </div>
+                   
+            </div>
                 </div>
             </div>
         </div>
+   
     </div>
-    
+
 
      <!-- Modal para ingreso manual -->
      <div class="modal fade" id="registrarProductoModal" tabindex="-1" aria-labelledby="registrarProductoLabel" aria-hidden="true">

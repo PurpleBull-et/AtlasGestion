@@ -254,9 +254,9 @@
 
 
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead class="table-dark">
+    <div class="table-container" style="min-height:550px">
+        <table class="table">
+            <thead class="table">
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
@@ -274,22 +274,22 @@
             <tbody>
                 {% for producto in productos %}
                     <tr class="{% if producto.estado == 'sin_stock' or producto.estado == 'ingresado_manual' %}table-danger{% elif producto.estado == 'registrado_reciente' %}table-warning{% else %}table-success{% endif %}">
-                        <td>{{ producto.producto_id }}</td>
-                        <td>{{ producto.nombre }}</td>
-                        <td>{{ producto.marca }}</td>
-                        <td>{{ producto.categoria }}</td>
-                        <td>{{ producto.precio|clp }}</td>
-                        <td>{{ producto.precio_mayorista|clp }}</td>
-                        <td>{{ producto.descuento }}</td>
-                        <td>{{ producto.descuento_mayorista }}</td>
-                        <td>
+                        <td data-label="ID">{{ producto.producto_id }}</td>
+                        <td data-label="Nombre">{{ producto.nombre }}</td>
+                        <td data-label="Marca">{{ producto.marca }}</td>
+                        <td data-label="Categoría">{{ producto.categoria }}</td>
+                        <td data-label="Precio">{{ producto.precio|clp }}</td>
+                        <td data-label="P.Mayorista">{{ producto.precio_mayorista|clp }}</td>
+                        <td data-label="Descuento">{{ producto.descuento }}%</td>
+                        <td data-label="D.Mayorista">{{ producto.descuento_mayorista }}%</td>
+                        <td data-label="Stock">
                             {% if producto.stock > 0 %}
                                 {{ producto.stock }}
                             {% else %}
                                 <span class="text-danger">Sin Stock</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-label="Estado">
                             {% if producto.estado == 'disponible' %}
                                 <span class="badge bg-success">Disponible</span>
                             {% elif producto.estado == 'sin_stock' %}

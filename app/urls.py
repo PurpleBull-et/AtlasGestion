@@ -15,6 +15,8 @@ handler500 = 'app.views.error_500'
 
 
 urlpatterns = [
+    path('hora-actual/', obtener_hora_actual, name='obtener_hora_actual'),
+
     path('', home, name='home'),
     path('ajax/cargar-provincias/', cargar_provincias, name='cargar_provincias'),
     path('ajax/cargar-comunas/', cargar_comunas, name='cargar_comunas'),

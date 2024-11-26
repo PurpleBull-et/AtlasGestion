@@ -1,7 +1,8 @@
 {% block add_categoria_form %}
+
 <div class="card mb-5">
     <div class="card-body">
-        <form method="post" class="formCat">
+        <form method="post" class="formCat" >
             {% csrf_token %}
             <input type="hidden" name="form_type" value="categoria">
             {{ categoria_form.as_p }}

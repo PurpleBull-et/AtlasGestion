@@ -52,8 +52,6 @@ class Negocio(models.Model):
     provincia = models.ForeignKey(Provincia, on_delete=models.SET_NULL, null=True, related_name="negocios")
     comuna = models.ForeignKey(Comuna, on_delete=models.SET_NULL, null=True, related_name="negocios")
 
-
-
     def __str__(self):
         return self.nombre
     
@@ -172,7 +170,13 @@ class Producto(models.Model):
             tasa_base = 1 + (self.iva_precio_mayorista / 100)
             return round(self.precio_mayorista - (self.precio_mayorista / tasa_base))
         return 0
-
+    
+    def actualizar_estado(self):
+        if self.stock <= 0:
+            self.estado = 'sin_stock'
+        else:
+            self.estado = 'disponible'
+        self.save()
 
     def save(self, *args, **kwargs):
         if not self.sku:

@@ -2,30 +2,30 @@
     {% csrf_token %}
     <div class="mb-3">
         <label for="nombre" class="form-label">Nombre del Producto</label>
-        <input type="text" id="nombre" name="nombre" class="form-control" required>
+        <input type="text" id="nombre" name="nombre" class="form-control" required  style="transform:translateY(-20px)">
     </div>
     <div class="mb-3">
-        <label for="marca_nombre" class="form-label">Marca</label>
-        <input type="text" id="marca_nombre" name="marca_nombre" class="form-control" placeholder="Escribe para buscar o crear">
+        <label for="marca_nombre" class="form-label"  style="transform:translateY(-35px)">Marca</label>
+        <input type="text" id="marca_nombre" name="marca_nombre" class="form-control" placeholder="Escribe para buscar o crear" style="transform:translateY(-35px)">
         <input type="hidden" id="marca_id" name="marca_id">
-        <div id="marca_suggestions" class="suggestions-box"></div>
+        <div id="marca_suggestions" class="suggestions-box border border-primary rounded-1 border-2" style="transform:translate(-15px, -30px); height:40px; text-align:center;"  ></div>
     </div>
     <div class="mb-3">
-        <label for="categoria_nombre" class="form-label">Categoría</label>
-        <input type="text" id="categoria_nombre" name="categoria_nombre" class="form-control" placeholder="Escribe para buscar o crear">
+        <label for="categoria_nombre" class="form-label" style="transform:translateY(-45px)">Categoría</label>
+        <input type="text" id="categoria_nombre" name="categoria_nombre" class="form-control" placeholder="Escribe para buscar o crear" style="transform:translateY(-45px)">
         <input type="hidden" id="categoria_id" name="categoria_id">
-        <div id="categoria_suggestions" class="suggestions-box"></div>
+        <div id="categoria_suggestions"class="suggestions-box border border-primary rounded-1 border-2" style="transform:translate(-15px, -40px); height:40px; text-align:center;"  ></div>
     </div>
     <div class="mb-3">
-        <label for="precio_mayorista" class="form-label">Precio Mayorista</label>
-        <input type="number" id="precio_mayorista" name="precio_mayorista" class="form-control" required>
+        <label for="precio_mayorista" class="form-label" style="transform:translateY(-45px)">Precio Mayorista</label>
+        <input type="number" id="precio_mayorista" name="precio_mayorista" class="form-control" required style="transform:translateY(-45px)">
     </div>
     <div class="mb-3">
-        <label for="stock" class="form-label">Stock</label>
-        <input type="number" id="stock" name="stock" class="form-control" required>
+        <label for="stock" class="form-label" style="transform:translateY(-55px)">Stock</label>
+        <input type="number" id="stock" name="stock" class="form-control" required style="transform:translateY(-55px)">
     </div>
 
-    <button type="submit" class="btn btn-primary">Registrar Producto</button>
+    <button type="submit" class="btn btn-primary" style="transform:translate(155px, -15px)">Registrar Producto</button>
 
     <style>
         .suggestions-box {

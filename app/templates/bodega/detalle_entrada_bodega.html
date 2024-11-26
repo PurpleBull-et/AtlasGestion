@@ -19,6 +19,7 @@
 </div>
 
 <h4>Productos Comprados</h4>
+<div class="table-container">
 <table class="table table-bordered table-hover">
     <thead>
         <tr>
@@ -35,15 +36,15 @@
     <tbody>
         {% for item in productos %}
             <tr>
-                <td>{{ item.producto.nombre }}</td>
-                <td>{{ item.cantidad_recibida }}</td>
-                <td>{{ item.cantidad_devuelta|default:0 }}</td>
-                <td>{{ item.cantidad_restante }}</td>
-                <td>{{ item.estado_devolucion }}</td>
-                <td>{{ item.precio_unitario }}</td>
-                <td>{{ item.subtotal }}</td>
+                <td data-label="Producto">{{ item.producto.nombre }}</td>
+                <td data-label="C.Recibida">{{ item.cantidad_recibida }}</td>
+                <td data-label="C.Devuelta">{{ item.cantidad_devuelta|default:0 }}</td>
+                <td data-label="C.Restante">{{ item.cantidad_restante }}</td>
+                <td data-label="E.Devolución">{{ item.estado_devolucion }}</td>
+                <td data-label="P.Unitario">{{ item.precio_unitario }}</td>
+                <td data-label="SubTotal">{{ item.subtotal }}</td>
                 <td>
-                    <a href="{% url 'detalle_prod_entrada_bodega' entrada_id=entrada.id producto_id=item.producto.producto_id %}" class="btn btn-info">Ver Detalle del Producto</a>
+                    <a href="{% url 'detalle_prod_entrada_bodega' entrada_id=entrada.id producto_id=item.producto.producto_id %}" class="btn btn-info">Detalle</a>
                 </td>
             </tr>
         {% empty %}
@@ -53,7 +54,7 @@
         {% endfor %}
     </tbody>
 </table>
-
+</div>
 <a href="{% url 'listar_entradas_bodega' %}" class="btn btn-primary">Volver a la Lista de Entradas</a>
 
 {% endblock %}

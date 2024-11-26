@@ -3,12 +3,15 @@
 {% block contenido %}
 <h1>Eliminar Categoría</h1>
 
-{% comment %} <p>¿Estás seguro de que deseas eliminar la categoría {{ categoria.nombre }}?</p> {% endcomment %}
+<div class="form">
+<form method="post">
 
-<form method="post" class="form">
-    <p>¿Estás seguro de que deseas eliminar la categoría {{ categoria.nombre }}?</p>
+
+<p>¿Estás seguro de que deseas eliminar la categoría {{ categoria.nombre }}?</p>
+  
     {% csrf_token %}
     <button type="submit" class="btn btn-danger">Eliminar</button>
     <a href="{% url 'list_categorias' %}" class="btn btn-secondary">Cancelar</a>
 </form>
+</div>
 {% endblock %}

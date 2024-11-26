@@ -1,6 +1,7 @@
 {% extends 'app/base.html' %}
 {% block contenido %}
 <h2>Ventas Realizadas</h2>
+<div class="table-container">
 <table class="table table-striped">
     <thead>
         <tr>
@@ -25,7 +26,7 @@
                 </ul>
             </td>
             <td>
-                <a href="#" class="btn btn-warning btn-sm">Anular Boleta</a>
+                <a href="#" class="btn btn-warning btn-sm ">Anular</a>
             </td>
         </tr>
         {% endfor %}

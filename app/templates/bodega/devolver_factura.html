@@ -5,11 +5,11 @@
 <div class="container mt-4">
     <h1 class="text-center">Devolver Factura {{ entrada.numero_factura }}</h1>
 
-    <form method="post" id="devolucionForm">
+    <form method="post" id="devolucionForm" class="devFact">
         {% csrf_token %}
         {{ formset.management_form }}
 
-        <div id="devoluciones-container">
+        <div id="devoluciones-container" class="table-container" style="min-height:500px">
             {% for form in formset %}
                 <div class="devolucion-form">
                     {{ form.as_p }}

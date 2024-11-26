@@ -148,7 +148,11 @@ class EntradaBodegaForm(forms.ModelForm):
         fields = ['numero_factura', 'proveedor', 'orden_compra', 'forma_pago']
 
     def __init__(self, *args, **kwargs):
+        staff_profile = kwargs.pop('staff_profile', None) 
         super(EntradaBodegaForm, self).__init__(*args, **kwargs)
+        if staff_profile:
+            self.fields['proveedor'].queryset = Proveedor.objects.filter(negocio=staff_profile.negocio)
+
 
         
 class EntradaBodegaProductoForm(forms.ModelForm):
@@ -157,13 +161,12 @@ class EntradaBodegaProductoForm(forms.ModelForm):
         fields = ['producto', 'cantidad_recibida', 'precio_unitario']
     
     def __init__(self, *args, **kwargs):
-        almacen = kwargs.pop('almacen', None)
+        almacen = kwargs.pop('almacen', None) 
         super(EntradaBodegaProductoForm, self).__init__(*args, **kwargs)
         if almacen:
-            # Filtrar productos por el almacén del negocio y estado
-            self.fields['producto'].queryset = Producto.objects.filter(
-                almacen=almacen, estado__in=['disponible', 'sin_stock']
-            )
+            self.fields['producto'].queryset = Producto.objects.filter(almacen=almacen)
+
+       
             
 class DevolucionProductoForm(forms.ModelForm):
     class Meta:

@@ -73,11 +73,11 @@
    /*  transform: translate(680px, -175px); */
 
 }
-.devFact button{
+.devFact .btnelim{
   /*   background-color:#1499a3; */
-    margin-left: 78px;
+    margin-left: 88px;
 }
-
+/*========== devolver factura*/
 .devolucion-form {
     border: 3px solid #ffffffee;
     border-radius: 5px;
@@ -85,7 +85,7 @@
  display: flex; 
  width: 100%;
  /* min-height: 200px; */
- background-color: rgb(212, 205, 219);
+ background-color: rgb(239, 235, 243);
  
 
 }
@@ -98,8 +98,18 @@
     border-radius: 5px;
 }
 .devolucion-form input{
+    text-align: center;
     /* background-color: red; */
     transform: translateX(45px);
+}
+.devolucion-form button{
+    background-color: red;
+    transform: translate(65px, 25px);
+    height: 50px;
+}
+.devolucion-form select{
+   /*  background-color: aqua; */
+    text-align: center;
 }
 /*===================== editar producto*/
 .editar{
@@ -108,12 +118,12 @@
      }
 .editar label{
         /*  background-color: aqua; */
-        margin-top: -15px;
-        transform: translateX(-50px);
+        margin-top: -5px;
+        transform: translateY(-20px);
 }
 .editar select{
      /*     background-color: rebeccapurple; */
-         width: 100%;
+         width: 50%;
          height: 50px;
          border-radius: 5px;
          border: 1px solid #aaa5a5ee;
@@ -122,7 +132,7 @@
 }
 .editar input{
     text-align: center;
-         transform: translateX(-50px);
+         transform: translateY(-20px);
          margin-top: 5px;
         /*  background-color: blue; */
          width: 100%;
@@ -132,11 +142,82 @@
          
        
 }
-.editar button{
+/* .editar button{
     background-color: red;
     height: 50px;
     width: 100px;
     color: white;
     border-radius: 5px;
     border: 1px solid red;
+} */
+
+/*========== modal agregar prod*/
+#add-prod-form{
+   /*  background-color: aqua; */
+    
 }
+#add-prod-form p{
+    /* background-color: rebeccapurple; */
+    height: 60px;
+}
+#add-prod-form label{
+    margin-top: -5px;
+    transform: translateY(-20px);
+}
+#add-prod-form input{
+    margin:5px, -15px;
+    text-align: center;
+         transform: translateY(-20px);
+        /*  margin-top: 5px; */
+        /*  background-color: blue; */
+         width: 100%;
+         height: 50px;
+         border-radius: 5px;
+         border: 1px solid #aaa5a5ee;
+}
+
+#add-prod-form button{
+    transform: translate(190px, -10px);
+}
+#add-prod-form select{
+    transform: translateY(-20px);
+    border: 1px solid #aaa5a5ee;
+}
+
+/*==================== editar producto*/
+.modal-body{
+  /*   background-color: rgb(44, 161, 28); */
+    text-align: left;
+ 
+}
+.modal-body label{
+   /*  background-color: rebeccapurple; */
+    margin-top: -5px;
+    
+    transform: translateY(-20px);
+    
+}
+.modal-body p{
+   /*  background-color: aqua; */
+    height: 60px;
+}
+.modal-body input{
+    margin:5px, -15px;
+    text-align: center;
+         transform: translateY(-20px);
+        /*  margin-top: 5px; */
+        /*  background-color: blue; */
+         width: 100%;
+         height: 50px;
+         border-radius: 5px;
+         border: 1px solid #aaa5a5ee;
+}
+.modal-body select{
+    transform: translateY(-20px);
+    border: 1px solid #aaa5a5ee;
+    
+
+}
+/* .modal-body button{
+    background-color: aqua;
+} */

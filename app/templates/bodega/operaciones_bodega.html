@@ -11,9 +11,9 @@
             {% csrf_token %}
 
             <!-- Fecha de recepción -->
-            <div class="form-group mb-3">
+            <div class="form-group mb-3" style="width:200px">
                 <label for="fecha_recepcion" class="form-label">Fecha de Recepción</label>
-                <input type="date" class="form-control" id="fecha_recepcion" name="fecha_recepcion" required>
+                <input type="date" class="form-control" id="fecha_recepcion" name="fecha_recepcion" required style="transform:translateY(-23px)">
             </div>
 
             <!-- Formulario de EntradaBodega -->
@@ -22,7 +22,7 @@
             </div>
 
             <div class="ContenedorcajaProducto">
-                <div class="table-container">
+                <div class="table-container" style="transform:translate(140px, -10px); min-height:350px;">
                     {% comment %} <table class="table"> {% endcomment %}
                     <div class="cajaProducto">
                         {{ producto_formset.management_form }}
@@ -35,12 +35,16 @@
                                 <button type="button" class="btn btn-danger mt-2" onclick="this.closest('.producto-form').remove()">Eliminar</button>
                             </div>
                             {% endfor %}
-                            <button type="button" class="btn btn-secondary mt-3" onclick="agregarProducto()">Agregar Otro Producto</button>
-                            <button type="submit" class="btn btn-primary mt-3">Registrar Entrada</button>
-                        </div>
+                            
+                    </div>
                     </div>
                 </div>
             </form>
+            <div class="card" style="width:18rem; transform:translate(900px, -360px); position:absolute; background-color: rgb(241, 243, 243);">
+                <button type="button" class="btn btn-secondary mt-3" onclick="agregarProducto()">Agregar Otro Producto</button>
+                <button type="submit" class="btn btn-primary mt-3">Registrar Entrada</button>
+            </div>
+        </div>
         </div>
     </div>
 

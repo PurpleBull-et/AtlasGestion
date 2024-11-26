@@ -24,7 +24,18 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.db.models import F, Sum, ExpressionWrapper, IntegerField
 from django.db.models import F, Sum, ExpressionWrapper, IntegerField, Value, CharField, Case, When, Q
+from django.http import JsonResponse
+import requests
 
+def obtener_hora_actual(request):
+    url = "https://www.timeapi.io/api/Time/current/zone?timeZone=America/Santiago"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        return JsonResponse({"hora": data['time']})
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": "No se pudo obtener la hora actual"}, status=500)
 
 def cargar_provincias(request):
     region_id = request.GET.get('region_id')
@@ -36,9 +47,53 @@ def cargar_comunas(request):
     comunas = Comuna.objects.filter(provincia_id=provincia_id).order_by('nombre')
     return JsonResponse(list(comunas.values('id', 'nombre')), safe=False)
 
+def user_permissions(request):
+    if not request.user.is_authenticated:
+        return {}
+    return {
+        'is_superuser': request.user.is_superuser,
+        'es_jefe': request.user.groups.filter(name='staff_jefe').exists(),
+        'es_cajero': request.user.groups.filter(name='staff_vendedor').exists(),
+        'es_bodeguero': request.user.groups.filter(name='staff_bodega').exists(),
+    }
+
 @login_required
+@staff_member_required
 def home(request):
-    return render(request, 'app/home.html', {})
+    user = request.user
+    es_jefe = user.groups.filter(name="staff_jefe").exists()
+    es_cajero = user.groups.filter(name="staff_vendedor").exists()
+    es_bodeguero = user.groups.filter(name="staff_bodega").exists()
+
+    if request.user.is_superuser:
+        return redirect('list_admin') 
+
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    compras = Compra.objects.filter(usuario__staffprofile__negocio=staff_profile.negocio).prefetch_related('detalles')
+
+    # Verificar si el usuario es del grupo `staff_jefe`
+    es_jefe = request.user.groups.filter(name='staff_jefe').exists()
+
+    # Calcular KPI solo si es jefe
+    if es_jefe:
+        total_ventas = compras.aggregate(Sum('total'))['total__sum'] or 0
+        promedio_ventas_diario = compras.annotate(dia=TruncDay('fecha')).values('dia').annotate(total_dia=Sum('total')).aggregate(Avg('total_dia'))['total_dia__avg'] or 0
+        producto_mas_vendido = DetalleCompra.objects.filter(compra__usuario__staffprofile__negocio=staff_profile.negocio).values('producto__nombre').annotate(cantidad_total=Sum('cantidad')).order_by('-cantidad_total').first()
+    else:
+        total_ventas = promedio_ventas_diario = producto_mas_vendido = None
+
+    return render(request, 'app/home.html', {
+        'staff': user,
+        'es_jefe': es_jefe,
+        'es_cajero': es_cajero,
+        'es_bodeguero': es_bodeguero,
+        'compras': compras,
+        'staff': request.user,
+        'es_jefe': es_jefe,
+        'total_ventas': total_ventas,
+        'promedio_ventas_diario': promedio_ventas_diario,
+        'producto_mas_vendido': producto_mas_vendido,
+    })
 
 def es_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest'
@@ -156,8 +211,8 @@ def confirmar_compra_boleta(request):
             descuento_total = sum(
                 item.producto.precio * item.cantidad * item.producto.descuento / 100 for item in carrito_items
             )
-            iva_total = (subtotal - descuento_total) * 0.19  # Ajusta según la tasa de IVA de tu país
-            total = subtotal - descuento_total + iva_total
+            iva_total = (subtotal - descuento_total) * 0.19 
+            total = subtotal - descuento_total
 
             # Crear compra
             compra = Compra.objects.create(
@@ -198,13 +253,7 @@ def confirmar_compra_boleta(request):
                 context = {'compra': compra, 'detalles': compra.detalles.all()}
                 pdf = generar_pdf(template_path, context)
                 if pdf:
-                    enviar_correo(
-                        correo,
-                        'Boleta de Compra',
-                        'Adjunto encontrará su boleta de compra.',
-                        pdf,
-                        'boleta.pdf'
-                    )
+                    enviar_correo(correo, '¡Su compra ha sido exitosa!', 'Hola, A continuación te adjuntamos la Boleta electrónica asociada a tu compra, para que esté disponible dónde y cuándo quieras. Guarda esta boleta e imprímela sólo de ser necesario. ¡Cuidemos juntos nuestro planeta!.', pdf, 'boleta.pdf')
 
             messages.success(request, 'La compra ha sido confirmada.')
             return redirect('compra_exitosa_boleta', compra_id=compra.id)
@@ -337,7 +386,6 @@ def vaciar_carrito_boleta(request):
         carrito.actualizar_total()  # Resetea el total del carrito
     messages.success(request, "El carrito ha sido vaciado.")
     return redirect('boleta')  # Redirige a la página de boleta
-
 
 
 #####################################
@@ -483,7 +531,7 @@ def confirmar_compra_factura(request):
                 item.producto.precio_mayorista * item.cantidad * item.producto.descuento_mayorista / 100 for item in carrito_items
             )
             iva_total = (subtotal - descuento_total) * 0.19
-            total = subtotal - descuento_total + iva_total
+            total = subtotal - descuento_total 
 
             # Crear la instancia de compra con los valores calculados
             compra = Compra.objects.create(
@@ -1053,8 +1101,6 @@ def list_prod(request):
         
     })
 
-
-
 @login_required
 @permission_required('app.delete_producto', raise_exception=True)
 def erase_prod(request, producto_id):
@@ -1072,7 +1118,6 @@ def erase_prod(request, producto_id):
         return redirect('list_prod')
     
     return redirect('list_prod')
-
 @login_required
 @permission_required('app.add_productosdevueltos', raise_exception=True)
 def devolver_prod(request, producto_id):
@@ -1129,7 +1174,6 @@ def devolver_prod(request, producto_id):
         return redirect('list_prod')
 
     return render(request, 'producto/devolver_prod.html', {'producto': producto})
-
 
 @login_required
 @permission_required('app.change_producto', raise_exception=True)
@@ -1225,8 +1269,12 @@ def error_500(request):
 @staff_member_required
 @permission_required('app.view_entradabodega', raise_exception=True)
 def historial_bodega(request):
-    entradas = EntradaBodega.objects.all().order_by('-fecha_entrada')
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    
+    entradas = EntradaBodega.objects.filter(bodega__negocio=staff_profile.negocio).order_by('-fecha_recepcion')
+
     return render(request, 'bodega/historial_bodega.html', {'entradas': entradas})
+
 
 @login_required
 @permission_required('app.add_entradabodega', raise_exception=True)
@@ -1289,28 +1337,34 @@ def operaciones_bodega_modal(request):
         return JsonResponse({'html_form': html_form})
 
 
-
-
 @login_required
 @permission_required('app.add_entradabodega', raise_exception=True)
 def operaciones_bodega(request):
-    # Configurar el formset para manejar múltiples productos
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()
+
+    productos = Producto.objects.filter(almacen=almacen)  # Filtrar productos por almacén
+    proveedores = Proveedor.objects.filter(negocio=staff_profile.negocio)  # Filtrar proveedores por negocio
+
     EntradaBodegaProductoFormSet = modelformset_factory(
         EntradaBodegaProducto,
         form=EntradaBodegaProductoForm,
         extra=1,
-        #can_delete=True  # Permitir eliminar formularios
     )
 
     if request.method == 'POST':
-        entrada_form = EntradaBodegaForm(request.POST)
-        producto_formset = EntradaBodegaProductoFormSet(request.POST, queryset=EntradaBodegaProducto.objects.none())
-
+        entrada_form = EntradaBodegaForm(request.POST, staff_profile=staff_profile)
+        producto_formset = EntradaBodegaProductoFormSet(
+            request.POST,
+            queryset=EntradaBodegaProducto.objects.none(),
+            form_kwargs={'almacen': almacen}
+        )
         if entrada_form.is_valid() and producto_formset.is_valid():
             with transaction.atomic():
                 # Guardar el formulario de EntradaBodega
                 entrada_bodega = entrada_form.save(commit=False)
                 entrada_bodega.fecha_recepcion = request.POST.get("fecha_recepcion")  # Obtener fecha de recepción del POST
+                entrada_bodega.bodega = almacen  # Asignar el almacén al campo bodega
                 entrada_bodega.save()
 
                 # Guardar cada formulario de producto asociado a esta entrada de bodega
@@ -1328,28 +1382,34 @@ def operaciones_bodega(request):
                 messages.success(request, 'Entrada de bodega y productos registrados exitosamente.')
             return redirect('operaciones_bodega')
     else:
-        entrada_form = EntradaBodegaForm()
-        producto_formset = EntradaBodegaProductoFormSet(queryset=EntradaBodegaProducto.objects.none())
-        productos = Producto.objects.all()  # Esto puede servir si necesitas mostrar la lista de productos disponibles
-
+        entrada_form = EntradaBodegaForm(staff_profile=staff_profile)
+        producto_formset = EntradaBodegaProductoFormSet(
+            queryset=EntradaBodegaProducto.objects.none(),
+            form_kwargs={'almacen': almacen}
+        )
     return render(request, 'bodega/operaciones_bodega.html', {
         'entrada_form': entrada_form,
         'producto_formset': producto_formset,
         'productos': productos,
+        'proveedores': proveedores,
     })
-
 
 
 @login_required
 @permission_required('app.view_entradabodega', raise_exception=True)
 def listar_entradas_bodega(request):
-    # Obtenemos todas las entradas de bodega
-    entradas = EntradaBodega.objects.all().order_by('-fecha_recepcion')  # Ordenar por fecha descendente
+    # Obtener el perfil del staff y el negocio relacionado
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio
 
-    # Renderizamos un template parcial con la lista de entradas
+    # Filtrar entradas de bodega por el almacén del negocio
+    entradas = EntradaBodega.objects.filter(bodega__negocio=negocio).order_by('-fecha_recepcion')
+
+    # Renderizar el template con las entradas filtradas
     return render(request, 'bodega/lista_entradas_bodega.html', {
         'entradas': entradas,
     })
+
 
 
 @login_required
@@ -1493,24 +1553,25 @@ def historial_devoluciones(request):
 @login_required
 @staff_member_required
 def mi_negocio(request):
-    # Obtener todas las ventas realizadas
-    compras = Compra.objects.prefetch_related('detalles').all()
+    # Obtener el perfil del staff
+    staff_profile = StaffProfile.objects.get(user=request.user)
 
-    # Datos del perfil del staff
-    staff = request.user
+    # Filtrar compras por el negocio del staff
+    compras = Compra.objects.filter(usuario__staffprofile__negocio=staff_profile.negocio).prefetch_related('detalles')
 
     # Calcular KPI
-    total_ventas = Compra.objects.aggregate(Sum('total'))['total__sum'] or 0
-    promedio_ventas_diario = Compra.objects.annotate(dia=TruncDay('fecha')).values('dia').annotate(total_dia=Sum('total')).aggregate(Avg('total_dia'))['total_dia__avg'] or 0
-    producto_mas_vendido = DetalleCompra.objects.values('producto__nombre').annotate(cantidad_total=Sum('cantidad')).order_by('-cantidad_total').first()
+    total_ventas = compras.aggregate(Sum('total'))['total__sum'] or 0
+    promedio_ventas_diario = compras.annotate(dia=TruncDay('fecha')).values('dia').annotate(total_dia=Sum('total')).aggregate(Avg('total_dia'))['total_dia__avg'] or 0
+    producto_mas_vendido = DetalleCompra.objects.filter(compra__usuario__staffprofile__negocio=staff_profile.negocio).values('producto__nombre').annotate(cantidad_total=Sum('cantidad')).order_by('-cantidad_total').first()
 
     return render(request, 'business/mi_negocio.html', {
         'compras': compras,
-        'staff': staff,
+        'staff': request.user,
         'total_ventas': total_ventas,
         'promedio_ventas_diario': promedio_ventas_diario,
         'producto_mas_vendido': producto_mas_vendido,
     })
+
 #####################################
 # / / / / / / / / / / / / / / / / / #
 #####################################
@@ -1518,22 +1579,27 @@ def mi_negocio(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def register_staff(request):
+    grupos = Group.objects.all()  # Cargar los grupos disponibles una sola vez
+
     if request.method == 'POST':
         user_form = UserForm(request.POST)
         profile_form = StaffProfileForm(request.POST)
 
         if user_form.is_valid() and profile_form.is_valid():
+            # Crear usuario
             user = user_form.save(commit=False)
-            user.is_staff = True 
-            user.is_superuser = False 
+            user.is_staff = True
+            user.is_superuser = False
             user.is_active = True
             user.save()
 
-            # Añadir al grupo STAFF
-            staff_group, created = Group.objects.get_or_create(name='staff_default')
-            user.groups.add(staff_group)
+            # Asignar grupo al usuario
+            grupo_seleccionado = request.POST.get('grupo')
+            if grupo_seleccionado:
+                grupo = Group.objects.get(id=grupo_seleccionado)
+                user.groups.add(grupo)
 
-            # Guardar perfil de staff
+            # Crear perfil de staff
             staff_profile = profile_form.save(commit=False)
             staff_profile.user = user
             staff_profile.save()
@@ -1545,8 +1611,11 @@ def register_staff(request):
 
     return render(request, 'administration/staff/register_staff.html', {
         'user_form': user_form,
-        'profile_form': profile_form
+        'profile_form': profile_form,
+        'grupos': grupos,  # Pasar todos los grupos disponibles
+        'grupo_actual': None  # Ningún grupo está asignado aún
     })
+
 
 
 @login_required
@@ -1660,7 +1729,8 @@ def erase_staff(request, staff_id):
 #####################################
 #MANEJO DE ADMIN
 # Listar administradores (solo superusuarios)
-
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
 def list_admin(request):
     admin_list = User.objects.filter(is_superuser=True) 
     return render(request, 'administration/admin/list_admin.html', {'admin_list': admin_list})

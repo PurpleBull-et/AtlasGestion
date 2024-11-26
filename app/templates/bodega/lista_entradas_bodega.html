@@ -19,6 +19,7 @@
 
 <!-- Lista de entradas de bodega -->
 <h2>Entradas de Bodega Registradas</h2>
+<div class="table-container" style="min-height: 450px">
 <table class="table table-bordered table-hover">
     <thead>
         <tr>
@@ -32,12 +33,12 @@
     <tbody>
         {% for entrada in entradas %}
         <tr>
-            <td>{{ entrada.numero_factura }}</td>
-            <td>{{ entrada.proveedor.nombre }}</td>
-            <td>{{ entrada.fecha_recepcion }}</td>
-            <td>{{ entrada.get_forma_pago_display }}</td>
-            <td>
-                <a href="{% url 'detalle_entrada_bodega' entrada.id %}" class="btn btn-info">Ver Detalles</a>
+            <td data-label="N° Factura">{{ entrada.numero_factura }}</td>
+            <td data-label="Proveedor">{{ entrada.proveedor.nombre }}</td>
+            <td data-label="F.Recepción">{{ entrada.fecha_recepcion }}</td>
+            <td data-label="F.Pago">{{ entrada.get_forma_pago_display }}</td>
+            <td data-label="">
+                <a href="{% url 'detalle_entrada_bodega' entrada.id %}" class="btn btn-info"> Detalles</a>
             </td>
         </tr>
         {% empty %}

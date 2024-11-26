@@ -33,7 +33,7 @@
     width: 200px;
     height: auto;
     transform: translateX(60px);
-    background-color: rgb(86, 204, 204);
+    /* background-color: #1499a3 */
 }
 .btnFiltros:hover{
    background-color: rgb(19, 29, 29);

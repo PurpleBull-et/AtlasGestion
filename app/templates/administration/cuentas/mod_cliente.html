@@ -2,7 +2,7 @@
 {% block contenido %}
 <h1>Modificar Cliente</h1>
 <div class="card mb-5">
-    <div class="card-body">
+    <div class="card">
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}

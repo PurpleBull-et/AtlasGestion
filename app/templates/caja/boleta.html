@@ -3,9 +3,9 @@
 {% block contenido %}
 {% load custom_filters %}
 
-<div><h1>Boleta</h1></div>
-
-<div class="containerFiltros"
+{% comment %} <div><h1>Boleta</h1></div> {% endcomment %}
+<h2>Boleta</h2>
+<div class="containerFiltros">
     <form method="get" class="mb-3">
         <div class="form-group">
             <label for="buscar">Buscar producto:</label>
@@ -34,8 +34,8 @@
         </div>
         {% endif %}
         
-        <button type="submit" class="btnFiltros">Aplicar Filtros</button>
-        <button type="button" class="btnFiltros" style="background-color: rgb(84, 104, 104);" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">
+        <button type="submit" class="btnFiltros" style="background-color:#1499a3; height:50px">Aplicar Filtros</button>
+        <button type="button" class="btnFiltros" style="background-color: rgb(84, 104, 104); height:50px" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">
             Ingreso Manual
         </button>
     
@@ -46,10 +46,22 @@
     <div class="card">
         <!-- Lista de productos -->
         <div class="row">
-            <div class="col-md-8 cart">
-                <div class="title">
+            <div class="col-md-7 cart">
+              {% comment %}   <div class="title">
                     <h4><b>Lista de Productos</b></h4>
-                </div>
+                </div> {% endcomment %}
+
+                <div class="containerEncabezado">               
+                    <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Stock</th>
+                        <th>Precio</th>
+                        <th>Desc</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+            </div>
                 <ul class="list-unstyled">
                     {% for producto in productos %}
                         {% if producto.stock > 0 %}
@@ -72,18 +84,18 @@
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title" id="precioDescuentoModalLabel{{ producto.producto_id }}">Asignar Precio/Descuento a {{ producto.nombre }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"  style="transform:translate(15px, -15px); background-color:transparent"></button>
                                             </div>
                                             <form method="POST" action="{% url 'actualizar_descuento_boleta' producto.producto_id %}">
                                                 {% csrf_token %}
                                                 <div class="modal-body">
                                                     <div class="mb-3">
                                                         <label for="descuento" class="form-label">Descuento (%)</label>
-                                                        <input type="number" class="form-control" id="descuento" name="descuento" value="{{ producto.descuento }}" min="0" max="100">
+                                                        <input type="number" class="form-control" id="descuento" name="descuento" value="{{ producto.descuento }}" min="0" max="100"  style="transform:translateY(-10px)">
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="button" class="btn bg-danger text-light " data-bs-dismiss="modal" style="transform:translate(-80px, -7.5px)">Cancelar</button>
                                                     <button type="submit" class="btn btn-primary">Guardar</button>
                                                 </div>
                                             </form>
@@ -101,45 +113,55 @@
             <!-- Resumen del carrito -->
 
             <!-- Resumen del carrito -->
-            <div class="col-md-4 summary">
-                <div><h5><b>Tu Carro (Items)</b></h5></div>
+            <div class="col-md-5 summary">
+                <div class="containerEncabezado">               
+                    <thead>
+                    <tr>
+                        <th>Cant.</th>
+                        <th>Prod.</th>
+                        <th>P.Unitario</th>
+                        <th>P.Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </div>
                 <hr>
                 {% if carrito_items %}
                 <ul class="list-unstyled">
                     {% for item in carrito_items %}
                     <li class="cart-item d-flex justify-content-between align-items-center border-bottom py-3">
-                        <div>{{ item.cantidad }}</div>
-                        <div>{{ item.producto.nombre }}</div>
-                        <div>{{ item.producto.precio|clp }}</div>
-                        <div>{{ item.total_precio|clp }}</div>
+                        <div class="col-4">{{ item.cantidad }}</div>
+                        <div class="col-2">{{ item.producto.nombre }}</div>
+                        <div class="col-2">{{ item.producto.precio|clp }}</div>
+                        <div class="col-2">{{ item.total_precio|clp }}</div>
                         <div class="botones">
                             <form method="post" action="{% url 'restar_producto_boleta' item.producto.producto_id %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-secondary">-</button>
+                                <button type="submit" class="btn btn-danger" style="transform: translateX(1px);">-</button>
                             </form>
                             <form method="post" action="{% url 'agregar_al_carrito_boleta' item.producto.producto_id %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-secondary">+</button>
+                                <button type="submit" class="btn btn-success">+</button>
                             </form>
                         </div>
                         <form method="post" action="{% url 'eliminar_del_carrito_boleta' item.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger ms-3">x</button>
+                            <button type="submit" class="btn btn-secondary x"style="background-color: rgb(84, 104, 104);">x</button>
                         </form>
                     </li>
                     {% endfor %}
                 </ul>
                 <form method="POST" action="{% url 'confirmar_compra_boleta' %}">
                     {% csrf_token %}
-                    <div class="border-top py-3">
-                        <div class="col">Sub Total (sin IVA): {{ carrito_subtotal|clp }}</div>
-                        <div class="col">Descuento: -{{ carrito_descuento_total|clp }}</div>
-                        <div class="col">Impt. IVA: {{ carrito_iva|clp }}</div>
-                        <div class="col text-right">Total: {{ carrito_total|clp }}</div>
+                    <div class="border-top py-3" style="transform:translateY(20px)">
+                        <div class="col"><strong>SubTotal(sin_IVA):</strong> {{ carrito_subtotal|clp }}</div>
+                        <div class="col"><strong>Descuento:</strong> -{{ carrito_descuento_total|clp }}</div>
+                        <div class="col"><strong>Impt.IVA:</strong> {{ carrito_iva|clp }}</div>
+                        <div class="col text-right"><strong>Total:</strong> {{ carrito_total|clp }}</div>
                     </div>
                     <div class="mb-3">
-                        <label for="medio_pago" class="form-label">Medio de Pago</label>
-                        <select class="form-select" id="medio_pago" name="medio_pago" required>
+                        <label for="medio_pago" class="form-label" style="transform: translateY(-50px);">Medio de Pago</label>
+                        <select class="form-select" id="medio_pago" name="medio_pago" required  style="transform: translateY(-55px);">
                             <option value="" disabled selected>Seleccione un medio de pago</option>
                             <option value="efectivo">Efectivo</option>
                             <option value="tarjeta_debito">Tarjeta Débito</option>
@@ -148,29 +170,34 @@
                     </div>
                     <div class="mb-3">
                         <div class="form-group">
-                            <label for="correo">Correo electrónico</label>
-                            <input type="email" id="correo" name="correo" class="form-control" placeholder="Escribe para buscar o crear">
+                            <label for="correo" style="transform: translate(-46px, -66px);">Correo electrónico</label>
+                            <input type="email" id="correo" name="correo" class="form-control" placeholder="Escribe para buscar o crear" style="width:500px; transform: translate(-50px, -65px);">
                             <input type="hidden" id="correo_id" name="correo_id">
-                            <div id="correo_suggestions" class="suggestions-box"></div>
+                            <div id="correo_suggestions" class="suggestions-box border border-light rounded-1 border-3" style="transform:translate(-50px, -58px); height:40px; text-align:center;" ></div>
                         </div>
                     </div>
                     <div id="mensaje-medio-pago" style="display: none; color: red; margin-top: 10px;"></div>
                     <div class="d-flex justify-content-between w-100 mt-3">                   
                         <!-- Botón para pagar -->
-                        <button type="submit" class="btn btn-success w-35" style="width: 30%;" id="pagar-btn">Pagar</button>
+                        <button type="submit" class="btn btn-success w-35" style="width: 30%; transform:translate(345px, -32px)" id="pagar-btn">Pagar</button>
                     </div>
                 </form>
                 <!-- Botón para cancelar la venta -->
                 <form method="post" action="{% url 'vaciar_carrito_boleta' %}" style="width: 49%;">
                     {% csrf_token %}
                     <input type="hidden" name="cancelar" value="true">
-                    <button type="submit" class="btn btn-danger w-100">Cancelar Venta</button>
+                    <button type="submit" class="btn btn-danger w-50" style="transform:translateY(-70px)" >Cancelar</button>
                 </form>
                 {% else %}
                 <p>Tu carrito está vacío.</p>
                 {% endif %}
+               {% comment %}  <div id="alerta-bajo-stock" style="display: none; color: red; font-weight: bold; margin-top: 15px; transform:translateY(-50px)">
+                    Atención: Hay productos con stock bajo (menos de 5 unidades).
+                </div> {% endcomment %}
+    
+                
             </div>
-
+         
         </div>
     </div>
 
@@ -195,9 +222,7 @@
 
 {% comment %} 
 Mostrar alerta si existen productos con stock bajo {% endcomment %}
-<div id="alerta-bajo-stock" style="display: none; color: red; font-weight: bold; margin-top: 15px;">
-    Atención: Hay productos con stock bajo (menos de 5 unidades).
-</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
                 
 <script>

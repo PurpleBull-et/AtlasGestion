@@ -25,7 +25,12 @@ SECRET_KEY = '#&8)1d8!!o+no6_y4x$*m0+yzxmk=1rb$jidq5bfemljmm7h6w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['f184-190-114-39-196.ngrok-free.app','127.0.0.1', 'localhost']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://f184-190-114-39-196.ngrok-free.app'
+]
+
 
 
 # Application definition
@@ -152,12 +157,11 @@ EMAIL_HOST = 'c2661241.ferozo.com'  # Servidor SMTP indicado en tu panel
 EMAIL_PORT = 465  # Puerto para SSL
 EMAIL_USE_TLS = False  # No utilizar TLS si se usa SSL
 EMAIL_USE_SSL = True  # Activar SSL
-EMAIL_HOST_USER = 'contacto@atlasgestion.cl'  # Tu correo completo
-EMAIL_HOST_PASSWORD = 'Mnx@6vJ3iZ'  # La contraseña de tu correo
+EMAIL_HOST_USER = 'contacto@atlasgestion.cl' 
+EMAIL_HOST_PASSWORD = 'Mnx@6vJ3iZ' 
 
 # Configuración adicional opcional
-DEFAULT_FROM_EMAIL = 'contacto@atlasgestion.cl'  # Dirección predeterminada
-
+DEFAULT_FROM_EMAIL = 'contacto@atlasgestion.cl'
 
 LOGIN_REDIRECT_URL = 'home' 
 

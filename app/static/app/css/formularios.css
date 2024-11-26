@@ -39,7 +39,7 @@
   background-color: rgb(94, 204, 204);
   position: relative;
   border-radius: 5px;
- /*  transform: translate(400px, -100px); */
+  transform: translate();
 }
 .formstaff input{
   padding: 10px; 
@@ -97,6 +97,7 @@
 } 
 .formNegocio label {
  display: flex;
+
 }
 .formNegocio input{
  padding: 10px;

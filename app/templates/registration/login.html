@@ -27,11 +27,11 @@
                                     <form action="" method="post" class="form">
                                         <h2 class="form_title">Inicia Sesion</h2>
                                         
-                                        <div class="form_container">
+                                        <div class="form_container" style="transform:translateY(60px)">
                                             <div class="form_group">
                                                 {% csrf_token %}
                                                 {{ form|crispy }}
-                                        <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+                                        <button type="submit" class="btn btn-primary btn-block" style="transform:translateY(-50px)">Iniciar Sesión</button>
                                     </form>
 
                                 </div>
