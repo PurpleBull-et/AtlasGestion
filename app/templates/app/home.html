@@ -1,18 +1,17 @@
 {% extends 'app/base.html' %}
-{% load static %}
+{%load static%}
 {% block contenido %}
 {% comment %} <h1>Mi Negocio</h1> {% endcomment %}
 
+
 <!-- Perfil del Staff -->
-<section id="perfil-staff" class="info-staff">
-    <div class="card card-info" style="width:100%;">
+<section id="perfil-staff" class="info-staff home">
+    <div class="card ihome" style="width:100%;">
     <h2>Perfil del Staff</h2>
     </div>
-    <div class="card card-interna">
-        <div class="card-body card-dbody">
+    <div class="card t-interna">
+        <div class="card-body">
             
-           
-
             <h4 class="card-title">{{ staff.username }}</h4>
             
             <div class="borderP">
@@ -24,60 +23,109 @@
         </div>
     </div>
     </section>
+    
+{% comment %} graficos {% endcomment %}
+
+<section class="sectionGraficos dshome dashboardgraf">
+
+    <div class="miDashboard ds-dash cont-graficos">
+{% comment %}     <div class="card envolt"> {% endcomment %}
+    <div class="card grafico">
+        <div class="card-body text-center infoTexto">
+            <h5>Ventas del Mes</h5>
+           {% comment %}  <p>${{ total_ventas }}</p> {% endcomment %}
+        <div class="card cardGrafo">
+            grafico
+        </div>
+        </div>
+    </div>
+{% comment %} </div> {% endcomment %}
+{% comment %} <div class="card envolt"> {% endcomment %}
+    <div class="card grafico">
+        <div class="card-body text-center infoTexto">
+            <h5>Ventas Acumuladas del año</h5>
+           {% comment %}  <p>${{ total_ventas }}</p> {% endcomment %}
+     
+           <div class="card cardGrafo">
+            grafico
+        </div>
+        
+        </div>
+    </div>
+{% comment %} </div> {% endcomment %}
+{% comment %} <div class="card envolt"> {% endcomment %}
+    <div class="card grafico">
+        <div class="card-body text-center infoTexto">
+            <h5>IVA Acumulado</h5>
+            {% comment %} <p>${{ total_ventas }}</p> {% endcomment %}
+            <div class="card cardGrafo">
+                grafico
+            </div>
+        </div>
+    </div>
+
+</div>
+{% comment %} </div> {% endcomment %}
+
+</section>
 
         <!-- Dashboard -->
-        {% if es_jefe %}
-        <section id="dashboard" class="mt-2 dashboard">
+        <section id="dashboard" class="mt-2 dashboard dshome">
+        
         <h2>Dashboard</h2>
-            <div class="miDashboard" >
-                <div class="col-md-9 columna-interna">
-                    <div class="card">
-                        <div class="card-body text-xl-center">
+       
+            <div class="miDashboard ds-dash">
+             {% comment %}    <div class="col-md-3 columna-interna colint"> {% endcomment %}
+                    <div class="card tdv">
+                        <div class="card-body text-center">
                             <h4>Total de Ventas</h4>
                             <p>${{ total_ventas }}</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-9 columna-interna">
-                    <div class="card">
+                {% comment %} </div> {% endcomment %}
+               {% comment %}  <div class="col columna-interna colint"> {% endcomment %}
+                    <div class="card pdv">
                         <div class="card-body text-center">
-                            <h4>Promedio Diario de Ventas</h4>
+                            <h5>Promedio Diario de Ventas</h5>
                             <p>${{ promedio_ventas_diario }}</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-9  columna-interna">
-                    <div class="card">
-                        <div class="card-body text-lg-center">
-                            <h4>Producto Más Vendido</h4>
+                {% comment %} </div> {% endcomment %}
+               {% comment %}  <div class="col-md-4  columna-interna colint"> {% endcomment %}
+                    <div class="card pmv">
+                        <div class="card-body text-center">
+                            <h5>Producto Más Vendido</h5>
                             <p>{{ producto_mas_vendido.nombre }} ({{ producto_mas_vendido.cantidad_total }} vendidos)</p>
                         </div>
                     </div>
-                </div>
+                {% comment %} </div> {% endcomment %}
+               {% comment %}  <div class="col-md-4  columna-interna colint"> {% endcomment %}
+                    <div class="card iva">
+                        <div class="card-body text-center">
+                            <h4>producto Menos Vendido</h4>
+                            <p>{{ producto_mas_vendido.nombre }} ({{ producto_mas_vendido.cantidad_total }} vendidos)</p>
+                        </div>
+                    </div>
+                {% comment %} </div> {% endcomment %}
             </div>
         </div>
-        </section>
-        {% endif %}
-
-
-  {% comment %}      
-    </div> {% endcomment %}
+    </div>
+</section>
 
 
 
 
- <!-- Ventas Totales -->
- 
-           
-    
+
+
+ <!-- Ventas Totales -->    
     {% comment %} <div class="card"> {% endcomment %}
-<section id="ventas-totales" class="mt-4"  style="transform:translate(-10px, 42px);">
-    <div class="card"> 
-        <h2>Ventas Realizadas</h2>
+<section id="ventas-totales" class="mt-4 sectionVenta">
+    <div class="card infoVenta"> 
+        <h3>Ventas Realizadas</h3>
     </div>
            {% comment %}  <table class="table table-bordered table-hover"> {% endcomment %}
-        
-                <div class="table-container" style="min-height:600px; width:800px">
+            <div class="env"> 
+                <div class="table-container contVenta">
                     <table class="table">
                 <thead>
                     <tr>
@@ -108,7 +156,16 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
 </section>
 
+
+
+
+
+{% comment %} <div class="c-graficos">
+    damian
+</div>
+ {% endcomment %}
 
 {% endblock %}

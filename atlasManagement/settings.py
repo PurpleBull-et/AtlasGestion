@@ -153,10 +153,10 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Configuración SMTP basada en Ferozo
-EMAIL_HOST = 'c2661241.ferozo.com'  # Servidor SMTP indicado en tu panel
-EMAIL_PORT = 465  # Puerto para SSL
-EMAIL_USE_TLS = False  # No utilizar TLS si se usa SSL
-EMAIL_USE_SSL = True  # Activar SSL
+EMAIL_HOST = 'c2661241.ferozo.com' 
+EMAIL_PORT = 465 
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True  
 EMAIL_HOST_USER = 'contacto@atlasgestion.cl' 
 EMAIL_HOST_PASSWORD = 'Mnx@6vJ3iZ' 
 

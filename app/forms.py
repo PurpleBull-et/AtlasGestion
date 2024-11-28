@@ -5,6 +5,17 @@ from django.forms.widgets import DateInput
 from .models import *
 from .utils import *  
 
+class UserForBossForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email']
+        labels = {
+            'username': 'Nombre de Usuario',
+            'first_name': 'Primer Nombre',
+            'last_name': 'Apellido',
+            'email': 'Correo Electrónico',
+        }
+
 
 class UserForm(UserCreationForm):
     class Meta:
@@ -261,3 +272,24 @@ class RegistroUbicacionForm(forms.Form):
             self.fields['provincia'].queryset = Provincia.objects.filter(region_id=region_id)
         if provincia_id:
             self.fields['comuna'].queryset = Comuna.objects.filter(provincia_id=provincia_id)
+
+
+
+class StaffProfileForBossForm(forms.ModelForm):
+    class Meta:
+        model = StaffProfile
+        
+        fields = ['rut', 'direccion', 'telefono'] 
+        labels = {
+            'rut': 'RUT',
+            'direccion': 'Dirección',
+            'telefono': 'Teléfono',
+            'negocio': 'Negocio',
+        }
+
+    def __init__(self, *args, **kwargs):
+        negocio = kwargs.pop('negocio', None) 
+        super().__init__(*args, **kwargs)
+        if negocio:
+            self.fields['negocio'].initial = negocio
+            self.fields['negocio'].widget = forms.HiddenInput()

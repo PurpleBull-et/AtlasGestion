@@ -70,4 +70,144 @@
    margin-left: 70px;
    
 }
+/*=HOME=========================*/
+.home{
+    background-color: aqua;
+    width: 320px;
+   /*  text-align: center; */
+}
+.home .ihome{/*titulo perfil staff*/
+   /*  background-color: rebeccapurple; */
+}
+.home .t-interna{
+    /* 0 */
+    height: 150px;
+}
+.dshome{
+   /*  background-color: yellowgreen; */
+    width: 170%;
+    height: 200px;
+    transform: translate(350px, -562px);
+   
+    /* display: grid; 
+    grid-template-columns: 1fr; */
 
+}
+.dshome .ds-dash{ /*contenedor de datos numericos*/
+  /*   margin: 60px; */
+    background-color: aliceblue;
+    display: flex;
+    flex-direction: row;
+  /*   justify-content: space-around; */
+  gap: 6px;
+  height:120px;
+  display: flex;
+
+}
+
+
+.dshome .ds-dash .colint .tdv{
+  /*   font-size: 50px; */
+    background-color: #b0ca1f;
+    width: 200px;
+    margin: 50px;
+    height: 100px;
+}
+.dshome .ds-dash .colint .pdv{
+    background-color: #b0ca1f;
+    width: 200px;
+    margin: 20px;
+    height: 100px;
+}
+.dshome .ds-dash .colint .pmv{
+    background-color: #b0ca1f;
+    width: 200px;
+    margin: 20px;
+    height: 100px;
+}
+.dshome .ds-dash .colint .iva{
+    background-color: #b0ca1f;
+    width: 200px;
+    margin: 20px;
+    height: 100px;
+}
+
+
+.dshome .ds-dash .colint .thome{
+    background-color: #1499a3;
+    
+    margin: 20px;
+    width: 250px;
+}
+/*Section graficos=================================*/
+.sectionGraficos{
+   /*  background-color: #b0ca1f; */
+    height: 300px;
+    width: 228%;
+    transform: translateY(40px);
+}
+.dshomegraf{
+    width: 170%;
+    height: 200px;
+    transform: translate(350px, -500px);
+    
+}
+
+.dashboardgraf{
+    /* background-color: #59e621; */
+    border: solid 2px rgb(206, 197, 197);
+    border-radius: 5px;
+    height:355px;
+    
+}
+.dashboardgraf .cont-graficos{
+    border-radius: 5px;
+    /* background-color: #1499a3; */
+    height: 350px;
+    width: 101%;
+    border: solid 2px rgb(206, 197, 197);
+}
+.dashboardgraf .cont-graficos .grafico{
+    border: solid 2px rgb(206, 197, 197);
+   /*  background-color: #36cc36; */
+    height: 348px;
+    width: 101%;
+
+}
+.dashboardgraf .cont-graficos .grafico .infoTexto h5{
+    border: 2px solid rgb(206, 197, 197);
+    border-radius: 5px;
+  
+} 
+.dashboardgraf .cont-graficos .grafico .infoTexto .cardGrafo{
+    border: 2px solid rgb(206, 197, 197);
+    
+    height: 290px;
+    width: 105%;
+    transform: translateX(-12px);
+} 
+
+.sectionVenta{
+   /*  background-color: #1499a3; */
+    height: 300px;
+    width: 800px;
+    transform: translate(-600px, 645px);
+}
+.sectionVenta .infoVenta{
+   /*  background-color: #b0ca1f; */
+    width: 800px;
+    transform: translateX(300px);
+}
+.sectionVenta .contVenta{
+    
+   /*  background-color: rebeccapurple; */
+    width:170%;
+    min-height: 400px;
+    border: 2px solid rgb(206, 197, 197);
+
+    
+}
+.sectionVenta .env{
+    /* border: 2px solid black; */
+    transform: translateX(10px);
+}

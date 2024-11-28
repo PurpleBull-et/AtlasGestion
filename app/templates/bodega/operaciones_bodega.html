@@ -22,9 +22,9 @@
             </div>
 
             <div class="ContenedorcajaProducto">
-                <div class="table-container" style="transform:translate(140px, -10px); min-height:350px;">
+                <div class="table-container tablaProd" style="transform:translate(140px, -10px); min-height:350px; width:800px;">
                     {% comment %} <table class="table"> {% endcomment %}
-                    <div class="cajaProducto">
+                    <div class="cajaProducto" style="width:750px;">
                         {{ producto_formset.management_form }}
                         {% comment %} </div> {% endcomment %}
                         {% comment %} <div class="containerproductos-container"> {% endcomment %}
@@ -40,7 +40,7 @@
                     </div>
                 </div>
             </form>
-            <div class="card" style="width:18rem; transform:translate(900px, -360px); position:absolute; background-color: rgb(241, 243, 243);">
+            <div class="card" style="width:18rem; transform:translate(950px, -360px); position:absolute; background-color: rgb(241, 243, 243);">
                 <button type="button" class="btn btn-secondary mt-3" onclick="agregarProducto()">Agregar Otro Producto</button>
                 <button type="submit" class="btn btn-primary mt-3">Registrar Entrada</button>
             </div>

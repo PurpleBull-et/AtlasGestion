@@ -38,6 +38,18 @@ class Comuna(models.Model):
         return f"{self.nombre} - {self.provincia.nombre}, {self.provincia.region.nombre}"
 
 
+class Membresia(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    val_mensual = models.IntegerField(null=True, blank=True, verbose_name="Valor mensual")
+    val_adicional = models.IntegerField(null=True, blank=True, verbose_name="Valor adicional")
+    duracion_dias = models.PositiveIntegerField(verbose_name="Duración (días)")
+    max_users = models.PositiveIntegerField(verbose_name="Usuarios máximos permitidos")
+    descripcion = models.TextField(null=True, blank=True, verbose_name="Descripción")
+
+    def __str__(self):
+        return f"{self.nombre} - Máx. {self.max_users} usuarios"
+
+
 class Negocio(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255)
@@ -51,9 +63,12 @@ class Negocio(models.Model):
     region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, related_name="negocios")
     provincia = models.ForeignKey(Provincia, on_delete=models.SET_NULL, null=True, related_name="negocios")
     comuna = models.ForeignKey(Comuna, on_delete=models.SET_NULL, null=True, related_name="negocios")
+    membresia = models.ForeignKey(Membresia, on_delete=models.SET_NULL, null=True, blank=True, related_name="negocios")
+
 
     def __str__(self):
         return self.nombre
+
     
 class Almacen(models.Model):
     id = models.AutoField(primary_key=True)

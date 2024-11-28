@@ -27,6 +27,15 @@ from django.db.models import F, Sum, ExpressionWrapper, IntegerField, Value, Cha
 from django.http import JsonResponse
 import requests
 
+from django.contrib.auth.decorators import user_passes_test, login_required
+
+def jefe_required(view_func):
+    @login_required
+    @user_passes_test(lambda u: u.groups.filter(name='staff_jefe').exists())
+    def wrapped_view(request, *args, **kwargs):
+        return view_func(request, *args, **kwargs)
+    return wrapped_view
+
 def obtener_hora_actual(request):
     url = "https://www.timeapi.io/api/Time/current/zone?timeZone=America/Santiago"
     try:
@@ -489,6 +498,13 @@ def enviar_correo(destinatario, asunto, mensaje, archivo, nombre_archivo):
     email = EmailMessage(asunto, mensaje, 'contacto@atlasgestion.cl', [destinatario])
     email.attach(nombre_archivo, archivo, 'application/pdf')
     email.send()
+
+def enviar_correo_datos(destinatario, asunto, mensaje, archivo=None, nombre_archivo=''):
+    email = EmailMessage(asunto, mensaje, 'contacto@atlasgestion.cl', [destinatario])
+    if archivo and nombre_archivo: 
+        email.attach(nombre_archivo, archivo, 'application/pdf')
+    email.send()
+
 
 @login_required
 def buscar_correo(request):
@@ -1550,27 +1566,108 @@ def historial_devoluciones(request):
 #####################################
 # / / / / / / / / / / / / / / / / / #
 #####################################
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+from django.db.models.functions import TruncDay, TruncMonth
+from django.db.models import Sum, Avg
+import matplotlib
+matplotlib.use('Agg')  # Usar un backend no interactivo para evitar problemas en el servidor
+
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+from django.db.models import Sum, Avg
+from django.db.models.functions import TruncDay, TruncMonth
+from django.shortcuts import render
+from .models import Compra, DetalleCompra, StaffProfile
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+
+import matplotlib
+matplotlib.use('Agg')  # Backend no interactivo
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+from django.db.models import Sum, Avg, Count
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+
+import matplotlib
+matplotlib.use('Agg')  # Backend no interactivo para evitar errores en servidores
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+from django.db.models import Sum, Avg, Count
+from django.db.models.functions import TruncDay
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+
 @login_required
 @staff_member_required
 def mi_negocio(request):
-    # Obtener el perfil del staff
     staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio
 
-    # Filtrar compras por el negocio del staff
-    compras = Compra.objects.filter(usuario__staffprofile__negocio=staff_profile.negocio).prefetch_related('detalles')
+    # KPIs
+    total_ventas = Compra.objects.filter(usuario__staffprofile__negocio=negocio).aggregate(Sum('total'))['total__sum'] or 0
+    promedio_ventas_diario = Compra.objects.filter(usuario__staffprofile__negocio=negocio).annotate(
+        dia=TruncDay('fecha')
+    ).values('dia').annotate(total_dia=Sum('total')).aggregate(Avg('total_dia'))['total_dia__avg'] or 0
+    producto_mas_vendido = DetalleCompra.objects.filter(
+        compra__usuario__staffprofile__negocio=negocio
+    ).values('producto__nombre').annotate(cantidad_total=Sum('cantidad')).order_by('-cantidad_total').first()
 
-    # Calcular KPI
-    total_ventas = compras.aggregate(Sum('total'))['total__sum'] or 0
-    promedio_ventas_diario = compras.annotate(dia=TruncDay('fecha')).values('dia').annotate(total_dia=Sum('total')).aggregate(Avg('total_dia'))['total_dia__avg'] or 0
-    producto_mas_vendido = DetalleCompra.objects.filter(compra__usuario__staffprofile__negocio=staff_profile.negocio).values('producto__nombre').annotate(cantidad_total=Sum('cantidad')).order_by('-cantidad_total').first()
+    # Generar gráficos solo si hay datos
+    grafico_producto_mas_vendido = None
+    if producto_mas_vendido:
+        productos = [producto_mas_vendido['producto__nombre']]
+        cantidades = [producto_mas_vendido['cantidad_total']]
+        fig, ax = plt.subplots()
+        ax.bar(productos, cantidades, color='skyblue')
+        ax.set_title('Producto Más Vendido')
+        ax.set_ylabel('Cantidad')
+        ax.set_xlabel('Producto')
+        buffer = BytesIO()
+        plt.tight_layout()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        grafico_producto_mas_vendido = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.close()
+        plt.close(fig)
 
-    return render(request, 'business/mi_negocio.html', {
-        'compras': compras,
-        'staff': request.user,
+    grafico_ventas_dia = None
+    ventas_por_dia = Compra.objects.filter(usuario__staffprofile__negocio=negocio).annotate(
+        dia=TruncDay('fecha')
+    ).values('dia').annotate(total_ventas=Sum('total')).order_by('dia')
+    if ventas_por_dia.exists():
+        dias = [venta['dia'].strftime('%Y-%m-%d') for venta in ventas_por_dia]
+        ventas = [venta['total_ventas'] for venta in ventas_por_dia]
+        fig, ax = plt.subplots()
+        ax.bar(dias, ventas, color='green')
+        ax.set_title('Ventas Totales por Día')
+        ax.set_ylabel('Total Ventas')
+        ax.set_xlabel('Días')
+        plt.xticks(rotation=45, ha='right')
+        buffer = BytesIO()
+        plt.tight_layout()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        grafico_ventas_dia = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.close()
+        plt.close(fig)
+
+    context = {
         'total_ventas': total_ventas,
         'promedio_ventas_diario': promedio_ventas_diario,
         'producto_mas_vendido': producto_mas_vendido,
-    })
+        'grafico_producto_mas_vendido': grafico_producto_mas_vendido,
+        'grafico_ventas_dia': grafico_ventas_dia,
+    }
+
+    return render(request, 'business/mi_negocio.html', context)
 
 #####################################
 # / / / / / / / / / / / / / / / / / #
@@ -2397,3 +2494,180 @@ def erase_cliente(request):
         cliente = get_object_or_404(PerfilClientes, id=cliente_id)
         cliente.delete()
         return JsonResponse({'success': True, 'message': 'Cliente eliminado'})
+
+
+
+
+
+
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+# MANEJOS DE JEFE DE NEGOCIO - BOSS
+# Registrar un nuevo staff (solo jefe de negocio)
+@login_required
+@jefe_required
+def register_staff_for_boss(request):
+    jefe_profile = StaffProfile.objects.get(user=request.user)
+
+    if request.method == 'POST':
+        user_form = UserForBossForm(request.POST)
+        profile_form = StaffProfileForBossForm(request.POST)
+
+        try:
+            if user_form.is_valid() and profile_form.is_valid():
+                # Crear usuario con contraseña generada
+                user = user_form.save(commit=False)
+                user.is_staff = True
+
+                # Generar contraseña y asignarla en los campos de confirmación
+                contraseña = generar_contraseña()
+                user.set_password(contraseña)
+                user_form.cleaned_data['password1'] = contraseña
+                user_form.cleaned_data['password2'] = contraseña
+
+                user.save()
+
+                # Asignar grupo
+                grupo_seleccionado = request.POST.get('grupo')
+                if grupo_seleccionado:
+                    grupo = Group.objects.get(id=grupo_seleccionado)
+                    user.groups.add(grupo)
+
+                # Crear perfil del staff
+                staff_profile = profile_form.save(commit=False)
+                staff_profile.user = user
+                staff_profile.negocio = jefe_profile.negocio
+                staff_profile.save()
+
+                # Enviar credenciales al correo
+                asunto = 'Credenciales de acceso'
+                mensaje = (
+                    f"Hola {user.first_name},\n\n"
+                    f"Tu cuenta ha sido creada exitosamente.\n\n"
+                    f"Credenciales de acceso:\n"
+                    f"Usuario: {user.username}\n"
+                    f"Contraseña: {contraseña}\n\n"
+                    f"Recuerda cambiar tu contraseña en el primer inicio de sesión."
+                )
+                destinatarios = [user.email, request.user.email]
+
+                for destinatario in destinatarios:
+                    enviar_correo_datos(destinatario, asunto, mensaje)  
+
+                return redirect('list_staff_for_boss')
+            else:
+                # Mostrar errores de validación
+                raise ValueError("Los formularios no son válidos. Por favor, verifica los datos ingresados.")
+        except Exception as e:
+            # Capturar errores y enviarlos al template para su visualización
+            error_message = str(e)
+            return render(request, 'administration/for_boss/register_staff_for_boss.html', {
+                'user_form': user_form,
+                'profile_form': profile_form,
+                'grupos': Group.objects.filter(name__in=['staff_bodega', 'staff_vendedor']),
+                'error_message': error_message,
+            })
+    else:
+        user_form = UserForBossForm()
+        profile_form = StaffProfileForBossForm()
+
+    return render(request, 'administration/for_boss/register_staff_for_boss.html', {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'grupos': Group.objects.filter(name__in=['staff_bodega', 'staff_vendedor']),
+    })
+
+
+
+
+@login_required
+@jefe_required
+def mod_staff_profile_for_boss(request, staff_id):
+    jefe_profile = StaffProfile.objects.get(user=request.user)
+
+    # Validar que el usuario pertenece al negocio del jefe
+    user = get_object_or_404(User, pk=staff_id)
+    staff_profile = get_object_or_404(StaffProfile, user=user, negocio=jefe_profile.negocio)
+
+    grupos = Group.objects.all()
+
+    if request.method == 'POST':
+        profile_form = StaffProfileForBossForm(request.POST, instance=staff_profile)
+
+        if profile_form.is_valid():
+            # Guardar cambios en el perfil
+            profile_form.save()
+
+            # Actualizar el grupo asignado al usuario
+            grupo_seleccionado = request.POST.get('grupo')
+            if grupo_seleccionado:
+                grupo = get_object_or_404(Group, id=grupo_seleccionado)
+                user.groups.clear()  # Limpiar todos los grupos actuales
+                user.groups.add(grupo)  # Asignar el nuevo grupo
+
+            return redirect('list_staff_for_boss')  # Redirigir a la lista de staff del jefe
+    else:
+        profile_form = StaffProfileForBossForm(instance=staff_profile)
+
+    return render(request, 'administration/for_boss/mod_staff_profile_for_boss.html', {
+        'profile_form': profile_form,
+        'staff': user,
+        'grupos': Group.objects.filter(name__in=['staff_bodega', 'staff_vendedor']),
+        'grupo_actual': user.groups.first()  # Obtener el primer grupo asignado (si existe)
+    })
+
+
+
+# Listar staff (solo jefe de negocio)
+from django.core.paginator import Paginator
+@login_required
+@jefe_required
+def list_staff_for_boss(request):
+    negocio = StaffProfile.objects.get(user=request.user).negocio
+    staff_list = User.objects.filter(
+        staffprofile__negocio=negocio,
+        is_staff=True,
+        is_active=True
+    )
+    paginator = Paginator(staff_list, 10)  # Mostrar 10 usuarios por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'administration/for_boss/list_staff_for_boss.html', {
+        'staff_list_for_boss': page_obj
+    })
+
+
+
+# Modificar cuenta staff (solo jefe de negocio)
+@jefe_required
+def mod_staff_account_for_boss(request, staff_id):
+    user = get_object_or_404(User, pk=staff_id)
+
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=user)
+
+        if user_form.is_valid():
+            user_form.save()
+            return redirect('list_staff_for_boss')
+    else:
+        user_form = UserForm(instance=user)
+
+    return render(request, 'administration/for_boss/mod_staff_account_for_boss.html', {
+        'user_form': user_form,
+        'staff': user,
+    })
+
+# Eliminar staff (solo jefe de negocio)
+@jefe_required
+def erase_staff_for_boss(request, staff_id):
+    user = get_object_or_404(User, pk=staff_id)
+    if request.method == 'POST':
+        user.delete()
+        return redirect('list_staff_for_boss')
+
+    return render(request, 'administration/for_boss/erase_staff_for_boss.html', {
+        'staff': user,
+    })
+

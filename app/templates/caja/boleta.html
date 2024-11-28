@@ -45,13 +45,13 @@
 <div>
     <div class="card">
         <!-- Lista de productos -->
-        <div class="row">
+        <div class="row summary-boleta">
             <div class="col-md-7 cart">
               {% comment %}   <div class="title">
                     <h4><b>Lista de Productos</b></h4>
                 </div> {% endcomment %}
 
-                <div class="containerEncabezado">               
+                <div class="containerEncabezado ">               
                     <thead>
                     <tr>
                         <th>Nombre</th>
@@ -68,11 +68,11 @@
                         {% comment %} <div class="table-container">
                             <table class="table"> {% endcomment %}
                         <li class="product-item row main align-items-center border-top border-bottom py-3">
-                            <div class="col-4">{{ producto.nombre }}</div>
-                            <div class="col-2">{{ producto.stock }}</div>
-                            <div class="col-2">{{ producto.precio|clp }}</div>
-                            <div class="col-2">{{ producto.descuento }}%</div>
-                            <div class="col-2">
+                            <div class="col-4 prod">{{ producto.nombre }}</div>
+                            <div class="col-2 stockk">{{ producto.stock }}</div>
+                            <div class="col-2 price">{{ producto.precio|clp }}</div>
+                            <div class="col-2 descu">{{ producto.descuento }}%</div>
+                            <div class="col-2 btns">
                                 <form method="post" action="{% url 'agregar_al_carrito_boleta' producto.producto_id %}">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-success" style="background-color:#1499a3;">Añadir</button>
@@ -113,15 +113,15 @@
             <!-- Resumen del carrito -->
 
             <!-- Resumen del carrito -->
-            <div class="col-md-5 summary">
-                <div class="containerEncabezado">               
+            <div class="col-md-5 summary summary-boleta">
+                <div class="containerEncabezado boleta">               
                     <thead>
                     <tr>
                         <th>Cant.</th>
-                        <th>Prod.</th>
+                        <th>Producto</th>
                         <th>P.Unitario</th>
                         <th>P.Total</th>
-                        <th></th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
             </div>

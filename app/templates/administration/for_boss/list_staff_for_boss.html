@@ -4,7 +4,7 @@
 <h1>Gestión de Staff</h1>
 
 <!-- Botón para registrar nuevo staff -->
-<a href="{% url 'register_staff' %}" class="btn btn-primary mb-3">Registrar Nuevo Usuario Staff</a>
+<a href="{% url 'register_staff_for_boss' %}" class="btn btn-primary mb-3">Registrar Nuevo Usuario Staff</a>
 
 <!-- Dropdown para filtrar usuarios por negocio -->
 <div class="mb-4">
@@ -32,7 +32,6 @@
     
     <thead>
         <tr>
-            <th>ID</th>
             <th>Nombre de Usuario</th>
             <th>Nombre Completo</th>
             <th>Correo Electrónico</th>
@@ -40,20 +39,19 @@
         </tr>
     </thead>
     <tbody>
-        {% if staff_list %}
-            {% for user in staff_list %}
+        {% if staff_list_for_boss %}
+            {% for user in staff_list_for_boss %}
                 <tr>
-                    <td data-label="ID">{{ user.id }}</td>
                     <td data-label="Nombre Usuario">{{ user.username }}</td>
                     <td data-label="Nombre Completo">{{ user.first_name }} {{ user.last_name }}</td>
                     <td data-label="Correo">{{ user.email }}</td>
                     <td data-label="Acciones">
                         <!-- Botón para modificar perfil -->
-                        <a href="{% url 'mod_staff_profile' user.id %}" class="btn btn-info">Perfil</a>
+                        <a href="{% url 'mod_staff_profile_for_boss' user.id %}" class="btn btn-info">Perfil</a>
                         <!-- Botón para modificar cuenta -->
-                        <a href="{% url 'mod_staff_account' user.id %}" class="btn btn-warning">Cuenta</a>
+                        <a href="{% url 'mod_staff_account_for_boss' user.id %}" class="btn btn-warning">Cuenta</a>
                         <!-- Botón para eliminar con confirmación -->
-                        <a href="{% url 'erase_staff' user.id %}" class="btn btn-danger">Eliminar</a>
+                        <a href="{% url 'erase_staff_for_boss' user.id %}" class="btn btn-danger">Eliminar</a>
                     </td>
                 </tr>
             {% endfor %}

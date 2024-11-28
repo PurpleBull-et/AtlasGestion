@@ -5,8 +5,10 @@
 
 <form method="post" class="formModificarStaff">
     {% csrf_token %}
-    
+    <!-- Ocultar el campo negocio -->
+    <input type="hidden" name="negocio" value="{{ user_profile.negocio.id }}"/>
     {{ profile_form.as_p }}
+
     
     <div class="form-group" style="transform:translate(5px, 3px)"  >
         <label for="grupo">Asignar Grupo:</label>

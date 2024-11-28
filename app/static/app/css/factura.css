@@ -4,23 +4,32 @@
     height: 720px;
     border: 2px solid hsl(240, 14%, 95%);
     position: relative;
-  /*   background-color: aqua; */
+   /*  background-color: aqua; */
 }
 .cart{
     /* width: 100%; */
     height: 660px;
+  /*   background-color:#ffffff; */
     background-color:#ffffff;
     border: 2px solid hsl(240, 14%, 95%);
     border-radius: 5px;
-    
 }
+.cart .factura{
+    
+    background-color: #1499a3;
+    color: white;
+    word-spacing: 105px;
+    border-radius: 5px;
+    text-align: justify;
+}
+
 .list-unstyled{
     width: 100%; /* Ancho fijo para el contenedor */ 
     height: 610px; /* Altura fija para el contenedor */ 
     overflow-y: auto; /* Muestra barra de desplazamiento vertical si es necesario */ 
     border: 2px solid #eedddd; /* Borde del contenedor */ 
     padding: 10px; /* Padding interno */ 
-    background-color: #f3efef; /* Color de fondo */
+    background-color: #eff3f3; /* Color de fondo */
     border-radius: 5px; /* Bordes redondeados */
 
 
@@ -30,16 +39,60 @@
 .list-unstyled .product-item{
     width: 102%;
     background-color: #f3efef;
-    height: 50px;
+ /*  background-color: #c94040; */
+    height: 70px;
     display: flex;
     flex-direction: column;
+    transition: all ease 1s;
     
   /*   align-items: flex-start; */
 }
+/* .list-unstyled .product-item:hover{
+    transform: scale(1.01);
+} */
+
 .list-unstyled .product-item .col-4{
-   /*  background-color: aqua; */
-    width: 180px;
+/*     background-color: aqua; */
+    width: 120px;
+    border: 1px solid #dfd5d5;
+    overflow: hidden;
+    margin-top: -5px;
+    margin-left: -45px;
+    
+   
+   
+
 }
+.list-unstyled .product-item .col-2{
+   /*  background-color: #1499a3; */
+   border: 1px solid #dfd5d5;
+    width: 80px;
+    margin-left: -120px;
+}
+.list-unstyled .product-item .precio{
+   /*  background-color: #1499a3; */
+    margin-right: 10px;
+    border: 1px solid #dfd5d5;
+}
+.list-unstyled .product-item .btns{
+   /*  background-color: #1499a3; */
+    border: none;
+    margin-left: -50px;
+}
+.list-unstyled .product-item .stock{
+   /*  background-color: yellow; */
+    width: 50px;
+    margin-right: 20px;
+    border: 1px solid #dfd5d5;
+}
+.list-unstyled .product-item .desc{
+    /* background-color: rgb(31, 90, 141); */
+    width: 50px;
+    border: 1px solid #dfd5d5;
+}
+
+
+
 .list-unstyled .product-item a{
     color: rgb(255, 253, 250);
     text-align: center;
@@ -74,11 +127,22 @@ li .col-4 {
 } */
 /*=========tu carro*/
 
+.summary-factura{
+   /*  background-color: aqua; */
+    border-radius: 8px;
+}
+.summary .factura{
+    background-color: #1499a3;
+    color: #dddada;
+    border-radius: 5px;
+    word-spacing: 50px;
+}
+
 .summary .list-unstyled{
     background-color: #ccc8c8;
 /*     border: 2px solid #afa9a9; */
     height: 200px;
-  
+    
     transform: translateY(-18px);
    
 
@@ -88,7 +152,7 @@ li .col-4 {
     background-color: #f8f4f4;
     margin-bottom: 2px;
     width: 102%;
-    height: 50px;/* 
+    height: 60px;/* 
     text-align: center; */
     display: flex;
     /* border: blue 1px solid; */
@@ -106,22 +170,36 @@ li .col-4 {
 }
 .summary .list-unstyled .cart-item .col-4{ 
     border: 1px solid #dfd5d5;
-    /* background-color: aqua; */
-    width: 55px;
+ /*    background-color: aqua; */
+    width:30px;
     text-align: center;
+   display: unset;
+   overflow: hidden;
+
 }
 .summary .list-unstyled .cart-item .col-2{
     border: 1px solid #c7c2c2;
-    /* background-color: rgb(43, 255, 0); */
+   /*  background-color: rgb(43, 255, 0); */
     text-align: center;
     transform: translateX(5px);
+    width: 110px;
+    margin: -10px;
+    overflow: hidden;
+
+}
+.summary .list-unstyled .cart-item .nombre{
+/*     background-color: #1499a3; */
+    width: 99px;
+    margin-left: -15px;
+    overflow: hidden;
+
 }
 
 
 
 .summary .list-unstyled .cart-item .botones form{
 
-    margin: 2px;
+    margin: 0px;
     display: inline-block ;
     /* background-color: rgb(37, 226, 37); */ 
     color: rgb(255, 255, 255); 
@@ -129,14 +207,17 @@ li .col-4 {
     border-radius: 5px; 
     cursor: pointer;
     /* background-color: rgb(182, 190, 183); */
-    transform: translateX(5px);
+    transform: translateX(8px);
     
 }
+
+
 
 .summary .list-unstyled .cart-item .btn-secondary{
     background-color: rgb(124, 120, 120);
     color: aliceblue;
-    transform: translateX(-5px);
+    transform: translateX(-2px);
+
     
 }
 

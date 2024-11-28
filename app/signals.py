@@ -5,7 +5,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import *
 from atlasManagement.middleware import get_current_authenticated_user
-from .models import Region, Provincia, Comuna
 
 @receiver(post_migrate)
 def create_user_groups(sender, **kwargs):
@@ -67,8 +66,6 @@ def create_user_groups(sender, **kwargs):
             staff_vendedor.permissions.add(permission)
         except Permission.DoesNotExist:
             print(f"Permiso {perm_codename} no encontrado")
-
-
 
 
 @receiver(post_save, sender=Producto)
@@ -133,6 +130,26 @@ def regiones_comunas_provincias(sender, **kwargs):
             "Colchagua": ["San Fernando", "Santa Cruz", "Chimbarongo", "Nancagua", "Placilla", "Palmilla", "Pumanque"],
             "Cardenal Caro": ["Pichilemu", "Marchigüe", "La Estrella", "Litueche", "Navidad", "Paredones"],
         },
+        "Región del Maule": {
+            "Talca": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael"],
+            "Cauquenes": ["Cauquenes", "Chanco", "Pelluhue"],
+            "Curicó": ["Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén"],
+            "Linares": ["Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"],
+        },
+        "Región de Ñuble": {
+            "Diguillín": ["Chillán", "Chillán Viejo", "Bulnes", "El Carmen", "Pemuco", "San Ignacio", "Yungay"],
+            "Itata": ["Quirihue", "Cobquecura", "Coelemu", "Ninhue", "Portezuelo", "Ránquil", "Treguaco"],
+            "Punilla": ["San Carlos", "Coihueco", "San Fabián", "Ñiquén"],
+        },
+        "Región del Biobío": {
+            "Concepción": ["Concepción", "Talcahuano", "San Pedro de la Paz", "Hualpén", "Coronel", "Lota", "Santa Juana", "Hualqui", "Penco", "Tomé", "Chiguayante"],
+            "Arauco": ["Arauco", "Cañete", "Contulmo", "Curanilahue", "Lebu", "Los Álamos", "Tirúa"],
+            "Biobío": ["Los Ángeles", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel", "Antuco"],
+        },
+        "Región de La Araucanía": {
+            "Cautín": ["Temuco", "Carahue", "Cholchol", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre Las Casas", "Perquenco", "Pitrufquén", "Pucon", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica"],
+            "Malleco": ["Angol", "Collipulli", "Curacautín", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Purén", "Renaico", "Traiguén", "Victoria"],
+        },
         "Región de Los Ríos": {
             "Valdivia": ["Valdivia", "Corral", "Lanco", "Los Lagos", "Máfil", "Mariquina", "Paillaco", "Panguipulli"],
             "Ranco": ["La Unión", "Futrono", "Lago Ranco", "Río Bueno"],
@@ -167,3 +184,18 @@ def regiones_comunas_provincias(sender, **kwargs):
             for comuna_nombre in comunas:
                 # Crear o buscar la comuna
                 Comuna.objects.get_or_create(nombre=comuna_nombre, provincia=provincia)
+
+
+@receiver(post_migrate)
+def create_membresia_plans(sender, **kwargs):
+    # Definimos los planes de membresía
+    membresias_data = [
+        {"nombre": "Básico", "val_mensual": 10000, "val_adicional": 0, "duracion_dias": 30, "max_users": 5, "descripcion": "Plan Básico con un máximo de 5 cuentas y sin costo adicional."},
+        {"nombre": "Medio", "val_mensual": 15000, "val_adicional": 10000, "duracion_dias": 30, "max_users": 10, "descripcion": "Plan Medio con un máximo de 10 cuentas y un costo adicional de $10,000."},
+        {"nombre": "Premium", "val_mensual": 30000, "val_adicional": 9000, "duracion_dias": 30, "max_users": 15, "descripcion": "Plan Premium con un máximo de 15 cuentas y un costo adicional de $9,000."},
+        {"nombre": "Avanzado", "val_mensual": 40000, "val_adicional": 8000, "duracion_dias": 30, "max_users": 20, "descripcion": "Plan Avanzado con un máximo de 20 cuentas y un costo adicional de $8,000."},
+        {"nombre": "Corporativo", "val_mensual": 50000, "val_adicional": 7000, "duracion_dias": 30, "max_users": 30, "descripcion": "Plan Corporativo con un máximo de 30 cuentas y un costo adicional de $7,000 para rangos superiores."},
+    ]
+
+    for membresia_data in membresias_data:
+        Membresia.objects.get_or_create(nombre=membresia_data["nombre"], defaults=membresia_data)

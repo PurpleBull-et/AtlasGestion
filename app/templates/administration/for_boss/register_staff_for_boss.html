@@ -23,6 +23,9 @@
     
     <div class="personales">
         {{ profile_form.as_p }}
+        <!-- Ocultar el campo negocio -->
+        <input type="hidden" name="negocio" value="{{ user_profile.negocio.id }}">
+
 
         <div class="form-group" style="transform:translate(-2px, 3px)">
             <label for="grupo">Asignar Grupo:</label>

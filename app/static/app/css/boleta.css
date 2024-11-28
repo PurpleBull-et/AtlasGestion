@@ -64,6 +64,7 @@
 
 /*===== encabezados de factura y boleta=====*/
 .summary .containerEncabezado { 
+   /*  background-color: aqua; */
  /*    margin-left: -100px; */
     width:100%;
     font-size: 2vh;
@@ -95,17 +96,54 @@
     font-weight: 600;
    /*  color: rgba(14, 1, 14, 0) ; */
     /* background-color: #3c3f44; */
-    background-color: #f4f6f8;
+    background-color: #1499a3;
+    color: white;
     padding: 2px;
     text-align: left;
     border: 2px solid #dee2e685;
-    word-spacing: 120px;
+    border-radius: 5px;
+    word-spacing: 105px;
     
 }
-/*  .cart .containerEncabezado{
-    padding: 20px;
-    background-color: #f9f9f9;
-     border-radius: 5px; 
-     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+/*======= lista*/
+.summary-boleta .list-unstyled .product-item .prod{
+  /*   background-color: #1499a3; */
+  margin-left: -50px;
+}
+.summary-boleta .list-unstyled .product-item .stockk{
+   /*  background-color: green; */
+    border: 1px solid #dfd5d5;
+    width: 55px;
+    margin-right: 38px;
+    text-align: center;
+}
+.summary-boleta .list-unstyled .product-item .price{
+    /* background-color: #a38914; */
+    width: 100px;
+    text-align: center;
+    margin-right: 18px;
+    border: 1px solid #dfd5d5;
+}
+.summary-boleta .list-unstyled .product-item .descu{
+ /*    background-color: #a31497; */
+    width: 60px;
+    text-align: center;
+    border: 1px solid #dfd5d5;
+}
 
-} */
+
+
+
+
+
+/* ========== encabezado carro*/
+.summary-boleta{
+  /*   background-color: aqua; */
+    border-radius: 8px;
+}
+.summary-boleta .boleta{
+    background-color: #1499a3;
+    color: #dddada;
+    border-radius: 5px;
+    word-spacing: 50px;
+}

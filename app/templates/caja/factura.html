@@ -52,14 +52,14 @@
                     <h4><b>Lista de Productos</b></h4>
                 </div> {% endcomment %}
                
-                <div class="containerEncabezado">               
+                <div class="containerEncabezado factura">               
                     <thead>
                     <tr>
                         <th>Producto</th>
                         <th>Stock</th>
                         <th>Precio</th>
-                        <th>Descuento</th>
-                        <th></th>
+                        <th>Desc.</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
             </div>
@@ -71,10 +71,10 @@
                         
                         <li class="product-item row main align-items-center border-top border-bottom py-3">
                             <div class="col-4">{{ producto.nombre }}</div>
-                            <div class="col-2">{{ producto.stock }}</div>
-                            <div class="col-2">{{ producto.precio_mayorista|clp }}</div>
-                            <div class="col-2">{{ producto.descuento_mayorista }}%</div>
-                            <div class="col-2">
+                            <div class="col-2 stock">{{ producto.stock }}</div>
+                            <div class="col-2 precio">{{ producto.precio_mayorista|clp }}</div>
+                            <div class="col-2 desc">{{ producto.descuento_mayorista }}%</div>
+                            <div class="col-2 btns">
                                 <form method="post" action="{% url 'agregar_al_carrito_factura' producto.producto_id %}">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-success" style="background-color:#1499a3">Añadir</button>
@@ -113,18 +113,18 @@
 
 
             <!-- Resumen del carrito -->
-            <div class="col-md-5 summary">
+            <div class="col-md-5 summary summary-factura">
                 {% comment %} <div><h5><b>Tu Carro (Items)</b></h5></div>{% endcomment %}
                 <hr> 
 
-                <div class="containerEncabezado" style="transform:translateY(-30px)">               
+                <div class="containerEncabezado factura" style="transform:translateY(-30px)">               
                     <thead>
                     <tr>
                         <th>Cant.</th>
                         <th>Prod.</th>
                         <th>P.Mayorista</th>
                         <th>P.Total</th>
-                        <th></th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
             </div>
@@ -133,7 +133,7 @@
                     {% for item in carrito_items %}
                     <li class="cart-item d-flex justify-content-between align-items-center border-bottom py-3">
                         <div class="col-4">{{ item.cantidad }}</div>
-                        <div class="col-2">{{ item.producto.nombre }}</div>
+                        <div class="col-2 nombre">{{ item.producto.nombre }}</div>
                         <div class="col-2">{{ item.producto.precio_mayorista|clp }}</div>
                         <div class="col-2">{{ item.total_precio|clp }}</div>
                         <div class="botones">
