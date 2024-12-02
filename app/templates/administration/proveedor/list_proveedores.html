@@ -26,22 +26,18 @@
 <table class="table">
     <thead>
         <tr>
-            <th>ID</th>
             <th>Nombre</th>
             <th>RUT Empresa</th>
             <th>Teléfono</th>
-            <th>Dirección</th>
             <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
         {% for proveedor in proveedores %}
         <tr>
-            <td data-label="ID">{{ proveedor.id }}</td>
             <td data-label="Nombre">{{ proveedor.nombre }}</td>
             <td data-label="RUT">{{ proveedor.rut_empresa }}</td>
             <td data-label="Teléfono">{{ proveedor.telefono }}</td>
-            <td data-label="Dirección">{{ proveedor.direccion }}</td>
             <td data-label="Acciones">
                 <a href="{% url 'mod_proveedor' proveedor.id %}" class="btn btn-warning">Modificar</a>
                 <a href="{% url 'erase_proveedor' proveedor.id %}" class="btn btn-danger">Eliminar</a>

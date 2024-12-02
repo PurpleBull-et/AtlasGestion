@@ -27,14 +27,47 @@ from django.db.models import F, Sum, ExpressionWrapper, IntegerField, Value, Cha
 from django.http import JsonResponse
 import requests
 
-from django.contrib.auth.decorators import user_passes_test, login_required
-
 def jefe_required(view_func):
     @login_required
     @user_passes_test(lambda u: u.groups.filter(name='staff_jefe').exists())
     def wrapped_view(request, *args, **kwargs):
         return view_func(request, *args, **kwargs)
     return wrapped_view
+
+def bodeguero_required(view_func):
+    @login_required
+    @user_passes_test(lambda u: u.groups.filter(name='staff_bodega').exists())
+    def wrapped_view(request, *args, **kwargs):
+        return view_func(request, *args, **kwargs)
+    return wrapped_view
+
+def cajero_required(view_func):
+    @login_required
+    @user_passes_test(lambda u: u.groups.filter(name='staff_vendedor').exists())
+    def wrapped_view(request, *args, **kwargs):
+        return view_func(request, *args, **kwargs)
+    return wrapped_view
+
+def negocio_mayorista_required(view_func):
+    @login_required
+    def wrapped_view(request, *args, **kwargs):
+        
+        staff_profile = get_object_or_404(StaffProfile, user=request.user)
+        
+        if not staff_profile.negocio.is_mayorista:
+            return HttpResponseForbidden("Acceso denegado: Este recurso es solo para negocios mayoristas.")
+        return view_func(request, *args, **kwargs)
+    return wrapped_view
+
+def validar_correo_unico(correo, modelo, negocio=None):
+    filtro = {'correo': correo}
+    if negocio:
+        filtro['negocio'] = negocio
+
+    if modelo.objects.filter(**filtro).exists():
+        raise ValidationError(f"El correo '{correo}' ya está registrado en este módulo.")
+
+
 
 def obtener_hora_actual(request):
     url = "https://www.timeapi.io/api/Time/current/zone?timeZone=America/Santiago"
@@ -402,6 +435,7 @@ def vaciar_carrito_boleta(request):
 #####################################
 # FACTURA
 @login_required
+@negocio_mayorista_required
 def factura(request):
     palabra_clave = request.GET.get('buscar', '')
     categoria_filtro = request.GET.get('categoria', None)
@@ -1013,11 +1047,17 @@ def mod_prod_modal(request, producto_id):
     }, request=request)
     return JsonResponse({'html_form': html_form})
 
+from django.db import IntegrityError
+
 @login_required
 def list_prod(request):
     estado_filtro = request.GET.get('estado', None)
     negocio_filtro = request.GET.get('negocio', None)
     categoria_filtro = request.GET.get('categoria', None)
+
+    error_message = None
+    marca_form = MarcaForm()
+    categoria_form = CategoriaForm()
 
     if request.user.is_superuser:
         negocios = Negocio.objects.all()
@@ -1053,9 +1093,6 @@ def list_prod(request):
 
         categorias = Categoria.objects.all()
         marcas = Marca.objects.all()
-        marca_form = MarcaForm()
-        categoria_form = CategoriaForm()
-
     else:
         staff_profile = StaffProfile.objects.get(user=request.user)
         negocio = staff_profile.negocio
@@ -1083,25 +1120,40 @@ def list_prod(request):
 
         if request.method == 'POST':
             form_type = request.POST.get('form_type')
-            if form_type == 'marca':
-                marca_form = MarcaForm(request.POST)
+            
+            if form_type == "marca":
+                # Manejo del formulario de Marca
+                marca_form = MarcaForm(request.POST, negocio=negocio)
                 if marca_form.is_valid():
-                    marca = marca_form.save(commit=False)
-                    marca.negocio = negocio
-                    marca.save()
-                    messages.success(request, "Marca registrada exitosamente.")
-                    return redirect('list_prod')
+                    try:
+                        marca = marca_form.save(commit=False)
+                        marca.negocio = negocio
+                        marca.save()
+                        messages.success(request, "Marca registrada exitosamente.")
+                    except IntegrityError as e:
+                        if "unique_marca_negocio" in str(e):
+                            error_message = "Ya existe una marca con este nombre en tu negocio."
+                        else:
+                            error_message = "Ocurrió un error al registrar la marca. Por favor, inténtalo nuevamente."
+                else:
+                    error_message = "Error en el formulario de marca. Revisa los datos ingresados."
+
             elif form_type == 'categoria':
-                categoria_form = CategoriaForm(request.POST)
+                # Manejo del formulario de Categoría
+                categoria_form = CategoriaForm(request.POST, negocio=negocio)
                 if categoria_form.is_valid():
-                    categoria = categoria_form.save(commit=False)
-                    categoria.negocio = negocio
-                    categoria.save()
-                    messages.success(request, "Categoría registrada exitosamente.")
-                    return redirect('list_prod')
-        else:
-            marca_form = MarcaForm()
-            categoria_form = CategoriaForm()
+                    try:
+                        categoria = categoria_form.save(commit=False)
+                        categoria.negocio = negocio
+                        categoria.save()
+                        messages.success(request, "Categoría registrada exitosamente.")
+                    except IntegrityError as e:
+                        if "unique_categoria_negocio" in str(e):
+                            error_message = "Ya existe una categoría con este nombre en tu negocio."
+                        else:
+                            error_message = "Ocurrió un error al registrar la categoría. Por favor, inténtalo nuevamente."
+                else:
+                    error_message = "Error en el formulario de categoría. Revisa los datos ingresados."
 
     return render(request, 'producto/list_prod.html', {
         'productos': productos,
@@ -1114,8 +1166,10 @@ def list_prod(request):
         'categoria_filtro': categoria_filtro,
         'marca_form': marca_form,
         'categoria_form': categoria_form,
-        
+        'error_message': error_message,
     })
+
+
 
 @login_required
 @permission_required('app.delete_producto', raise_exception=True)
@@ -1930,14 +1984,27 @@ def change_password(request):
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user) 
+            update_session_auth_hash(request, user)  # Mantiene la sesión activa
+            # Enviar correo de confirmación
+            asunto = "¡Tu contraseña ha sido actualizada!"
+            mensaje = (
+                "Hola,\n\n"
+                "Tu contraseña ha sido actualizada exitosamente. Si no realizaste este cambio, por favor "
+                "contacta al jefe de tu negocio o informa de actividad sospechosa inmediatamente.\n\n"
+                "Gracias por preferir Atlas Gestión."
+            )
+            enviar_correo_datos(
+                destinatario=user.email,
+                asunto=asunto,
+                mensaje=mensaje
+            )
             messages.success(request, 'Tu contraseña ha sido cambiada exitosamente.')
-            return redirect('password_success') 
+            return redirect('password_success')
         else:
             messages.error(request, 'Algo ocurrió, vuelve a intentarlo.')
     else:
         form = PasswordChangeForm(request.user)
-    
+
     return render(request, 'administration/change_password.html', {'form': form})
 
 
@@ -2007,6 +2074,7 @@ def mod_negocio(request, negocio_id):
     negocio = get_object_or_404(Negocio, pk=negocio_id)
     almacen = Almacen.objects.filter(negocio=negocio).first() 
 
+            
     if request.method == 'POST':
         form = NegocioForm(request.POST, request.FILES, instance=negocio)
         if form.is_valid():
@@ -2023,8 +2091,11 @@ def mod_negocio(request, negocio_id):
             'almacen_direccion': almacen.direccion if almacen else ''
         })
 
+    regiones = Region.objects.all()
+
     return render(request, 'administration/negocio/mod_negocio.html', {
-        'form': form
+        'form': form,
+        'regions': regiones,
     })
 
 
@@ -2089,18 +2160,33 @@ def add_proveedor(request):
 
             if proveedor_form.is_valid():
                 proveedor = proveedor_form.save(commit=False)
-                proveedor.negocio = negocio 
+
+                # Asignar las relaciones de región, provincia y comuna
+                region_id = request.POST.get('region')
+                provincia_id = request.POST.get('provincia')
+                comuna_id = request.POST.get('comuna')
+
+                proveedor.region = Region.objects.get(id=region_id) if region_id else None
+                proveedor.provincia = Provincia.objects.get(id=provincia_id) if provincia_id else None
+                proveedor.comuna = Comuna.objects.get(id=comuna_id) if comuna_id else None
+
+                proveedor.negocio = negocio
                 proveedor.save()
+
                 messages.success(request, "Proveedor registrado exitosamente.")
                 return redirect('list_proveedores')
         else:
             proveedor_form = ProveedorForm()
+        
+        regiones = Region.objects.all()
 
         return render(request, 'administration/proveedor/add_proveedor.html', {
             'proveedor_form': proveedor_form,
+            'regions': regiones,
         })
     except StaffProfile.DoesNotExist:
         return HttpResponseForbidden("No tienes un perfil asociado.")
+
 
 @login_required
 @permission_required('app.view_proveedor', raise_exception=True)
@@ -2130,6 +2216,16 @@ def list_proveedores(request):
             form = ProveedorForm(request.POST)
             if form.is_valid():
                 proveedor = form.save(commit=False)
+
+                # Asignar las relaciones de región, provincia y comuna
+                region_id = request.POST.get('region')
+                provincia_id = request.POST.get('provincia')
+                comuna_id = request.POST.get('comuna')
+
+                proveedor.region = Region.objects.get(id=region_id) if region_id else None
+                proveedor.provincia = Provincia.objects.get(id=provincia_id) if provincia_id else None
+                proveedor.comuna = Comuna.objects.get(id=comuna_id) if comuna_id else None
+
                 proveedor.negocio = negocio  
                 proveedor.save()
                 messages.success(request, "Proveedor registrado exitosamente.")
@@ -2137,12 +2233,15 @@ def list_proveedores(request):
         else:
             form = ProveedorForm()
 
+            regiones = Region.objects.all()
+
         return render(request, 'administration/proveedor/list_proveedores.html', {
             'proveedores': proveedores,
             'form': form,
             'negocios': negocios,
             'negocio_filtro': negocio_filtro,
             'negocio_nombre': negocio_nombre,
+            'regions': regiones,
         })
     except StaffProfile.DoesNotExist:
         return HttpResponseForbidden("No tienes un perfil asociado.")
@@ -2150,21 +2249,38 @@ def list_proveedores(request):
 @login_required
 @permission_required('app.change_proveedor', raise_exception=True)
 def mod_proveedor(request, proveedor_id):
-    proveedor = get_object_or_404(Proveedor, pk=proveedor_id)
-    staff_profile = StaffProfile.objects.get(user=request.user)
+    try:
+        proveedor = get_object_or_404(Proveedor, id=proveedor_id)
 
-    if proveedor.negocio != staff_profile.negocio:
-        return HttpResponseForbidden("No tienes permiso para modificar este proveedor.")
+        if request.method == 'POST':
+            proveedor_form = ProveedorForm(request.POST, instance=proveedor)
 
-    if request.method == 'POST':
-        form = ProveedorForm(request.POST, instance=proveedor)
-        if form.is_valid():
-            form.save()
-            return redirect('list_proveedores')
-    else:
-        form = ProveedorForm(instance=proveedor)
+            if proveedor_form.is_valid():
+                proveedor = proveedor_form.save(commit=False)
 
-    return render(request, 'administration/proveedor/mod_proveedor.html', {'form': form})
+                region_id = request.POST.get('region')
+                provincia_id = request.POST.get('provincia')
+                comuna_id = request.POST.get('comuna')
+
+                proveedor.region = Region.objects.get(id=region_id) if region_id else None
+                proveedor.provincia = Provincia.objects.get(id=provincia_id) if provincia_id else None
+                proveedor.comuna = Comuna.objects.get(id=comuna_id) if comuna_id else None
+
+                proveedor.save()
+
+                messages.success(request, "Proveedor modificado exitosamente.")
+                return redirect('list_proveedores')
+        else:
+            proveedor_form = ProveedorForm(instance=proveedor)
+            regiones = Region.objects.all()
+
+        return render(request, 'administration/proveedor/mod_proveedor.html', {
+            'proveedor_form': proveedor_form,
+            'regions': regiones,
+            'proveedor': proveedor,
+        })
+    except Proveedor.DoesNotExist:
+        return HttpResponseForbidden("Proveedor no encontrado.")
 
 @login_required
 @permission_required('app.delete_proveedor', raise_exception=True)
@@ -2303,103 +2419,110 @@ def add_marca(request):
         staff_profile = StaffProfile.objects.get(user=request.user)
         negocio = staff_profile.negocio
 
-        if request.method == 'POST':
-            form = MarcaForm(request.POST)
-            if form.is_valid():
-                marca = form.save(commit=False)
-                marca.negocio = negocio  # Asociar la marca al negocio
-                marca.save()
-                messages.success(request, "Marca registrada exitosamente.")
-                return redirect('list_marcas')
-        else:
-            form = MarcaForm()
+        error_message = None  # Variable para almacenar el mensaje de error
 
+        if request.method == 'POST':
+            form = MarcaForm(request.POST, negocio=negocio)
+            if form.is_valid():
+                try:
+                    marca = form.save(commit=False)
+                    marca.negocio = negocio  # Asociar la marca al negocio
+                    marca.save()
+                    messages.success(request, "Marca registrada exitosamente.")
+                    return redirect('list_marcas')
+                except IntegrityError as e:
+                    # Captura el error de unicidad
+                    if 'unique_marca_negocio' in str(e):  # Verifica el nombre de la restricción
+                        error_message = "Ya existe una marca con este nombre en tu negocio."
+                    else:
+                        error_message = "Ocurrió un error al guardar la marca. Intenta nuevamente."
+            else:
+                error_message = "Error en el formulario. Verifica los datos ingresados."
+        else:
+            form = MarcaForm(negocio=negocio)
+
+        # Renderiza la plantilla con el formulario y el mensaje de error (si existe)
         return render(request, 'marca/add_marca.html', {
             'form': form,
+            'error_message': error_message,  # Pasamos el mensaje de error al contexto
         })
     except StaffProfile.DoesNotExist:
         return HttpResponseForbidden("No tienes un perfil asociado.")
 
 @login_required
-@permission_required('app.view_marca', raise_exception=True)
 def list_marcas(request):
     try:
         staff_profile = StaffProfile.objects.get(user=request.user)
         negocio = staff_profile.negocio
-
-        if request.user.is_superuser:
-            negocios = Negocio.objects.all()
-            marcas = Marca.objects.all()
-        else:
-            negocios = None
-            marcas = Marca.objects.filter(negocio=negocio)
-
-        negocio_filtro = request.GET.get('negocio', None)
-        negocio_nombre = None
-        if request.user.is_superuser and negocio_filtro:
-            try:
-                negocio_filtro = int(negocio_filtro)
-                marcas = marcas.filter(negocio_id=negocio_filtro)
-                negocio_nombre = Negocio.objects.get(id=negocio_filtro).nombre
-            except (ValueError, Negocio.DoesNotExist):
-                negocio_filtro = None
-
-        if request.method == 'POST':
-            form = MarcaForm(request.POST)
-            if form.is_valid():
-                marca = form.save(commit=False)
-                marca.negocio = negocio
-                marca.save()
-                messages.success(request, "Marca registrada exitosamente.")
-                return redirect('list_marcas')
-        else:
-            form = MarcaForm()
-
-        return render(request, 'marca/list_marcas.html', {
-            'marcas': marcas,
-            'form': form,
-            'negocios': negocios,
-            'negocio_filtro': negocio_filtro,
-            'negocio_nombre': negocio_nombre,
-        })
     except StaffProfile.DoesNotExist:
-        return HttpResponseForbidden("No tienes un perfil asociado.")
+        messages.error(request, "No tienes un negocio asignado.")
+        return redirect('home')
+
+    marcas = Marca.objects.filter(negocio=negocio)
+
+    if request.method == 'POST':
+        marca_form = MarcaForm(request.POST, negocio=negocio)
+        if marca_form.is_valid():
+            nueva_marca = marca_form.save(commit=False)
+            nueva_marca.negocio = negocio
+            nueva_marca.save()
+            messages.success(request, "Marca registrada exitosamente.")
+            return redirect('list_marcas')
+        else:
+            messages.error(request, "Error al registrar la marca. Verifica los datos.")
+    else:
+        marca_form = MarcaForm(negocio=negocio)
+
+    return render(request, 'marca/list_marcas.html', {
+        'marcas': marcas,
+        'marca_form': marca_form,
+    })
 
 
 @login_required
-@permission_required('app.change_marca', raise_exception=True)
 def mod_marca(request, marca_id):
-    marca = get_object_or_404(Marca, id=marca_id)
+    try:
+        staff_profile = StaffProfile.objects.get(user=request.user)
+        negocio = staff_profile.negocio
+    except StaffProfile.DoesNotExist:
+        messages.error(request, "No tienes un negocio asignado.")
+        return redirect('home')
 
-    staff_profile = StaffProfile.objects.get(user=request.user)
-    if not request.user.is_superuser and marca.negocio != staff_profile.negocio:
-        return HttpResponseForbidden("No tienes permiso para modificar esta marca.")
+    marca = get_object_or_404(Marca, id=marca_id, negocio=negocio)
 
     if request.method == 'POST':
-        form = MarcaForm(request.POST, instance=marca)
+        form = MarcaForm(request.POST, instance=marca, negocio=negocio)
         if form.is_valid():
             form.save()
-            return redirect('list_prod')
+            messages.success(request, "Marca modificada exitosamente.")
+            return redirect('list_marcas')
+        else:
+            messages.error(request, "Error al modificar la marca. Verifica los datos.")
     else:
-        form = MarcaForm(instance=marca)
+        form = MarcaForm(instance=marca, negocio=negocio)
 
     return render(request, 'marca/mod_marca.html', {'form': form, 'marca': marca})
 
-@login_required
-@permission_required('app.delete_marca', raise_exception=True)
-def erase_marca(request, marca_id):
-    marca = get_object_or_404(Marca, id=marca_id)
 
-    # Verificar que la marca pertenece al negocio del staff
-    staff_profile = StaffProfile.objects.get(user=request.user)
-    if not request.user.is_superuser and marca.negocio != staff_profile.negocio:
-        return HttpResponseForbidden("No tienes permiso para eliminar esta marca.")
+
+@login_required
+def erase_marca(request, marca_id):
+    try:
+        staff_profile = StaffProfile.objects.get(user=request.user)
+        negocio = staff_profile.negocio
+    except StaffProfile.DoesNotExist:
+        messages.error(request, "No tienes un negocio asignado.")
+        return redirect('home')
+
+    marca = get_object_or_404(Marca, id=marca_id, negocio=negocio)
 
     if request.method == 'POST':
         marca.delete()
+        messages.success(request, "Marca eliminada exitosamente.")
         return redirect('list_prod')
 
     return render(request, 'marca/erase_marca.html', {'marca': marca})
+
 
 #####################################
 # / / / / / / / / / / / / / / / / / #
@@ -2494,12 +2617,6 @@ def erase_cliente(request):
         cliente = get_object_or_404(PerfilClientes, id=cliente_id)
         cliente.delete()
         return JsonResponse({'success': True, 'message': 'Cliente eliminado'})
-
-
-
-
-
-
 #####################################
 # / / / / / / / / / / / / / / / / / #
 #####################################
@@ -2516,6 +2633,9 @@ def register_staff_for_boss(request):
 
         try:
             if user_form.is_valid() and profile_form.is_valid():
+                correo = user_form.cleaned_data['email']
+                validar_correo_unico(correo, StaffProfile, negocio=jefe_profile.negocio)
+
                 # Crear usuario con contraseña generada
                 user = user_form.save(commit=False)
                 user.is_staff = True

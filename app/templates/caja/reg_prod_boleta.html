@@ -6,18 +6,6 @@
     </div>
 
     <div class="mb-3">
-        <label for="marca_nombre" style="transform:translateY(-35px)">Marca</label>
-        <input type="text" id="marca_nombre" name="marca_nombre" class="form-control" placeholder="Escribe para buscar o crear"  style="transform:translateY(-35px)">
-        <input type="hidden" id="marca_id" name="marca_id">
-        <div id="marca_suggestions" class="suggestions-box border border-primary rounded-1 border-2" style="transform:translate(-15px, -30px); height:40px; text-align:center;"></div>
-    </div>
-    <div class="mb-3">
-        <label for="categoria_nombre" style="transform:translateY(-45px)">Categoría</label>
-        <input type="text" id="categoria_nombre" name="categoria_nombre" class="form-control" placeholder="Escribe para buscar o crear" style="transform:translateY(-45px)">
-        <input type="hidden" id="categoria_id" name="categoria_id">
-        <div id="categoria_suggestions"class="suggestions-box border border-primary rounded-1 border-2" style="transform:translate(-15px, -40px); height:40px; text-align:center;"></div>
-    </div>
-    <div class="mb-3">
         <label for="precio" style="transform:translateY(-45px)">Precio Venta</label>
         <input type="number" step="0.01" class="form-control" id="precio" name="precio" required style="transform:translateY(-45px)">
     </div>
@@ -27,8 +15,25 @@
         <input type="number" class="form-control" id="stock" name="stock" min="1" required style="transform:translateY(-45px)">
     </div>
 
-    <button type="submit" class="btn btn-primary"  style="transform:translate(155px, -15px)">Registrar Producto</button>
+    <div class="mb-3">
+        <label for="categoria_nombre" style="transform:translateY(-45px)">Categoría</label>
+        <input type="text" id="categoria_nombre" name="categoria_nombre" required style="transform:translateY(-45px)" class="form-control" placeholder="Escribe para buscar o crear">
+        <input type="hidden" id="categoria_id" name="categoria_id">
+    
+        <!-- Contenedor para mostrar sugerencias -->
+        <div id="categoria_suggestions" class="suggestions-box"></div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="marca_nombre" style="transform:translateY(-45px)">Marca</label>
+        <input type="text" id="marca_nombre" name="marca_nombre" required style="transform:translateY(-45px)" class="form-control" placeholder="Escribe para buscar o crear">
+        <input type="hidden" id="marca_id" name="marca_id">
+    
+        <!-- Contenedor para mostrar sugerencias -->
+        <div id="marca_suggestions" class="suggestions-box"></div>
+    </div>
 
+    <!--Estilo directo para las sugerencias-->
     <style>
         .suggestions-box {
             border: 1px solid #ddd;
@@ -40,10 +45,12 @@
             width: 100%;
             display: none;
         }
+
         .suggestion-item {
             padding: 10px;
             cursor: pointer;
         }
+
         .suggestion-item:hover {
             background-color: #f0f0f0;
         }
@@ -51,29 +58,31 @@
             background-color: #007bff;
             color: #fff;
         }
+        
     </style>
+    <button type="submit" class="btn btn-primary"  style="transform:translate(155px, -15px)">Registrar Producto</button>
 </form>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
 
+
 <script>
     $(document).ready(function () {
-        // Configuración del autocompletado
         function setupAutocomplete(inputSelector, hiddenSelector, suggestionsSelector, url) {
             const $input = $(inputSelector);
             const $hidden = $(hiddenSelector);
             const $suggestions = $(suggestionsSelector);
-
+    
             let currentIndex = -1;
-
+    
             $input.on("input", function () {
                 const term = $input.val().trim();
                 if (term.length < 2) {
                     $suggestions.hide();
                     return;
                 }
-
+    
                 $.ajax({
                     url: url,
                     data: { term: term },
@@ -90,11 +99,11 @@
                             );
                         });
                         currentIndex = -1;
-
+    
                         $(".suggestion-item").on("click", function () {
                             const value = $(this).data("value");
                             const id = $(this).data("id");
-
+    
                             $input.val(value);
                             $hidden.val(id);
                             $suggestions.hide();
@@ -102,10 +111,10 @@
                     },
                 });
             });
-
+    
             $input.on("keydown", function (e) {
                 const items = $suggestions.find(".suggestion-item");
-
+    
                 if (e.key === "ArrowDown") {
                     e.preventDefault();
                     if (currentIndex < items.length - 1) {
@@ -128,35 +137,35 @@
                         const selectedItem = $(items[currentIndex]);
                         const value = selectedItem.data("value");
                         const id = selectedItem.data("id");
-
+    
                         $input.val(value);
                         $hidden.val(id);
                         $suggestions.hide();
                     }
                 }
             });
-
+    
             $(document).on("click", function (e) {
                 if (!$(e.target).closest($suggestions).length && !$(e.target).is($input)) {
                     $suggestions.hide();
                 }
             });
         }
-
-        // Configuración de autocompletado para categoría y marca
+    
         setupAutocomplete(
             "#categoria_nombre",
             "#categoria_id",
             "#categoria_suggestions",
-            "{% url 'buscar_categoria' %}" // URL para buscar categorías
+            "{% url 'buscar_categoria' %}"
         );
         setupAutocomplete(
             "#marca_nombre",
             "#marca_id",
             "#marca_suggestions",
-            "{% url 'buscar_marca' %}" // URL para buscar marcas
+            "{% url 'buscar_marca' %}"
         );
     });
+    
 </script>
 
 <script>

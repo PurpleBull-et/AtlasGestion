@@ -25,13 +25,13 @@ SECRET_KEY = '#&8)1d8!!o+no6_y4x$*m0+yzxmk=1rb$jidq5bfemljmm7h6w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['f184-190-114-39-196.ngrok-free.app','127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['8df5-190-114-39-196.ngrok-free.app','127.0.0.1', 'localhost']
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://f184-190-114-39-196.ngrok-free.app'
+    'https://8df5-190-114-39-196.ngrok-free.app'
 ]
 
-
+LANGUAGE_CODE = 'es'
 
 # Application definition
 
@@ -74,6 +74,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'app.views.user_permissions',
             ],
         },
     },
@@ -88,7 +89,7 @@ WSGI_APPLICATION = 'atlasManagement.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'ddbbAtlasGestion',
+        'NAME': 'ddbbAtlasGestion1',
         'USER': 'sa',
         'PASSWORD': 'qweqweqwe123123',
         'HOST': 'AlanPC\SQLEXPRESS',

@@ -63,6 +63,8 @@ class Negocio(models.Model):
     region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, related_name="negocios")
     provincia = models.ForeignKey(Provincia, on_delete=models.SET_NULL, null=True, related_name="negocios")
     comuna = models.ForeignKey(Comuna, on_delete=models.SET_NULL, null=True, related_name="negocios")
+    fono_contacto = models.CharField(max_length=20)
+    correo = models.CharField(max_length=50)
     membresia = models.ForeignKey(Membresia, on_delete=models.SET_NULL, null=True, blank=True, related_name="negocios")
 
 
@@ -83,8 +85,17 @@ class Proveedor(models.Model):
     nombre = models.CharField(max_length=255)
     rut_empresa = models.CharField(max_length=12, unique=True)
     telefono = models.CharField(max_length=20)
-    direccion = models.CharField(max_length=255)
+    region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, related_name="proveedores")
+    provincia = models.ForeignKey(Provincia, on_delete=models.SET_NULL, null=True, related_name="proveedores")
+    comuna = models.ForeignKey(Comuna, on_delete=models.SET_NULL, null=True, related_name="proveedores")
+    correo = models.CharField(max_length=50)
     negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE)
+
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['nombre', 'negocio'], name='unique_proveedor_negocio')  
+        ]
     
     def __str__(self):
         return self.nombre
@@ -92,16 +103,26 @@ class Proveedor(models.Model):
     
 class Categoria(models.Model):
     id = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(max_length=100)
     negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE, related_name='categorias') 
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['nombre', 'negocio'], name='unique_categoria_negocio')  
+        ]
+        
     def __str__(self):
         return self.nombre
     
 class Marca(models.Model):
     id = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(max_length=100)
     negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE, related_name='marcas')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['nombre', 'negocio'], name='unique_marca_negocio')  
+        ]
 
     def __str__(self):
         return self.nombre
@@ -252,7 +273,7 @@ class ProductosDevueltos(models.Model):
         return self.entrada_bodega.numero_factura
 
 class PerfilClientes(models.Model):
-    id = models.AutoField(primary_key=True) # ID autoincremental
+    id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255, null=True, blank=True)
     rut = models.CharField(max_length=12, null=True, blank=True, unique=False)
     direccion = models.CharField(max_length=255, null=True, blank=True)

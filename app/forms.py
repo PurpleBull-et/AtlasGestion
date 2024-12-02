@@ -49,15 +49,25 @@ class StaffProfileForm(forms.ModelForm):
             'negocio': 'Negocio',
         }
 
+class MarcaForm(forms.ModelForm):
+    class Meta:
+        model = Marca
+        fields = ['nombre']
+
+    def __init__(self, *args, **kwargs):
+        self.negocio = kwargs.pop('negocio', None)
+        super().__init__(*args, **kwargs)
+
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
         fields = ['nombre']
 
-class MarcaForm(forms.ModelForm):
-    class Meta:
-        model = Marca
-        fields = ['nombre']
+    def __init__(self, *args, **kwargs):
+        self.negocio = kwargs.pop('negocio', None)
+        super().__init__(*args, **kwargs)
+
+
 
 class TipoProductoForm(forms.ModelForm):
     class Meta:
@@ -232,9 +242,30 @@ class NegocioForm(forms.ModelForm):
 
 
 class ProveedorForm(forms.ModelForm):
+    rut_empresa = forms.CharField(
+        max_length=12,
+        required=True,
+        label="RUT Empresa",
+        error_messages={
+            'required': 'Por favor, ingresa un RUT válido.',
+            'max_length': 'El RUT no puede exceder los 12 caracteres.'
+        }
+    )
     class Meta:
         model = Proveedor
-        fields = ['nombre', 'rut_empresa', 'telefono', 'direccion']
+        fields = ['nombre', 'rut_empresa', 'telefono', 'correo']
+
+    def clean_rut_empresa(self):
+        rut = self.cleaned_data.get('rut_empresa')
+        if not validar_rut_empresa(rut):
+            raise ValidationError("El RUT ingresado no es válido.")
+        return rut
+    
+    def save(self, commit=True):
+        proveedor = super().save(commit=False)
+        if commit:
+            proveedor.save()
+        return proveedor
 
 
 class ProductoFormBoleta(forms.ModelForm):

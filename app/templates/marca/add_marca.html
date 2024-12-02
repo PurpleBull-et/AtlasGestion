@@ -1,6 +1,11 @@
 {% block add_marca_form %}
 <div class="card mb-5">
     <div class="card-body">
+        {% if error_message %}
+            <div class="alert alert-danger">
+                {{ error_message }}
+            </div>
+        {% endif %}
         <form method="post" class="formMarca">
             {% csrf_token %}
             <input type="hidden" name="form_type" value="marca">

@@ -4,9 +4,76 @@
         <h4 class="card-title">Registrar Nuevo Proveedor</h4>
         <form method="post" class="formProv">
             {% csrf_token %}
+            <div class="form-group" style="transform:translateX(5px);">
+                <label for="id_region" style="">Región:</label>
+                <select id="id_region" name="region" class="form-control">
+                    <option value="">Seleccione una región</option>
+                    {% for region in regions %}
+                    <option value="{{ region.id }}">{{ region.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group" style="transform:translateX(5px);">
+                <label for="id_provincia">Provincia:</label>
+                <select id="id_provincia" name="provincia" class="form-control" disabled>
+                    <option value="">Seleccione una provincia</option>
+                </select>
+            </div>
+            
+            <div class="form-group" style="transform:translateX(5px);">
+                <label for="id_comuna">Comuna:</label>
+                <select id="id_comuna" name="comuna" class="form-control" disabled>
+                    <option value="">Seleccione una comuna</option>
+                </select>
+            </div>
+            
             {{ form.as_p }}
+            <p>Formato de RUT: <strong>Sin puntos y con guion (Ejemplo: 12345678-9)</strong></p>        
             <button type="submit" class="btn btn-primary">Registrar</button>
         </form>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $("#id_region").change(function () {
+        var regionId = $(this).val();
+        if (regionId) {
+            $.ajax({
+                url: "{% url 'cargar_provincias' %}",
+                data: { 'region_id': regionId },
+                success: function (data) {
+                    $("#id_provincia").html('<option value="">Seleccione una provincia</option>');
+                    data.forEach(function (item) {
+                        $("#id_provincia").append('<option value="' + item.id + '">' + item.nombre + '</option>');
+                    });
+                    $("#id_provincia").prop('disabled', false);
+                }
+            });
+        } else {
+            $("#id_provincia").html('<option value="">Seleccione una provincia</option>').prop('disabled', true);
+            $("#id_comuna").html('<option value="">Seleccione una comuna</option>').prop('disabled', true);
+        }
+    });
+
+    $("#id_provincia").change(function () {
+        var provinciaId = $(this).val();
+        if (provinciaId) {
+            $.ajax({
+                url: "{% url 'cargar_comunas' %}",
+                data: { 'provincia_id': provinciaId },
+                success: function (data) {
+                    $("#id_comuna").html('<option value="">Seleccione una comuna</option>');
+                    data.forEach(function (item) {
+                        $("#id_comuna").append('<option value="' + item.id + '">' + item.nombre + '</option>');
+                    });
+                    $("#id_comuna").prop('disabled', false);
+                }
+            });
+        } else {
+            $("#id_comuna").html('<option value="">Seleccione una comuna</option>').prop('disabled', true);
+        }
+    });
+</script>
 {% endblock %}
