@@ -297,53 +297,59 @@ class Carrito(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     total = models.IntegerField(default=0)
     tipo = models.CharField(max_length=10, choices=[('boleta', 'Boleta'), ('factura', 'Factura')])
-
     def actualizar_total(self):
-        """Calcula los totales del carrito tipo boleta (precios regulares)."""
         subtotal = 0
         descuento_total = 0
-        iva_total = 0
 
         for item in self.carritoproducto_set.all():
-            descuento = item.producto.descuento / 100 
-            precio_con_descuento = item.producto.precio * (1 - descuento)
+
+            precio_sin_iva = item.producto.precio / 1.19
+
+            descuento = item.producto.descuento / 100
+            precio_con_descuento = precio_sin_iva * (1 - descuento)
 
             subtotal += precio_con_descuento * item.cantidad
 
-            descuento_total += (item.producto.precio - precio_con_descuento) * item.cantidad
+            descuento_total += (precio_sin_iva * descuento) * item.cantidad
 
-            iva_total += item.producto.calcular_iva() * item.cantidad
+        subtotal_con_descuento = subtotal - descuento_total
+        iva_total = subtotal_con_descuento * 0.19
+        total = subtotal_con_descuento + iva_total
 
-        self.subtotal = round(subtotal)
-        self.descuento_total = round(descuento_total)
-        self.iva_total = round(iva_total)
-
-        self.total = round(subtotal - descuento_total)
+        self.subtotal = round(subtotal)  
+        self.descuento_total = round(descuento_total) 
+        self.iva_total = round(iva_total)  
+        self.total = round(total)  
         self.save()
-
 
     def actualizar_total_mayorista(self):
         subtotal = 0
         descuento_total = 0
-        iva_total = 0
 
         for item in self.carritoproducto_set.all():
-            descuento = item.producto.descuento_mayorista / 100  
-            precio_con_descuento = item.producto.precio_mayorista * (1 - descuento)
+            
+            precio_sin_iva = item.producto.precio_mayorista / 1.19
+            
+            descuento = item.producto.descuento_mayorista / 100
+            precio_con_descuento = precio_sin_iva * (1 - descuento)
+
 
             subtotal += precio_con_descuento * item.cantidad
 
-            descuento_total += (item.producto.precio_mayorista - precio_con_descuento) * item.cantidad
 
-            iva_total += item.producto.calcular_iva_mayorista() * item.cantidad
+            descuento_total += (precio_sin_iva * descuento) * item.cantidad
 
-        self.subtotal = round(subtotal)
-        self.descuento_total = round(descuento_total)
+
+        subtotal_con_descuento = subtotal - descuento_total
+        iva_total = subtotal_con_descuento * 0.19
+        total = subtotal_con_descuento + iva_total
+
+
+        self.subtotal = round(subtotal) 
+        self.descuento_total = round(descuento_total)  
         self.iva_total = round(iva_total)
-
-        self.total = round(subtotal - descuento_total)
+        self.total = round(total) 
         self.save()
-
 
 
 

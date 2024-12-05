@@ -219,10 +219,6 @@ def eliminar_del_carrito_boleta(request, item_id):
     carrito_producto.carrito.actualizar_total()
     return redirect('boleta')
 
-from django.core.mail import EmailMessage
-from xhtml2pdf import pisa
-from io import BytesIO
-
 @login_required
 def confirmar_compra_boleta(request):
     if request.method == 'POST':
@@ -235,8 +231,6 @@ def confirmar_compra_boleta(request):
             messages.success(request, "El carrito ha sido vaciado.")
             return redirect('boleta')  # Redirige al sitio actual (boleta)
 
-
-
         correo = request.POST.get('correo', '').strip()
         medio_pago = request.POST.get('medio_pago', '')
 
@@ -248,13 +242,14 @@ def confirmar_compra_boleta(request):
             if correo:
                 perfil_cliente, _ = PerfilClientes.objects.get_or_create(correo=correo)
 
-            # Calcular subtotal, descuentos, IVA y total
-            subtotal = sum(item.producto.precio * item.cantidad for item in carrito_items)
+            # Calcular subtotal (sin IVA), descuentos, IVA y total
+            subtotal = sum((item.producto.precio / 1.19) * item.cantidad for item in carrito_items)
             descuento_total = sum(
-                item.producto.precio * item.cantidad * item.producto.descuento / 100 for item in carrito_items
+                (item.producto.precio / 1.19) * item.cantidad * item.producto.descuento / 100 for item in carrito_items
             )
-            iva_total = (subtotal - descuento_total) * 0.19 
-            total = subtotal - descuento_total
+            iva_total = (subtotal - descuento_total) * 0.19
+            total = subtotal - descuento_total + iva_total
+
 
             # Crear compra
             compra = Compra.objects.create(
@@ -576,12 +571,12 @@ def confirmar_compra_factura(request):
 
 
             # Calcular subtotal, descuentos y IVA
-            subtotal = sum(item.producto.precio_mayorista * item.cantidad for item in carrito_items)
+            subtotal = sum((item.producto.precio_mayorista / 1.19) * item.cantidad for item in carrito_items)
             descuento_total = sum(
                 item.producto.precio_mayorista * item.cantidad * item.producto.descuento_mayorista / 100 for item in carrito_items
             )
             iva_total = (subtotal - descuento_total) * 0.19
-            total = subtotal - descuento_total 
+            total = subtotal - descuento_total + iva_total
 
             # Crear la instancia de compra con los valores calculados
             compra = Compra.objects.create(
@@ -2633,9 +2628,6 @@ def register_staff_for_boss(request):
 
         try:
             if user_form.is_valid() and profile_form.is_valid():
-                correo = user_form.cleaned_data['email']
-                validar_correo_unico(correo, StaffProfile, negocio=jefe_profile.negocio)
-
                 # Crear usuario con contraseña generada
                 user = user_form.save(commit=False)
                 user.is_staff = True
