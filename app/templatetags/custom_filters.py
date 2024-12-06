@@ -8,7 +8,6 @@ def add_class(field, css_class):
 
 @register.filter
 def multiply(value, arg):
-    """Multiplica dos valores."""
     try:
         return value * arg
     except (TypeError, ValueError):

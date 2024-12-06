@@ -33,10 +33,10 @@ def validar_rut_empresa(rut_completo):
     return validar_rut(rut_completo)
 
 
-def generar_contraseña():
+def gen_password():
     letras = ''.join(random.choices(string.ascii_letters, k=5))  # 5 letras
     numeros = ''.join(random.choices(string.digits, k=3))  # 3 números
     mayuscula = random.choice(string.ascii_uppercase)  # 1 mayúscula
     punto = random.choice(['.', '.'])  # Punto al inicio o al final
-    contraseña = punto + mayuscula + letras + numeros if random.choice([True, False]) else mayuscula + letras + numeros + punto
-    return contraseña
+    passw = punto + mayuscula + letras + numeros if random.choice([True, False]) else mayuscula + letras + numeros + punto
+    return passw

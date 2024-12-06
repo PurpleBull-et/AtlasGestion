@@ -114,12 +114,10 @@
                 <span class="sidebar-text">Negocios</span>
             </a>
             {% endif %}
-            <div class="sidebar-logo">LOGO EMPRESA</div>
         </div>
     </div>
     {% endif %}
 
-    
 
 
     <div class="main-content">
@@ -128,6 +126,18 @@
     </div>
 
     <script src="{% static 'app/js/main.js' %}"></script>
-    <script src="{% static 'app/js/dark.js' %}"></script>
 </body>
 </html>
+
+<script>
+    setInterval(function() {
+      fetch('/conectado/', { method: 'GET' })
+        .then(response => {
+          if (!response.ok) {
+            console.log('Sesión terminada o problema detectado.');
+          }
+        })
+        .catch(error => console.error('Error en la solicitud:', error));
+    }, 240000)
+  </script>
+  

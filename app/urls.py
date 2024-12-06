@@ -16,7 +16,9 @@ handler500 = 'app.views.error_500'
 
 urlpatterns = [
     path('hora-actual/', obtener_hora_actual, name='obtener_hora_actual'),
+    path('conectado/', conectado, name='conectado'),
 
+    path('compras/detalle/<int:compra_id>/', detalle_compra, name='detalle_compra'),
     path('', home, name='home'),
     path('ajax/cargar-provincias/', cargar_provincias, name='cargar_provincias'),
     path('ajax/cargar-comunas/', cargar_comunas, name='cargar_comunas'),
@@ -46,12 +48,12 @@ urlpatterns = [
     path('carrito/factura/vaciar/', vaciar_carrito_factura, name='vaciar_carrito_factura'),
     path('compra/factura/<int:compra_id>/', compra_exitosa_factura, name='compra_exitosa_factura'),
     
-    path('bodega/operaciones/', operaciones_bodega, name='operaciones_bodega'),
-    path('bodega/entrada/', listar_entradas_bodega, name='listar_entradas_bodega'),
-    path('bodega/entrada/<int:entrada_id>/', detalle_entrada_bodega, name='detalle_entrada_bodega'),
-    path('bodega/entrada/<int:entrada_id>/producto/<int:producto_id>/', detalle_prod_entrada_bodega, name='detalle_prod_entrada_bodega'),
-    path('bodega/entrada/<int:entrada_id>/devolucion/', devolver_factura, name='devolver_factura'),
-    path('bodega/devoluciones/', historial_devoluciones, name='historial_devoluciones'),
+    path('compras/operaciones/', operaciones_bodega, name='operaciones_bodega'),
+    path('compras/entrada/', listar_entradas_bodega, name='listar_entradas_bodega'),
+    path('compras/entrada/<int:entrada_id>/', detalle_entrada_bodega, name='detalle_entrada_bodega'),
+    path('compras/entrada/<int:entrada_id>/producto/<int:producto_id>/', detalle_prod_entrada_bodega, name='detalle_prod_entrada_bodega'),
+    path('compras/entrada/<int:entrada_id>/devolucion/', devolver_factura, name='devolver_factura'),
+    path('compras/devoluciones/', historial_devoluciones, name='historial_devoluciones'),
 
 
     path('socios/cuentas/agregar/', add_cliente, name='add_cliente'),

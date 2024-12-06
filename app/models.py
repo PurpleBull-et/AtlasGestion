@@ -378,6 +378,16 @@ class CarritoProducto(models.Model):
 
 
 class Compra(models.Model):
+    TIPO_DOCUMENTO_CHOICES = [
+        ('boleta', 'Boleta'),
+        ('factura', 'Factura'),
+    ]
+    tipo_documento = models.CharField(
+        max_length=10,
+        choices=TIPO_DOCUMENTO_CHOICES,
+        default='boleta',
+        verbose_name="Tipo de Documento"
+    )
     id = models.AutoField(primary_key=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     fecha = models.DateTimeField(auto_now_add=True)

@@ -1,5 +1,6 @@
 {% extends 'app/base.html' %}
 {%load static%}
+{% load custom_filters %}
 {% block contenido %}
 {% comment %} <h1>Mi Negocio</h1> {% endcomment %}
 
@@ -33,7 +34,7 @@
     <div class="card grafico">
         <div class="card-body text-center infoTexto">
             <h5>Ventas del Mes</h5>
-           {% comment %}  <p>${{ total_ventas }}</p> {% endcomment %}
+           {% comment %}  <p>{{ total_ventas }}</p> {% endcomment %}
         <div class="card cardGrafo">
             grafico
         </div>
@@ -79,7 +80,7 @@
                     <div class="card tdv">
                         <div class="card-body text-center">
                             <h4>Total de Ventas</h4>
-                            <p>${{ total_ventas }}</p>
+                            <p>{{ total_ventas|clp }}</p>
                         </div>
                     </div>
                 {% comment %} </div> {% endcomment %}
@@ -87,7 +88,7 @@
                     <div class="card pdv">
                         <div class="card-body text-center">
                             <h5>Promedio Diario de Ventas</h5>
-                            <p>${{ promedio_ventas_diario }}</p>
+                            <p>{{ promedio_ventas_diario|clp }}</p>
                         </div>
                     </div>
                 {% comment %} </div> {% endcomment %}
@@ -119,46 +120,60 @@
 
  <!-- Ventas Totales -->    
     {% comment %} <div class="card"> {% endcomment %}
-<section id="ventas-totales" class="mt-4 sectionVenta">
-    <div class="card infoVenta"> 
-        <h3>Ventas Realizadas</h3>
-    </div>
-           {% comment %}  <table class="table table-bordered table-hover"> {% endcomment %}
-            <div class="env"> 
-                <div class="table-container contVenta">
-                    <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID Compra</th>
-                        <th>Fecha</th>
-                        <th>Total</th>
-                        <th>Productos Comprados</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for compra in compras %}
-                    <tr>
-                        <td data-label="ID">{{ compra.id }}</td>
-                        <td data-label="Fecha">{{ compra.fecha }}</td>
-                        <td data-label="Total">${{ compra.total }}</td>
-                        <td data-label="P.Comprados">
-                            <ul>
-                                {% for detalle in compra.detalles.all %}
-                                <li style="list-style-type: none;">{{ detalle.producto.nombre }} ({{ detalle.cantidad }} x {{ detalle.precio_unitario }})</li>
+        <section id="ventas-totales" class="mt-4 sectionVenta">
+            <div class="card infoVenta"> 
+                <h3>Ventas Realizadas</h3>
+            </div>
+            {% comment %}  <table class="table table-bordered table-hover"> {% endcomment %}
+                <div class="env"> 
+                    <div class="table-container contVenta">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Productos Comprados</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for compra in compras %}
+                                <tr>
+                                    <td data-label="Fecha">{{ compra.fecha }}</td>
+                                    <td data-label="Total">${{ compra.total }}</td>
+                                    <td data-label="P.Comprados">
+                                        <ul>
+                                            {% for detalle in compra.detalles.all %}
+                                            <li style="list-style-type: none;">{{ detalle.producto.nombre }} ({{ detalle.cantidad }} x {{ detalle.precio_unitario }})</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <a href="#" class="btn btn-warning btn-sm">Anular</a>
+                                        <a href="{% url 'detalle_compra' compra.id %}" class="btn btn-info btn-sm">Detalles</a>
+                                    </td>
+                                </tr>
                                 {% endfor %}
-                            </ul>
-                        </td>
-                        <td>
-                            <a href="#" class="btn btn-warning btn-sm">Anular</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-</section>
-
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Controles de paginación -->
+                    <div class="pagination">
+                        {% if compras.has_previous %}
+                            <a href="?page=1">Primera</a>
+                            <a href="?page={{ compras.previous_page_number }}">Anterior</a>
+                        {% endif %}
+            
+                        <span>Página {{ compras.number }} de {{ compras.paginator.num_pages }}</span>
+            
+                        {% if compras.has_next %}
+                            <a href="?page={{ compras.next_page_number }}">Siguiente</a>
+                            <a href="?page={{ compras.paginator.num_pages }}">Última</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+            
 
 
 

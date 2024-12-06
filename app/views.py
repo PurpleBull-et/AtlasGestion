@@ -26,6 +26,12 @@ from django.db.models import F, Sum, ExpressionWrapper, IntegerField
 from django.db.models import F, Sum, ExpressionWrapper, IntegerField, Value, CharField, Case, When, Q
 from django.http import JsonResponse
 import requests
+from datetime import datetime
+
+@login_required
+def conectado(request):
+    request.session['last_activity'] = datetime.timestamp(datetime.now())
+    return JsonResponse({'status': 'active'})
 
 def jefe_required(view_func):
     @login_required
@@ -68,16 +74,32 @@ def validar_correo_unico(correo, modelo, negocio=None):
         raise ValidationError(f"El correo '{correo}' ya está registrado en este módulo.")
 
 
+from datetime import datetime
+from django.utils.timezone import make_aware
 
-def obtener_hora_actual(request):
+def obtener_hora_actual():
     url = "https://www.timeapi.io/api/Time/current/zone?timeZone=America/Santiago"
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-        return JsonResponse({"hora": data['time']})
+
+        # Convertir la fecha y hora de la API en un objeto datetime
+        fecha_hora_actual = datetime(
+            year=data['year'],
+            month=data['month'],
+            day=data['day'],
+            hour=data['hour'],
+            minute=data['minute'],
+            second=data['seconds']
+        )
+        
+        # Asegurar que el objeto datetime sea timezone-aware
+        fecha_hora_actual = make_aware(fecha_hora_actual)
+        return fecha_hora_actual
     except requests.exceptions.RequestException as e:
-        return JsonResponse({"error": "No se pudo obtener la hora actual"}, status=500)
+        # En caso de error, devuelve la hora del servidor
+        return make_aware(datetime.now())
 
 def cargar_provincias(request):
     region_id = request.GET.get('region_id')
@@ -101,6 +123,25 @@ def user_permissions(request):
 
 @login_required
 @staff_member_required
+def detalle_compra(request, compra_id):
+    compra = get_object_or_404(Compra, id=compra_id)
+    detalles = compra.detalles.all()
+
+    # Seleccionar template basado en `tipo_documento`
+    if compra.tipo_documento == "boleta":
+        template_name = 'comprobante/compra_exitosa_boleta.html'
+    elif compra.tipo_documento == "factura":
+        template_name = 'comprobante/compra_exitosa_factura.html'
+    else:
+        return HttpResponse("Tipo de documento desconocido", status=400)
+
+    return render(request, template_name, {
+        'compra': compra,
+        'detalles': detalles,
+    })
+
+@login_required
+@staff_member_required
 def home(request):
     user = request.user
     es_jefe = user.groups.filter(name="staff_jefe").exists()
@@ -111,16 +152,32 @@ def home(request):
         return redirect('list_admin') 
 
     staff_profile = StaffProfile.objects.get(user=request.user)
-    compras = Compra.objects.filter(usuario__staffprofile__negocio=staff_profile.negocio).prefetch_related('detalles')
 
-    # Verificar si el usuario es del grupo `staff_jefe`
-    es_jefe = request.user.groups.filter(name='staff_jefe').exists()
+    # Ordenar las compras desde la más reciente
+    compras = Compra.objects.filter(
+        usuario__staffprofile__negocio=staff_profile.negocio
+    ).prefetch_related('detalles').order_by('-fecha')
 
-    # Calcular KPI solo si es jefe
+    # Aplicar paginación (10 compras por página)
+    paginator = Paginator(compras, 10)
+    page_number = request.GET.get('page')  # Obtener el número de página
+    compras_page = paginator.get_page(page_number)  # Página actual
+
+    # Cálculo de KPI si es jefe
     if es_jefe:
         total_ventas = compras.aggregate(Sum('total'))['total__sum'] or 0
-        promedio_ventas_diario = compras.annotate(dia=TruncDay('fecha')).values('dia').annotate(total_dia=Sum('total')).aggregate(Avg('total_dia'))['total_dia__avg'] or 0
-        producto_mas_vendido = DetalleCompra.objects.filter(compra__usuario__staffprofile__negocio=staff_profile.negocio).values('producto__nombre').annotate(cantidad_total=Sum('cantidad')).order_by('-cantidad_total').first()
+        promedio_ventas_diario = compras.annotate(
+            dia=TruncDay('fecha')
+        ).values('dia').annotate(
+            total_dia=Sum('total')
+        ).aggregate(
+            Avg('total_dia')
+        )['total_dia__avg'] or 0
+        producto_mas_vendido = DetalleCompra.objects.filter(
+            compra__usuario__staffprofile__negocio=staff_profile.negocio
+        ).values('producto__nombre').annotate(
+            cantidad_total=Sum('cantidad')
+        ).order_by('-cantidad_total').first()
     else:
         total_ventas = promedio_ventas_diario = producto_mas_vendido = None
 
@@ -129,13 +186,14 @@ def home(request):
         'es_jefe': es_jefe,
         'es_cajero': es_cajero,
         'es_bodeguero': es_bodeguero,
-        'compras': compras,
-        'staff': request.user,
-        'es_jefe': es_jefe,
+        'compras': compras_page,  # Pasar la página actual al contexto
         'total_ventas': total_ventas,
         'promedio_ventas_diario': promedio_ventas_diario,
         'producto_mas_vendido': producto_mas_vendido,
     })
+
+
+
 
 def es_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest'
@@ -219,6 +277,7 @@ def eliminar_del_carrito_boleta(request, item_id):
     carrito_producto.carrito.actualizar_total()
     return redirect('boleta')
 
+
 @login_required
 def confirmar_compra_boleta(request):
     if request.method == 'POST':
@@ -250,6 +309,8 @@ def confirmar_compra_boleta(request):
             iva_total = (subtotal - descuento_total) * 0.19
             total = subtotal - descuento_total + iva_total
 
+            # Obtener la fecha y hora actual
+            fecha_hora_actual = obtener_hora_actual()
 
             # Crear compra
             compra = Compra.objects.create(
@@ -260,7 +321,9 @@ def confirmar_compra_boleta(request):
                 total=total,
                 nombre_staff=request.user.get_full_name(),
                 correo=perfil_cliente.correo if perfil_cliente else None,
-                medio_pago=medio_pago
+                medio_pago=medio_pago,
+                tipo_documento='boleta',
+                fecha=fecha_hora_actual  
             )
 
             # Procesar cada item en el carrito
@@ -290,7 +353,13 @@ def confirmar_compra_boleta(request):
                 context = {'compra': compra, 'detalles': compra.detalles.all()}
                 pdf = generar_pdf(template_path, context)
                 if pdf:
-                    enviar_correo(correo, '¡Su compra ha sido exitosa!', 'Hola, A continuación te adjuntamos la Boleta electrónica asociada a tu compra, para que esté disponible dónde y cuándo quieras. Guarda esta boleta e imprímela sólo de ser necesario. ¡Cuidemos juntos nuestro planeta!.', pdf, 'boleta.pdf')
+                    enviar_correo(
+                        correo, 
+                        '¡Su compra ha sido exitosa!', 
+                        'Hola, A continuación te adjuntamos la Boleta electrónica asociada a tu compra, para que esté disponible dónde y cuándo quieras. Guarda esta boleta e imprímela sólo de ser necesario. ¡Cuidemos juntos nuestro planeta!.', 
+                        pdf, 
+                        'boleta.pdf'
+                    )
 
             messages.success(request, 'La compra ha sido confirmada.')
             return redirect('compra_exitosa_boleta', compra_id=compra.id)
@@ -569,6 +638,8 @@ def confirmar_compra_factura(request):
                     perfil_cliente.full_clean()  # Validación antes de guardar
                     perfil_cliente.save()
 
+            # Usar la función para obtener la fecha y hora actuales
+            fecha_hora_actual = obtener_hora_actual()
 
             # Calcular subtotal, descuentos y IVA
             subtotal = sum((item.producto.precio_mayorista / 1.19) * item.cantidad for item in carrito_items)
@@ -588,7 +659,9 @@ def confirmar_compra_factura(request):
                 nombre_staff=request.user.get_full_name(),
                 correo=perfil_cliente.correo if perfil_cliente else None,
                 medio_pago=medio_pago,
-                glosa=glosa
+                glosa=glosa,
+                tipo_documento='factura',
+                fecha=fecha_hora_actual  # Usar la fecha y hora obtenidas 
             )
             
             # Procesar cada item en el carrito
@@ -611,14 +684,16 @@ def confirmar_compra_factura(request):
             # Limpiar el carrito después de la compra
             carrito.carritoproducto_set.all().delete()
             carrito.actualizar_total_mayorista()
+
             # Enviar correo con factura en PDF
             if correo:
                 template_path = 'comprobante/factura_pdf.html'
                 context = {'compra': compra, 'detalles': compra.detalles.all()}
                 pdf = generar_pdf(template_path, context)
                 if pdf:
-                    enviar_correo(correo, '¡Su compra ha sido exitosa!', 'Hola, A continuación te adjuntamos la Boleta electrónica asociada a tu compra, para que esté disponible dónde y cuándo quieras. Guarda esta boleta e imprímela sólo de ser necesario. ¡Cuidemos juntos nuestro planeta!.', pdf, 'factura.pdf')
-
+                    enviar_correo(correo, '¡Su compra ha sido exitosa!', 
+                                  'Hola, A continuación te adjuntamos la Factura electrónica asociada a tu compra, para que esté disponible dónde y cuándo quieras. Guarda esta factura e imprímela sólo de ser necesario. ¡Cuidemos juntos nuestro planeta!.', 
+                                  pdf, 'factura.pdf')
 
             messages.success(request, 'La compra ha sido confirmada.')
             return redirect('compra_exitosa_factura', compra_id=compra.id)
@@ -1718,6 +1793,8 @@ def mi_negocio(request):
 
     return render(request, 'business/mi_negocio.html', context)
 
+
+
 #####################################
 # / / / / / / / / / / / / / / / / / #
 #####################################
@@ -2633,10 +2710,10 @@ def register_staff_for_boss(request):
                 user.is_staff = True
 
                 # Generar contraseña y asignarla en los campos de confirmación
-                contraseña = generar_contraseña()
-                user.set_password(contraseña)
-                user_form.cleaned_data['password1'] = contraseña
-                user_form.cleaned_data['password2'] = contraseña
+                passw = gen_password()
+                user.set_password(passw)
+                user_form.cleaned_data['password1'] = passw
+                user_form.cleaned_data['password2'] = passw
 
                 user.save()
 
@@ -2659,7 +2736,7 @@ def register_staff_for_boss(request):
                     f"Tu cuenta ha sido creada exitosamente.\n\n"
                     f"Credenciales de acceso:\n"
                     f"Usuario: {user.username}\n"
-                    f"Contraseña: {contraseña}\n\n"
+                    f"Contraseña: {passw}\n\n"
                     f"Recuerda cambiar tu contraseña en el primer inicio de sesión."
                 )
                 destinatarios = [user.email, request.user.email]
