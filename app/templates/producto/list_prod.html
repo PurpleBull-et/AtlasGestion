@@ -29,13 +29,17 @@
 
             <!-- Filtros -->
             <form class="d-flex align-items-center">
+                <!-- <input type="text" name="buscar" id="buscar" class="form-control" value="{{ palabra_clave }}" placeholder="Buscar producto...">
                 <label for="estado" class="me-2">Estado:</label>
+                -->
+                
                 <select name="estado" id="estado" class="form-select w-auto me-3" onchange="this.form.submit();">
                     <option value="">Todos</option>
                     <option value="disponible" {% if estado_filtro == 'disponible' %}selected{% endif %}>Disponible</option>
                     <option value="sin_stock" {% if estado_filtro == 'sin_stock' %}selected{% endif %}>Sin Stock</option>
                     <option value="registrado_reciente" {% if estado_filtro == 'registrado_reciente' %}selected{% endif %}>Nuevo</option>
                 </select>
+                
 
                 <label for="categoria" class="me-2">Categoría:</label>
                 <select name="categoria" id="categoria" class="form-select w-auto me-3" onchange="this.form.submit();">

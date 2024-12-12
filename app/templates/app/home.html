@@ -1,12 +1,11 @@
 {% extends 'app/base.html' %}
-{%load static%}
+{% load static %}
 {% load custom_filters %}
-{% block contenido %}
-{% comment %} <h1>Mi Negocio</h1> {% endcomment %}
 
+{% block contenido %}
 <style>
     .card.tdv {
-        background-color: #DFF0D8; /* Verde claro, por ejemplo */
+        background-color: #DFF0D8; /* Verde claro */
         color: #333;
     }
 
@@ -25,275 +24,194 @@
         color: #333;
     }
 
+    .grafico {
+        overflow-x: auto;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
 </style>
-<!-- Perfil del Staff -->
-<section id="perfil-staff" class="info-staff home">
-    <div class="card ihome" style="width:100%;">
-    <h2>Perfil del Staff</h2>
-    </div>
-    <div class="card t-interna">
-        <div class="card-body">
-            
-            <h4 class="card-title">{{ staff.username }}</h4>
-            
-            <div class="borderP">
-            <p class="card-text">Correo: {{ staff.email }}</p>
-            <p class="card-text">Nombre completo: {{ staff.first_name }} {{ staff.last_name }}</p>
+
+<div class="container-fluid py-4">
+    <div class="row mb-3">
+        <!-- Perfil del Staff -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h4 class="card-title">{{ staff.username }}</h4>
+                    <p>Correo: {{ staff.email }}</p>
+                    <p>Nombre completo: {{ staff.first_name }} {{ staff.last_name }}</p>
+                    <a href="{% url 'change_password' %}" class="btn btn-secondary mt-3">Cambiar Contraseña</a>
+                </div>
             </div>
-            <a href="{% url 'change_password' %}" class="btn btn-secondary mt-3 miBoton">Cambiar Contraseña</a>
-            
-           
         </div>
-    </div>
-    </section>
-    
-{% comment %} graficos {% endcomment %}
 
-<section class="sectionGraficos dshome dashboardgraf">
-
-    <div class="miDashboard ds-dash cont-graficos">
-{% comment %}     <div class="card envolt"> {% endcomment %}
-    <div class="card grafico">
-        <div class="card-body text-center infoTexto">
-            <h5>Ventas del Mes</h5>
-           {% comment %}  <p>{{ total_ventas }}</p> {% endcomment %}
-        <div class="card cardGrafo">
-            grafico
-            <canvas id="comprasChart" width="400" height="200"></canvas>
-            <script>
-                // Obtener los datos de la API
-                fetch("{% url 'compras_por_mes' %}")
-                    .then(response => response.json())
-                    .then(data => {
-                        const ctx = document.getElementById('comprasChart').getContext('2d');
-                        new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels: data.labels,
-                                datasets: [
-                                    {
-                                        label: 'Compras con Boleta',
-                                        data: data.data_boleta,
-                                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                        borderColor: 'rgba(75, 192, 192, 1)',
-                                        borderWidth: 1
-                                    },
-                                    {
-                                        label: 'Compras con Factura',
-                                        data: data.data_factura,
-                                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                                        borderColor: 'rgba(153, 102, 255, 1)',
-                                        borderWidth: 1
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                scales: {
-                                    y: {
-                                        beginAtZero: true
-                                    }
-                                }
-                            }
-                        });
-                    })
-                    .catch(error => console.error('Error al cargar los datos:', error));
-            </script>
-        </div>
-        </div>
-    </div>
-{% comment %} </div> {% endcomment %}
-{% comment %} <div class="card envolt"> {% endcomment %}
-    <div class="card grafico">
-        <div class="card-body text-center infoTexto">
-            <h5>Ventas Acumuladas del año</h5>
-           {% comment %}  <p>${{ total_ventas }}</p> {% endcomment %}
-     
-           <div class="card cardGrafo">
-            grafico
-            <canvas id="comprasDiariasChart" width="400" height="200"></canvas>
-            <script>
-                // Gráfico de Compras Diarias
-                fetch("{% url 'compras_diarias' %}")
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log("Datos diarios recibidos de la API:", data);
-            
-                        const ctxDiarias = document.getElementById('comprasDiariasChart').getContext('2d');
-                        new Chart(ctxDiarias, {
-                            type: 'line', // Gráfico de líneas para mostrar tendencias
-                            data: {
-                                labels: data.labels, // Fechas
-                                datasets: [
-                                    {
-                                        label: 'Compras con Boleta',
-                                        data: data.data_boleta, // Totales de boletas
-                                        borderColor: 'rgba(75, 192, 192, 1)',
-                                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                        borderWidth: 2,
-                                        fill: true,
-                                    },
-                                    {
-                                        label: 'Compras con Factura',
-                                        data: data.data_factura, // Totales de facturas
-                                        borderColor: 'rgba(153, 102, 255, 1)',
-                                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                                        borderWidth: 2,
-                                        fill: true,
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    legend: {
-                                        display: true,
-                                        position: 'top'
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        title: {
-                                            display: true,
-                                            text: 'Total (CLP)'
-                                        }
-                                    },
-                                    x: {
-                                        title: {
-                                            display: true,
-                                            text: 'Día del Mes'
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    })
-                    .catch(error => {
-                        console.error("Error al cargar los datos o renderizar el gráfico diario:", error);
-                    });
-            </script>
-        </div>
-        
-        </div>
-    </div>
-{% comment %} </div> {% endcomment %}
-{% comment %} <div class="card envolt"> {% endcomment %}
-</div>
-{% comment %} </div> {% endcomment %}
-
-</section>
-        <!-- Dashboard -->
-        <section id="dashboard" class="mt-2 dashboard dshome">
-        
-        <h2>Dashboard</h2>
-       
-            <div class="miDashboard ds-dash">
-             {% comment %}    <div class="col-md-3 columna-interna colint"> {% endcomment %}
-                    <div class="card tdv">
-                        <div class="card-body text-center">
-                            <h4>Total de Ventas</h4>
+        <!-- Tarjetas del Dashboard -->
+        <div class="col-md-9">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card tdv text-center">
+                        <div class="card-body">
+                            <h5>Total de Ventas</h5>
                             <p>{{ total_ventas|clp }}</p>
                         </div>
                     </div>
-                {% comment %} </div> {% endcomment %}
-               {% comment %}  <div class="col columna-interna colint"> {% endcomment %}
-                    <div class="card pdv">
-                        <div class="card-body text-center">
+                </div>
+                <div class="col-md-3">
+                    <div class="card pdv text-center">
+                        <div class="card-body">
                             <h5>Promedio Diario de Ventas</h5>
                             <p>{{ promedio_ventas_diario|clp }}</p>
                         </div>
                     </div>
-                {% comment %} </div> {% endcomment %}
-               {% comment %}  <div class="col-md-4  columna-interna colint"> {% endcomment %}
-                    <div class="card pmv">
-                        <div class="card-body text-center">
+                </div>
+                <div class="col-md-3">
+                    <div class="card pmv text-center">
+                        <div class="card-body">
                             <h5>Producto Más Vendido</h5>
                             <p>{{ producto_mas_vendido.nombre }} ({{ producto_mas_vendido.cantidad_total }} vendidos)</p>
                         </div>
                     </div>
-                {% comment %} </div> {% endcomment %}
-               {% comment %}  <div class="col-md-4  columna-interna colint"> {% endcomment %}
-                    <div class="card iva">
-                        <div class="card-body text-center">
-                            <h4>producto Menos Vendido</h4>
-                            <p>{{ producto_mas_vendido.nombre }} ({{ producto_mas_vendido.cantidad_total }} vendidos)</p>
+                </div>
+                <div class="col-md-3">
+                    <div class="card iva text-center">
+                        <div class="card-body">
+                            <h5>Producto Menos Vendido</h5>
+                            <p>{{ producto_menos_vendido.nombre }} ({{ producto_menos_vendido.cantidad_total }} vendidos)</p>
                         </div>
                     </div>
-                    
-                    
-                {% comment %} </div> {% endcomment %}
+                </div>
             </div>
-            <a href="{% url 'generar_reporte_pdf' %}" class="btn btn-primary">Descargar PDF</a>
         </div>
     </div>
-</section>
+    <a href="{% url 'generar_reporte_pdf' %}" class="btn btn-primary">Descargar PDF</a>
 
-
-
-
-
-
- <!-- Ventas Totales -->    
-    {% comment %} <div class="card"> {% endcomment %}
-        <section id="ventas-totales" class="mt-4 sectionVenta">
-            <div class="card infoVenta"> 
-                <h3>Ventas Realizadas</h3>
-            </div>
-            {% comment %}  <table class="table table-bordered table-hover"> {% endcomment %}
-                <div class="env"> 
-                    <div class="table-container contVenta">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Total</th>
-                                    <th>Productos Comprados</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for compra in compras %}
-                                <tr>
-                                    <td data-label="Fecha">{{ compra.fecha }}</td>
-                                    <td data-label="Total">${{ compra.total }}</td>
-                                    <td data-label="P.Comprados">
-                                        <ul>
-                                            {% for detalle in compra.detalles.all %}
-                                            <li style="list-style-type: none;">{{ detalle.producto.nombre }} ({{ detalle.cantidad }} x {{ detalle.precio_unitario }})</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </td>
-                                    <td>
-                                        <a href="#" class="btn btn-warning btn-sm">Anular</a>
-                                        <a href="{% url 'detalle_compra' compra.id %}" class="btn btn-info btn-sm">Detalles</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Controles de paginación -->
-                    <div class="pagination">
-                        {% if compras.has_previous %}
-                            <a href="?page=1">Primera</a>
-                            <a href="?page={{ compras.previous_page_number }}">Anterior</a>
-                        {% endif %}
-            
-                        <span>Página {{ compras.number }} de {{ compras.paginator.num_pages }}</span>
-            
-                        {% if compras.has_next %}
-                            <a href="?page={{ compras.next_page_number }}">Siguiente</a>
-                            <a href="?page={{ compras.paginator.num_pages }}">Última</a>
-                        {% endif %}
-                    </div>
+    <!-- Sección de Gráficos -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card grafico">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Ventas del Mes</h5>
+                    <canvas id="comprasChart"></canvas>
                 </div>
-            </section>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card grafico">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Ventas Acumuladas del Año</h5>
+                    <canvas id="comprasDiariasChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
-{% comment %} <div class="c-graficos">
-    damian
+    <!-- Ventas Totales -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Ventas Realizadas</h5>
+            <div class="table-container">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Productos Comprados</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for compra in compras %}
+                        <tr>
+                            <td>{{ compra.fecha }}</td>
+                            <td>${{ compra.total }}</td>
+                            <td>
+                                <ul>
+                                    {% for detalle in compra.detalles.all %}
+                                    <li>{{ detalle.producto.nombre }} ({{ detalle.cantidad }} x {{ detalle.precio_unitario }})</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-warning btn-sm">Anular</a>
+                                <a href="{% url 'detalle_compra' compra.id %}" class="btn btn-info btn-sm">Detalles</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Paginación -->
+            <div class="pagination">
+                {% if compras.has_previous %}
+                    <a href="?page=1">Primera</a>
+                    <a href="?page={{ compras.previous_page_number }}">Anterior</a>
+                {% endif %}
+                <span>Página {{ compras.number }} de {{ compras.paginator.num_pages }}</span>
+                {% if compras.has_next %}
+                    <a href="?page={{ compras.next_page_number }}">Siguiente</a>
+                    <a href="?page={{ compras.paginator.num_pages }}">Última</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
- {% endcomment %}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico Ventas del Mes
+    fetch("{% url 'compras_por_mes' %}")
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('comprasChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Compras con Boleta',
+                            data: data.data_boleta,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                        },
+                        {
+                            label: 'Compras con Factura',
+                            data: data.data_factura,
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                        }
+                    ]
+                },
+            });
+        });
+
+    // Gráfico Ventas Diarias
+    fetch("{% url 'compras_diarias' %}")
+        .then(response => response.json())
+        .then(data => {
+            const ctxDiarias = document.getElementById('comprasDiariasChart').getContext('2d');
+            new Chart(ctxDiarias, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Compras con Boleta',
+                            data: data.data_boleta,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        },
+                        {
+                            label: 'Compras con Factura',
+                            data: data.data_factura,
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        }
+                    ]
+                },
+            });
+        });
+</script>
 {% endblock %}

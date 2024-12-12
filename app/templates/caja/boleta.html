@@ -175,6 +175,29 @@
                             <input type="hidden" id="correo_id" name="correo_id">
                             <div id="correo_suggestions" class="suggestions-box border border-light rounded-1 border-3" style="transform:translate(-50px, -58px); height:40px; text-align:center;" ></div>
                         </div>
+                        <style>
+                                .suggestions-box {
+                                    border: 1px solid #ddd;
+                                    background-color: #fff;
+                                    max-height: 200px;
+                                    overflow-y: auto;
+                                    position: absolute;
+                                    z-index: 1000;
+                                    width: 100%;
+                                    display: none;
+                                }
+                                .suggestion-item {
+                                    padding: 10px;
+                                    cursor: pointer;
+                                }
+                                .suggestion-item:hover {
+                                    background-color: #f0f0f0;
+                                }
+                                .suggestion-item.active {
+                                    background-color: #007bff;
+                                    color: #fff;
+                                }
+                            </style>
                     </div>
                     <div id="mensaje-medio-pago" style="display: none; color: red; margin-top: 10px;"></div>
                     <div class="d-flex justify-content-between w-100 mt-3">                   

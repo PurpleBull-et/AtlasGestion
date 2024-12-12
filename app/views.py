@@ -29,6 +29,10 @@ from django.db.models import F, Sum, ExpressionWrapper, IntegerField, Value, Cha
 from django.http import JsonResponse
 import requests
 from datetime import datetime
+import openpyxl
+from openpyxl.styles import Alignment, Font
+from io import BytesIO
+from django.http import HttpResponse
 
 @login_required
 def conectado(request):
@@ -1144,6 +1148,7 @@ from django.db import IntegrityError
 
 @login_required
 def list_prod(request):
+    palabra_clave = request.GET.get('buscar', '')
     estado_filtro = request.GET.get('estado', None)
     negocio_filtro = request.GET.get('negocio', None)
     categoria_filtro = request.GET.get('categoria', None)
@@ -1205,6 +1210,9 @@ def list_prod(request):
         negocio_nombre = negocio.nombre
         negocios = None
 
+        if palabra_clave:
+            productos = productos.filter(Q(nombre__icontains=palabra_clave))
+
         if estado_filtro:
             productos = productos.filter(estado=estado_filtro)
 
@@ -1260,6 +1268,7 @@ def list_prod(request):
         'marca_form': marca_form,
         'categoria_form': categoria_form,
         'error_message': error_message,
+        'palabra_clave': palabra_clave,
     })
 
 
@@ -1506,8 +1515,8 @@ def operaciones_bodega(request):
     staff_profile = StaffProfile.objects.get(user=request.user)
     almacen = Almacen.objects.filter(negocio=staff_profile.negocio).first()
 
-    productos = Producto.objects.filter(almacen=almacen)  # Filtrar productos por almacén
-    proveedores = Proveedor.objects.filter(negocio=staff_profile.negocio)  # Filtrar proveedores por negocio
+    productos = Producto.objects.filter(almacen=almacen)
+    proveedores = Proveedor.objects.filter(negocio=staff_profile.negocio)
 
     EntradaBodegaProductoFormSet = modelformset_factory(
         EntradaBodegaProducto,
@@ -1524,17 +1533,20 @@ def operaciones_bodega(request):
         )
         if entrada_form.is_valid() and producto_formset.is_valid():
             with transaction.atomic():
-                # Guardar el formulario de EntradaBodega
                 entrada_bodega = entrada_form.save(commit=False)
-                entrada_bodega.fecha_recepcion = request.POST.get("fecha_recepcion")  # Obtener fecha de recepción del POST
-                entrada_bodega.bodega = almacen  # Asignar el almacén al campo bodega
+                entrada_bodega.fecha_recepcion = request.POST.get("fecha_recepcion")
+                entrada_bodega.bodega = almacen
                 entrada_bodega.save()
 
-                # Guardar cada formulario de producto asociado a esta entrada de bodega
                 for producto_form in producto_formset:
-                    if producto_form.cleaned_data:  # Verificar que el formulario contiene datos
+                    if producto_form.cleaned_data:
                         entrada_producto = producto_form.save(commit=False)
                         entrada_producto.entrada_bodega = entrada_bodega
+
+                        # Calcular precio_neto e iva_compra
+                        entrada_producto.iva_compra = round(entrada_producto.precio_total * 0.19)
+                        entrada_producto.precio_neto = entrada_producto.precio_total - entrada_producto.iva_compra
+
                         entrada_producto.save()
 
                         # Actualizar el stock del producto
@@ -1542,7 +1554,7 @@ def operaciones_bodega(request):
                         producto.stock += entrada_producto.cantidad_recibida
                         producto.save()
 
-                messages.success(request, 'Entrada de bodega y productos registrados exitosamente.')
+                messages.success(request, 'Entrada de bodega registrada exitosamente.')
             return redirect('operaciones_bodega')
     else:
         entrada_form = EntradaBodegaForm(staff_profile=staff_profile)
@@ -1556,6 +1568,8 @@ def operaciones_bodega(request):
         'productos': productos,
         'proveedores': proveedores,
     })
+
+
 
 
 @login_required
@@ -1583,7 +1597,7 @@ def detalle_entrada_bodega(request, entrada_id):
 
     # Obtener los productos asociados a esta entrada, incluyendo las cantidades devueltas
     productos = EntradaBodegaProducto.objects.filter(entrada_bodega=entrada).annotate(
-        subtotal=ExpressionWrapper(F('cantidad_recibida') * F('precio_unitario'), output_field=IntegerField()),
+        subtotal=ExpressionWrapper(F('cantidad_recibida') * F('precio_total'), output_field=IntegerField()),
         cantidad_devuelta=Sum(
             'producto__devoluciones__cantidad_devuelta',
             filter=Q(producto__devoluciones__entrada_bodega=entrada),
@@ -3233,7 +3247,6 @@ def generar_contexto_reporte(request):
     }
 
     return context
-
 
 
 @login_required

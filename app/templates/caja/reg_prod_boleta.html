@@ -28,38 +28,12 @@
         <label for="marca_nombre" style="transform:translateY(-45px)">Marca</label>
         <input type="text" id="marca_nombre" name="marca_nombre" required style="transform:translateY(-45px)" class="form-control" placeholder="Escribe para buscar o crear">
         <input type="hidden" id="marca_id" name="marca_id">
-    
         <!-- Contenedor para mostrar sugerencias -->
         <div id="marca_suggestions" class="suggestions-box"></div>
-    </div>
-
-    <!--Estilo directo para las sugerencias-->
-    <style>
-        .suggestions-box {
-            border: 1px solid #ddd;
-            background-color: #fff;
-            max-height: 200px;
-            overflow-y: auto;
-            position: absolute;
-            z-index: 1000;
-            width: 100%;
-            display: none;
-        }
-
-        .suggestion-item {
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .suggestion-item:hover {
-            background-color: #f0f0f0;
-        }
-        .suggestion-item.active {
-            background-color: #007bff;
-            color: #fff;
-        }
         
-    </style>
+    </div>
+    <!--Estilo directo para las sugerencias-->
+
     <button type="submit" class="btn btn-primary"  style="transform:translate(155px, -15px)">Registrar Producto</button>
 </form>
 

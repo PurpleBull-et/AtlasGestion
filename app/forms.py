@@ -207,7 +207,7 @@ class EntradaBodegaForm(forms.ModelForm):
 class EntradaBodegaProductoForm(forms.ModelForm):
     class Meta:
         model = EntradaBodegaProducto
-        fields = ['producto', 'cantidad_recibida', 'precio_unitario']
+        fields = ['producto', 'cantidad_recibida', 'precio_total']
     
     def __init__(self, *args, **kwargs):
         almacen = kwargs.pop('almacen', None) 

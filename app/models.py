@@ -247,7 +247,9 @@ class EntradaBodegaProducto(models.Model):
     entrada_bodega = models.ForeignKey(EntradaBodega, on_delete=models.CASCADE, related_name="productos")  
     producto = models.ForeignKey('Producto', on_delete=models.CASCADE) 
     cantidad_recibida = models.PositiveIntegerField()  
-    precio_unitario = models.IntegerField(default=0)  
+    precio_total = models.IntegerField(default=0)
+    precio_neto = models.IntegerField(default=0)
+    iva_compra = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.cantidad_recibida}x {self.producto.nombre} - {self.entrada_bodega.numero_factura}"

@@ -24,19 +24,31 @@
             <div class="ContenedorcajaProducto">
                 <div class="table-container tablaProd" style="transform:translate(140px, -10px); min-height:350px; width:800px;">
                     {% comment %} <table class="table"> {% endcomment %}
-                    <div class="cajaProducto" style="width:750px;">
-                        {{ producto_formset.management_form }}
-                        {% comment %} </div> {% endcomment %}
-                        {% comment %} <div class="containerproductos-container"> {% endcomment %}
-                        <div id="productos-container">
-                            {% for form in producto_formset %}
-                            <div class="producto-form mb-3 p-3 border rounded">
-                                {{ form.as_p }}
-                                <button type="button" class="btn btn-danger mt-2" onclick="this.closest('.producto-form').remove()">Eliminar</button>
-                            </div>
-                            {% endfor %}
-                            
-                    </div>
+                        <div class="cajaProducto" style="width:750px;">
+                            {{ producto_formset.management_form }}
+                            {% comment %} </div> {% endcomment %}
+                            {% comment %} <div class="containerproductos-container"> {% endcomment %}
+                            <div id="productos-container">
+                                {% for form in producto_formset %}
+                                <div class="producto-form mb-3 p-3 border rounded">
+                                    {{ form.as_p }}
+                                    <!-- Cálculos dinámicos -->
+                                    <div>
+                                        <label>IVA (19%):</label>
+                                        <span id="iva_{{ forloop.counter }}">0</span>
+                                    </div>
+                                    <div>
+                                        <label>Precio Neto:</label>
+                                        <span id="neto_{{ forloop.counter }}">0</span>
+                                    </div>
+                                </div>
+                                <script>
+                                    document.getElementById("id_form-{{ forloop.counter0 }}-precio_total").addEventListener("input", function() {
+                                        calcularValores("id_form-{{ forloop.counter0 }}-precio_total", "iva_{{ forloop.counter }}", "neto_{{ forloop.counter }}");
+                                    });
+                                </script>
+                            {% endfor %}                 
+                        </div>
                     </div>
                 </div>
             </form>
@@ -65,7 +77,6 @@
     <input type="hidden" id="id_form-TOTAL_FORMS" value="1">
     <button onclick="agregarProducto()">Agregar producto</button>
     {% endcomment %}
-
     <script>
         function agregarProducto() {
             const container = document.getElementById('productos-container');
@@ -86,5 +97,15 @@
             container.appendChild(newForm);
             totalForms.value = parseInt(totalForms.value) + 1; // Incrementa el contador total de formularios
         }
+    </script>
+    <script>
+    function calcularValores(precioTotalId, ivaId, netoId) {
+        const precioTotal = parseFloat(document.getElementById(precioTotalId).value) || 0;
+        const iva = precioTotal * 0.19;
+        const neto = precioTotal - iva;
+
+        document.getElementById(ivaId).innerText = iva.toFixed(2);
+        document.getElementById(netoId).innerText = neto.toFixed(2);
+    }
     </script>
 {% endblock %}
