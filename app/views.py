@@ -1,3 +1,4 @@
+import locale
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout
@@ -7,6 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template, render_to_string
 from django.views.decorators.http import require_POST
+from weasyprint import HTML
 from xhtml2pdf import pisa
 from django.db.models import Q
 from itertools import chain
@@ -504,8 +506,6 @@ def factura(request):
     palabra_clave = request.GET.get('buscar', '')
     categoria_filtro = request.GET.get('categoria', None)
     negocio_filtro = request.GET.get('negocio', None)
-    clientes = PerfilClientes.objects.all()  # Agregar clientes al contexto
-    cliente_form = PerfilClientesForm()
     
     if request.user.is_superuser:
         productos = Producto.objects.exclude(precio_mayorista=0)
@@ -519,6 +519,11 @@ def factura(request):
         categorias = Categoria.objects.filter(negocio=staff_profile.negocio)
         marcas = Marca.objects.filter(negocio=staff_profile.negocio)
         proveedores = Proveedor.objects.filter(negocio=staff_profile.negocio)
+
+        empresas = PerfilClienteEmpresa.objects.filter(negocio=staff_profile.negocio, activo=True) # Filtramos las empresas activas
+        empresa_form = PerfilClienteEmpresaForm()
+
+
         negocios = None
 
     if palabra_clave:
@@ -532,6 +537,8 @@ def factura(request):
 
     carrito, _ = Carrito.objects.get_or_create(usuario=request.user, tipo="factura")
     carrito.actualizar_total_mayorista()  
+
+    regiones = Region.objects.all()
     
     return render(request, 'caja/factura.html', {
         'productos': productos,
@@ -547,8 +554,9 @@ def factura(request):
         'categoria_filtro': categoria_filtro,
         'negocio_filtro': negocio_filtro,
         'palabra_clave': palabra_clave,
-        'clientes': clientes,
-        'cliente_form': cliente_form,
+        'empresas': empresas,
+        'empresa_form': empresa_form,
+        'regions': regiones
     })
 
 
@@ -607,11 +615,11 @@ def enviar_correo_datos(destinatario, asunto, mensaje, archivo=None, nombre_arch
 @login_required
 def buscar_correo(request):
     term = request.GET.get('term', '').strip()
-    correos = PerfilClientes.objects.filter(correo__icontains=term).values('id', 'correo')[:10]
+    correos = PerfilClienteEmpresa.objects.filter(correo__icontains=term).values('id', 'correo')[:10]
 
     # Crear correo automáticamente si no existe y es válido
     if not correos.exists() and '@' in term:  # Valida un formato básico de correo
-        nuevo_perfil, created = PerfilClientes.objects.get_or_create(correo=term)
+        nuevo_perfil, created = PerfilClienteEmpresa.objects.get_or_create(correo=term)
         correos = [{'id': nuevo_perfil.id, 'correo': nuevo_perfil.correo}]
 
     results = [{'id': correo['id'], 'label': correo['correo'], 'value': correo['correo']} for correo in correos]
@@ -620,25 +628,36 @@ def buscar_correo(request):
 
 @login_required
 def confirmar_compra_factura(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio
+    if not negocio:
+        messages.error(request, "No se puede procesar la factura porque el staff no tiene un negocio asociado.")
+        return redirect('factura')
+
     if request.method == 'POST':
         medio_pago = request.POST.get('medio_pago', '')
         glosa = request.POST.get('glosa', '').strip()
         correo = request.POST.get('correo', '').strip()
-                
+
         carrito = get_object_or_404(Carrito, usuario=request.user, tipo="factura")
         carrito_items = carrito.carritoproducto_set.all()
 
         if carrito_items:
             perfil_cliente = None
             if correo:
+                correo = correo.lower().strip()  # Normalizar el correo
                 try:
-                    perfil_cliente = PerfilClientes.objects.get(correo=correo)
-                except PerfilClientes.DoesNotExist:
-                    perfil_cliente = PerfilClientes(correo=correo)
+                    perfil_cliente = PerfilClienteEmpresa.objects.get(correo=correo, negocio=negocio)
+                except PerfilClienteEmpresa.DoesNotExist:
+                    
+                    perfil_cliente = PerfilClienteEmpresa(
+                        correo=correo,
+                        negocio=negocio
+                    )
                     perfil_cliente.full_clean()  # Validación antes de guardar
                     perfil_cliente.save()
 
-            # Usar la función para obtener la fecha y hora actuales
+            # Obtener la fecha y hora actual
             fecha_hora_actual = obtener_hora_actual()
 
             # Calcular subtotal, descuentos y IVA
@@ -661,9 +680,9 @@ def confirmar_compra_factura(request):
                 medio_pago=medio_pago,
                 glosa=glosa,
                 tipo_documento='factura',
-                fecha=fecha_hora_actual  # Usar la fecha y hora obtenidas 
+                fecha=fecha_hora_actual
             )
-            
+
             # Procesar cada item en el carrito
             for item in carrito_items:
                 producto = item.producto
@@ -691,9 +710,13 @@ def confirmar_compra_factura(request):
                 context = {'compra': compra, 'detalles': compra.detalles.all()}
                 pdf = generar_pdf(template_path, context)
                 if pdf:
-                    enviar_correo(correo, '¡Su compra ha sido exitosa!', 
-                                  'Hola, A continuación te adjuntamos la Factura electrónica asociada a tu compra, para que esté disponible dónde y cuándo quieras. Guarda esta factura e imprímela sólo de ser necesario. ¡Cuidemos juntos nuestro planeta!.', 
-                                  pdf, 'factura.pdf')
+                    enviar_correo(
+                        correo, 
+                        '¡Su compra ha sido exitosa!',
+                        'Hola, a continuación te adjuntamos la Factura electrónica asociada a tu compra, para que esté disponible dónde y cuándo quieras. Guarda esta factura e imprímela sólo de ser necesario. ¡Cuidemos juntos nuestro planeta!.',
+                        pdf, 
+                        'factura.pdf'
+                    )
 
             messages.success(request, 'La compra ha sido confirmada.')
             return redirect('compra_exitosa_factura', compra_id=compra.id)
@@ -2689,6 +2712,114 @@ def erase_cliente(request):
         cliente = get_object_or_404(PerfilClientes, id=cliente_id)
         cliente.delete()
         return JsonResponse({'success': True, 'message': 'Cliente eliminado'})
+
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+# MANEJO DE PERFIL DE CLIENTES
+@login_required
+def gestionar_empresas(request):
+    staff_profile = StaffProfile.objects.get(user=request.user)
+    negocio = staff_profile.negocio
+
+    if request.method == 'POST':
+        empresa_id = request.POST.get('empresa_id')
+        accion = request.POST.get('accion')
+
+        if accion == 'crear':
+            form = PerfilClienteEmpresaForm(request.POST)
+            if form.is_valid():
+                empresa = form.save(commit=False)
+                empresa.negocio = negocio
+                empresa.activo = True
+                                
+                # Asignar las relaciones de región, provincia y comuna
+                region_id = request.POST.get('region')
+                provincia_id = request.POST.get('provincia')
+                comuna_id = request.POST.get('comuna')
+
+                empresa.region = Region.objects.get(id=region_id) if region_id else None
+                empresa.provincia = Provincia.objects.get(id=provincia_id) if provincia_id else None
+                empresa.comuna = Comuna.objects.get(id=comuna_id) if comuna_id else None
+
+                empresa.save()
+                return JsonResponse({'success': True, 'message': 'Empresa creada exitosamente.'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Error al crear la empresa.'})
+
+        elif accion == 'modificar':
+            empresa = get_object_or_404(PerfilClienteEmpresa, id=empresa_id, negocio=negocio)
+            form = PerfilClienteEmpresaForm(request.POST, instance=empresa)
+            if form.is_valid():
+                form.save()
+                return JsonResponse({'success': True, 'message': 'Empresa modificada exitosamente.'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Error al modificar la empresa.'})
+
+        elif accion == 'eliminar':
+            empresa = get_object_or_404(PerfilClienteEmpresa, id=empresa_id, negocio=negocio)
+            empresa.activo = False
+            empresa.save()
+            return JsonResponse({'success': True, 'message': 'Empresa desactivada exitosamente.'})
+
+    # Filtrar empresas activas
+    empresas = PerfilClienteEmpresa.objects.filter(negocio=negocio, activo=True)
+    form = PerfilClienteEmpresaForm()
+
+    regiones = Region.objects.all()
+
+    return render(request, 'caja/factura.html', {
+        'empresas': empresas,
+        'empresa_form': form,
+        'regions': regiones
+    })
+
+@login_required
+def add_empresa(request):
+    if request.method == 'POST':
+        correo = request.POST.get('correo')
+        if correo:
+            PerfilClienteEmpresa.objects.get_or_create(correo=correo)
+            return JsonResponse({'success': True, 'message': 'Cliente registrado'})
+        return JsonResponse({'success': False, 'message': 'Correo inválido'})
+
+@login_required
+def list_empresa(request):
+    clientes = PerfilClienteEmpresa.objects.all()
+    return render(request, 'administration/empresas/list_empresa_modal.html', {'clientes': clientes})
+
+@login_required
+def mod_empresa(request, cliente_id):
+    cliente = get_object_or_404(PerfilClienteEmpresa, id=cliente_id)
+
+    if request.method == 'POST':
+        cliente_form = PerfilClienteEmpresaForm(request.POST, instance=cliente)
+        if cliente_form.is_valid():
+            cliente_form.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({
+                'success': False,
+                'html_form': render_to_string('administration/empresas/mod_empresa_modal.html', {'cliente_form': cliente_form, 'cliente': cliente}, request=request)
+            })
+    else:
+        cliente_form = PerfilClienteEmpresaForm(instance=cliente)
+
+    html_form = render_to_string('administration/empresas/mod_empresa_modal.html', {
+        'cliente_form': cliente_form,
+        'cliente': cliente,
+    }, request=request)
+    return JsonResponse({'html_form': html_form})
+
+@login_required
+def erase_empresa(request):
+    if request.method == 'POST':
+        cliente_id = request.POST.get('cliente_id')
+        cliente = get_object_or_404(PerfilClienteEmpresa, id=cliente_id)
+        cliente.delete()
+        return JsonResponse({'success': True, 'message': 'Cliente eliminado'})
+
+
 #####################################
 # / / / / / / / / / / / / / / / / / #
 #####################################
@@ -2860,3 +2991,269 @@ def erase_staff_for_boss(request, staff_id):
         'staff': user,
     })
 
+#####################################
+# / / / / / / / / / / / / / / / / / #
+#####################################
+# MANEJOS DE DASHBOARD 
+
+def compras_por_mes(request):
+    # Agrupar las compras por mes y por tipo de documento
+    compras_boleta = (
+        Compra.objects.filter(tipo_documento='boleta')
+        .annotate(mes=TruncMonth('fecha'))
+        .values('mes')
+        .annotate(total=Sum('total'))
+        .order_by('mes')
+    )
+
+    compras_factura = (
+        Compra.objects.filter(tipo_documento='factura')
+        .annotate(mes=TruncMonth('fecha'))
+        .values('mes')
+        .annotate(total=Sum('total'))
+        .order_by('mes')
+    )
+
+    # Obtener los meses comunes
+    meses = sorted({compra['mes'] for compra in compras_boleta}.union(
+        {compra['mes'] for compra in compras_factura}
+    ))
+
+    # Formatear los datos
+    labels = [mes.strftime('%B %Y') for mes in meses]
+    data_boleta = [
+        next((compra['total'] for compra in compras_boleta if compra['mes'] == mes), 0)
+        for mes in meses
+    ]
+    data_factura = [
+        next((compra['total'] for compra in compras_factura if compra['mes'] == mes), 0)
+        for mes in meses
+    ]
+
+    return JsonResponse({
+        'labels': labels,
+        'data_boleta': data_boleta,
+        'data_factura': data_factura,
+    })
+
+
+def compras_diarias(request):
+    # Filtrar compras del mes actual
+    ahora = datetime.now()
+    compras_boleta = (
+        Compra.objects.filter(fecha__year=ahora.year, fecha__month=ahora.month, tipo_documento='boleta')
+        .annotate(dia=TruncDay('fecha'))
+        .values('dia')
+        .annotate(total=Sum('total'))
+        .order_by('dia')
+    )
+
+    compras_factura = (
+        Compra.objects.filter(fecha__year=ahora.year, fecha__month=ahora.month, tipo_documento='factura')
+        .annotate(dia=TruncDay('fecha'))
+        .values('dia')
+        .annotate(total=Sum('total'))
+        .order_by('dia')
+    )
+
+    # Obtener los días comunes
+    dias = sorted({compra['dia'] for compra in compras_boleta}.union(
+        {compra['dia'] for compra in compras_factura}
+    ))
+
+    # Formatear los datos
+    labels = [dia.strftime('%d-%b-%Y') for dia in dias]
+    data_boleta = [
+        next((compra['total'] for compra in compras_boleta if compra['dia'] == dia), 0)
+        for dia in dias
+    ]
+    data_factura = [
+        next((compra['total'] for compra in compras_factura if compra['dia'] == dia), 0)
+        for dia in dias
+    ]
+
+    return JsonResponse({
+        'labels': labels,
+        'data_boleta': data_boleta,
+        'data_factura': data_factura,
+    })
+
+def generar_contexto_reporte(request):
+    locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+
+    # Obtener el perfil del usuario actual
+    user = request.user
+    staff_profile = StaffProfile.objects.get(user=user)
+
+    # Total ventas
+    compras = Compra.objects.filter(usuario__staffprofile__negocio=staff_profile.negocio)
+    total_ventas = compras.aggregate(Sum('total'))['total__sum'] or 0
+
+    # Promedio ventas diario
+    promedio_ventas_diario = compras.annotate(
+        dia=TruncDay('fecha')
+    ).values('dia').annotate(
+        total_dia=Sum('total')
+    ).aggregate(
+        Avg('total_dia')
+    )['total_dia__avg'] or 0
+
+    # Producto más vendido
+    producto_mas_vendido = DetalleCompra.objects.filter(
+        compra__usuario__staffprofile__negocio=staff_profile.negocio
+    ).values('producto__nombre').annotate(
+        total_cantidad=Sum('cantidad')
+    ).order_by('-total_cantidad').first()
+
+
+
+    # Total de compras por mes diferenciando por tipo de documento
+    compras_por_mes_boleta = (
+        Compra.objects.filter(tipo_documento='boleta')
+        .annotate(mes=TruncMonth('fecha'))
+        .values('mes')
+        .annotate(total=Sum('total'))
+        .order_by('mes')
+    )
+
+    compras_por_mes_factura = (
+        Compra.objects.filter(tipo_documento='factura')
+        .annotate(mes=TruncMonth('fecha'))
+        .values('mes')
+        .annotate(total=Sum('total'))
+        .order_by('mes')
+    )
+
+    # Total de compras diarias en el mes actual diferenciando por tipo de documento
+    compras_diarias_boleta = (
+        Compra.objects.filter(tipo_documento='boleta')
+        .annotate(dia=TruncDay('fecha'))
+        .values('dia')
+        .annotate(total=Sum('total'))
+        .order_by('dia')
+    )
+
+    compras_diarias_factura = (
+        Compra.objects.filter(tipo_documento='factura')
+        .annotate(dia=TruncDay('fecha'))
+        .values('dia')
+        .annotate(total=Sum('total'))
+        .order_by('dia')
+    )
+
+    # Gráfico de barras: Compras por Mes
+    meses = sorted(
+        {compra['mes'] for compra in compras_por_mes_boleta}.union(
+            {compra['mes'] for compra in compras_por_mes_factura}
+        )
+    )
+    labels_mes = [mes.strftime('%B %Y') for mes in meses]
+    totales_mes_boleta = [
+        next((compra['total'] for compra in compras_por_mes_boleta if compra['mes'] == mes), 0)
+        for mes in meses
+    ]
+    totales_mes_factura = [
+        next((compra['total'] for compra in compras_por_mes_factura if compra['mes'] == mes), 0)
+        for mes in meses
+    ]
+
+    fig1, ax1 = plt.subplots(figsize=(10, 6))
+    width = 0.35
+    x = range(len(labels_mes))
+    ax1.bar(x, totales_mes_boleta, width, label="Boleta", color="skyblue", edgecolor="blue")
+    ax1.bar(
+        [i + width for i in x], totales_mes_factura, width, label="Factura", color="lightgreen", edgecolor="green"
+    )
+    ax1.set_title("Compras Totales por Mes (Boleta vs Factura)")
+    ax1.set_ylabel("Total Compras (CLP)")
+    ax1.set_xlabel("Mes")
+    ax1.set_xticks([i + width / 2 for i in x])
+    ax1.set_xticklabels(labels_mes, rotation=45, ha="right")
+    ax1.legend()
+    plt.tight_layout()
+
+    buffer1 = BytesIO()
+    plt.savefig(buffer1, format="png")
+    buffer1.seek(0)
+    grafico_barras = base64.b64encode(buffer1.getvalue()).decode("utf-8")
+    buffer1.close()
+    plt.close(fig1)
+
+    # Gráfico de línea: Compras Diarias
+    dias = sorted(
+        {compra['dia'] for compra in compras_diarias_boleta}.union(
+            {compra['dia'] for compra in compras_diarias_factura}
+        )
+    )
+    labels_dia = [dia.strftime('%d-%b-%Y') for dia in dias]
+    totales_dia_boleta = [
+        next((compra['total'] for compra in compras_diarias_boleta if compra['dia'] == dia), 0)
+        for dia in dias
+    ]
+    totales_dia_factura = [
+        next((compra['total'] for compra in compras_diarias_factura if compra['dia'] == dia), 0)
+        for dia in dias
+    ]
+
+    fig2, ax2 = plt.subplots(figsize=(12, 6))
+    ax2.plot(labels_dia, totales_dia_boleta, marker='o', linestyle='-', color='blue', label="Boleta")
+    ax2.plot(labels_dia, totales_dia_factura, marker='o', linestyle='-', color='green', label="Factura")
+    ax2.fill_between(
+        labels_dia, totales_dia_boleta, color="lightblue", alpha=0.5, label="Área Boleta"
+    )
+    ax2.fill_between(
+        labels_dia, totales_dia_factura, color="lightgreen", alpha=0.5, label="Área Factura"
+    )
+    ax2.set_title("Compras Diarias del Mes Actual (Boleta vs Factura)")
+    ax2.set_ylabel("Total Compras (CLP)")
+    ax2.set_xlabel("Día")
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+
+    buffer2 = BytesIO()
+    plt.savefig(buffer2, format="png")
+    buffer2.seek(0)
+    grafico_linea = base64.b64encode(buffer2.getvalue()).decode("utf-8")
+    buffer2.close()
+    plt.close(fig2)
+
+    context = {
+        # Datos de las métricas
+        'total_compras': total_ventas,
+        'promedio_diario_compras': promedio_ventas_diario,
+        'producto_mas_comprado': producto_mas_vendido,
+
+        # Datos de los gráficos
+        'compras_por_mes': compras_por_mes,
+        'compras_diarias': compras_diarias,
+        'grafico_barras': grafico_barras,
+        'grafico_linea': grafico_linea,
+    }
+
+    return context
+
+
+
+@login_required
+def mostrar_reporte(request):
+    context = generar_contexto_reporte(request) 
+    return render(request, 'business/graficos.html', context)
+
+@login_required
+def generar_reporte_pdf(request):
+    context = generar_contexto_reporte(request)
+
+    # Renderizar el template HTML
+    html_string = render_to_string('business/graficos.html', context)
+
+    # Generar el PDF con WeasyPrint
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    # Enviar como archivo adjunto
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="reporte_compras.pdf"'
+
+    return response

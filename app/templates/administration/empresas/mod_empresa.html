@@ -1,0 +1,13 @@
+{% extends 'app/base.html' %}
+{% block contenido %}
+<h1>Modificar Cliente</h1>
+<div class="card mb-5">
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

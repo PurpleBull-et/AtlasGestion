@@ -1,0 +1,33 @@
+{% block contenido %}
+{% load static %}
+
+<form method="post" id="mod-cliente-form-{{ cliente.id }}">
+    {% csrf_token %}
+    {{ cliente_form.as_p }}
+
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    <button type="button" class="btn bg-danger text-light" data-bs-dismiss="modal">Cancelar</button>
+</form>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+
+<script>
+    $('#mod-cliente-form-{{ cliente.id }}').submit(function (e) {
+        e.preventDefault();
+        $.ajax({
+            url: "{% url 'mod_cliente' cliente.id %}",
+            type: "POST",
+            data: $(this).serialize(),
+            success: function (data) {
+                if (data.success) {
+                    $('#modClienteModal').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modClienteModalBody').html(data.html_form);
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -272,6 +272,33 @@ class ProductosDevueltos(models.Model):
         
         return self.entrada_bodega.numero_factura
 
+
+class PerfilClienteEmpresa(models.Model):
+    id = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=255, null=True, blank=True)
+    raz_social = models.CharField(max_length=255, null=True, blank=True)
+    giro = models.CharField(max_length=255, null=True, blank=True)
+    
+    rut_empresa = models.CharField(max_length=12, null=True, blank=True, unique=False)
+    direccion = models.CharField(max_length=255, null=True, blank=True)
+    
+    region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True, related_name="perfilClienteEmpresa")
+    provincia = models.ForeignKey(Provincia, on_delete=models.SET_NULL, null=True, blank=True, related_name="perfilClienteEmpresa")
+    comuna = models.ForeignKey(Comuna, on_delete=models.SET_NULL, null=True, blank=True, related_name="perfilClienteEmpresa")
+    
+    correo = models.EmailField(max_length=255, null=True, blank=True, unique=False)
+    telefono = models.CharField(max_length=20, null=True, blank=True)
+    
+    linea_credito = models.IntegerField(default=0)
+    descuento_fijo = models.IntegerField(default=0)
+    dias_pago = models.IntegerField(null=True, blank=True)
+    activo = models.BooleanField(default=True)
+    negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.nombre or "Empresa sin nombre"} - {self.rut_empresa or "Sin RUT"}'
+
+
 class PerfilClientes(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255, null=True, blank=True)

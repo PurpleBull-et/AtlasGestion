@@ -61,6 +61,11 @@ urlpatterns = [
     path('socios/cuentas/modificar/<int:cliente_id>/', mod_cliente, name='mod_cliente'),
     path('socios/cuentas/eliminar/', erase_cliente, name='erase_cliente'),
 
+    path('socios/empresas/agregar/', add_empresa, name='add_empresa'),
+    path('socios/empresas/', list_empresa, name='list_empresa'),
+    path('socios/empresas/modificar/<int:cliente_id>/', mod_empresa, name='mod_empresa'),
+    path('socios/empresas/eliminar/', erase_empresa, name='erase_empresa'),
+
     path('mi_negocio_dashboard/', mi_negocio, name='mi_negocio'),
 
     path('staffs/', list_staff, name='list_staff'),
@@ -132,12 +137,20 @@ urlpatterns = [
     path('buscar_marca/', buscar_marca, name='buscar_marca'),
     path('buscar_correo/', buscar_correo, name='buscar_correo'),
 
+    path('gestionar_empresas/', gestionar_empresas, name='gestionar_empresas'),
+
+
     path('administrar/registrar_empleado', register_staff_for_boss, name='register_staff_for_boss'),
     path('administrar/empleados/', list_staff_for_boss, name='list_staff_for_boss'),
     path('administrar/empleados/modificar/perfil/<int:staff_id>/', mod_staff_profile_for_boss, name='mod_staff_profile_for_boss'),
     path('administrar/empleados/modificar/cuenta/<int:staff_id>/', mod_staff_account_for_boss, name='mod_staff_account_for_boss'),
     path('administrar/empleados/eliminar/<int:staff_id>/', erase_staff_for_boss, name='erase_staff_for_boss'),
-
+    
+    # Gráficos
+    path('api/compras-por-mes/', compras_por_mes, name='compras_por_mes'),
+    path('api/compras-diarias/', compras_diarias, name='compras_diarias'),
+    path('reporte/', mostrar_reporte, name='mostrar_reporte'),
+    path('reporte/pdf/', generar_reporte_pdf, name='generar_reporte_pdf'),
 
     
 

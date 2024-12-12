@@ -1,0 +1,36 @@
+<div class="modal fade" id="listClienteModal" tabindex="-1" aria-labelledby="listClienteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="listClienteModalLabel">Gestión de Perfiles de Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="formAddCliente">
+                    <!-- Formulario de creación rápida -->
+                    <form method="post" id="add-cliente-form">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="correo">Correo Electrónico</label>
+                            <input type="email" id="correo" name="correo" class="form-control" placeholder="correo@ejemplo.com" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Registrar Cliente</button>
+                    </form>
+                </div>
+                <hr>
+                <div id="clienteList">
+                    <!-- Lista de clientes cargados dinámicamente -->
+                    {% for cliente in clientes %}
+                    <div class="row mb-2">
+                        <div class="col">{{ cliente.correo }}</div>
+                        <div class="col-auto">
+                            <button class="btn btn-warning btn-sm modificar-cliente" data-id="{{ cliente.id }}" data-bs-toggle="modal" data-bs-target="#modClienteModal">Editar</button>
+                            <button class="btn btn-danger btn-sm eliminar-cliente" data-id="{{ cliente.id }}" data-bs-toggle="modal" data-bs-target="#eraseClienteModal">Eliminar</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,56 @@
+
+{% extends 'app/base.html' %}
+{% block contenido %}
+{% load static %}
+{% load custom_filters %}
+<h2>Métricas del Negocio</h2>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Métrica</th>
+            <th>Valor</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Total de Compras</td>
+            <td>{{ total_compras|clp }}</td>
+        </tr>
+        <tr>
+            <td>Promedio Diario de Compras</td>
+            <td>{{ promedio_diario_compras|clp }}</td>
+        </tr>
+        <tr>
+            <td>Producto Más Comprado</td>
+            <td>
+                {% if producto_mas_comprado %}
+                    {{ producto_mas_comprado.producto__nombre }} ({{ producto_mas_comprado.total_cantidad }} unidades)
+                {% else %}
+                    No disponible
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+<div class="col-md-6 d-flex justify-content-center align-items-center">
+    <div class="chart-container" style="width: 100%; max-width: 500px; height: 400px;">
+        <h3></h3>
+        <img src="data:image/png;base64,{{ grafico_barras }}" alt="Gráfico de Compras por Mes" style="max-width: 100%; height: auto;">
+    </div>
+</div>
+
+
+<div class="col-md-6 d-flex justify-content-center align-items-center">
+    <div class="chart-container" style="width: 100%; max-width: 500px; height: 400px;">
+        <h3></h3>
+        <img src="data:image/png;base64,{{ grafico_linea }}" alt="Gráfico de Compras Diarias" style="max-width: 100%; height: auto;">
+    </div>
+</div>
+
+
+
+{% endblock %}

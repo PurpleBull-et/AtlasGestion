@@ -35,12 +35,9 @@
         <button type="submit" class="btnFiltros" style="background-color:#1499a3; height:50px">Aplicar Filtros</button>
         <button type="button" class="btnFiltros" style="background-color: rgb(84, 104, 104); height:50px;" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">Ingreso Manual</button>
          
-        <button type="button" class="btn btn-info" style="height:50px; transform:translate(60px, -2px)" data-bs-toggle="modal" data-bs-target="#listClienteModal" style="transform:translateX(60px)">
+        <button type="button" class="btn btn-info" style="height:50px; transform:translate(60px, -2px)" data-bs-toggle="modal" data-bs-target="#listEmpresaModal" style="transform:translateX(60px)">
             Gestionar Perfiles de Cliente
-        </button>
-        
-        
-        
+        </button>       
     </form>
 </div>
 <div>
@@ -110,8 +107,6 @@
                 </ul>
             </div>
             
-
-
             <!-- Resumen del carrito -->
             <div class="col-md-5 summary summary-factura">
                 {% comment %} <div><h5><b>Tu Carro (Items)</b></h5></div>{% endcomment %}
@@ -224,93 +219,108 @@
             </div>
         </div>
     </div>
-    <!--Borrar cliente-->
-    <div class="modal fade" id="eraseClienteModal" tabindex="-1" aria-labelledby="eraseClienteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+
+    <!-- Modal para gestión de empresas -->
+    <div class="modal fade" id="listEmpresaModal" tabindex="-1" aria-labelledby="listEmpresaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="eraseClienteModalLabel">Eliminar Cliente</h5>
+                    <h5 class="modal-title" id="listEmpresaModalLabel">Gestión de Empresas</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar este cliente?</p>
-                    <form method="post" id="erase-cliente-form">
+                    <form id="empresaForm" method="POST">
                         {% csrf_token %}
-                        <input type="hidden" id="cliente-id" name="cliente_id">
-                        <button type="submit" class="btn btn-danger">Eliminar</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <div class="form-group" style="transform:translateX(5px);">
+                            <label for="id_region" style="">Región:</label>
+                            <select id="id_region" name="region" class="form-control">
+                                <option value="">Seleccione una región</option>
+                                {% for region in regions %}
+                                <option value="{{ region.id }}">{{ region.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="transform:translateX(5px);">
+                            <label for="id_provincia">Provincia:</label>
+                            <select id="id_provincia" name="provincia" class="form-control" disabled>
+                                <option value="">Seleccione una provincia</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="transform:translateX(5px);">
+                            <label for="id_comuna">Comuna:</label>
+                            <select id="id_comuna" name="comuna" class="form-control" disabled>
+                                <option value="">Seleccione una comuna</option>
+                            </select>
+                        </div>
+                        
+                        {{ empresa_form.as_p }}
+                        <p>Formato de RUT: <strong>Sin puntos y con guion (Ejemplo: 12345678-9)</strong></p>     
+
+                        <input type="hidden" name="accion" value="crear">
+                        <button type="submit" class="btn btn-primary">Guardar Empresa</button>
+                    </form>
+                    <hr>
+                    <ul id="empresa-list" class="list-group">
+                        {% for empresa in empresas %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><strong>{{ empresa.nombre }}</strong> ({{ empresa.correo }})</span>
+                            <span>
+                                <button class="btn btn-warning btn-sm editar-empresa" data-id="{{ empresa.id }}" data-bs-toggle="modal" data-bs-target="#editEmpresaModal">
+                                    Editar
+                                </button>                                
+                                <button class="btn btn-danger btn-sm eliminar-empresa" data-id="{{ empresa.id }}">Eliminar</button>
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar empresas -->
+    <div class="modal fade" id="editEmpresaModal" tabindex="-1" aria-labelledby="editEmpresaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editEmpresaModalLabel">Editar Empresa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editEmpresaForm" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="empresa_id" id="edit-empresa-id">
+                        <div class="form-group">
+                            <label for="edit-nombre">Nombre</label>
+                            <input type="text" name="nombre" id="edit-nombre" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-correo">Correo</label>
+                            <input type="email" name="correo" id="edit-correo" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-rut">RUT</label>
+                            <input type="text" name="rut_empresa" id="edit-rut" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-direccion">Dirección</label>
+                            <input type="text" name="direccion" id="edit-direccion" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-telefono">Teléfono</label>
+                            <input type="text" name="telefono" id="edit-telefono" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
     
-    <!--Mod cliente-->
-    <div class="modal fade" id="modClienteModal" tabindex="-1" aria-labelledby="modClienteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content editar">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modClienteModalLabel">Editar Cliente</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="modClienteModalBody">
-                    <!-- Formulario cargado dinámicamente -->
-                </div>
-            </div>
-        </div>
-    </div>
     
-    <!--Modal listar clientes-->
-    <div class="modal fade" id="listClienteModal" tabindex="-1" aria-labelledby="listClienteModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="listClienteModalLabel">Gestión de Perfiles de Cliente</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="formAddCliente">
-                        <form method="post" id="add-cliente-form">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="correo" style="transform:translateY(-7px)">Correo Electrónico</label>
-                                <input type="email" id="correo" name="correo" class="form-control" placeholder="correo@ejemplo.com" required style="width:300px; transform:translateY(-2px)">
-                            </div>
-                            <button type="submit" class="btn btn-primary mt-3" style="transform:translate(60px, -11px)">Registrar Cliente</button>
-                        </form>
-                    </div>
-
-                {% comment %}     <table class="table" style="transform:translateY(-250px);">
-                    <thead>
-                        <tr>
-                            <th>Email Cliente</th>
-                          
-                            <th>Opciones</th>
-                        </tr>
-                    </thead> {% endcomment %}
-                    <hr>
-                    <div id="clienteList" class="table-container"style="transform:translateY(50px);" >
-                        
-                  
-                        {% for cliente in clientes %}
-                        <div class="row mb-2">
-                          
-                           
-                            <div class="col">{{ cliente.correo }}</div>
-                           
-                            <div class="col-auto">
-                                <button class="btn btn-warning btn-sm modificar-cliente" data-id="{{ cliente.id }}" data-bs-toggle="modal" data-bs-target="#modClienteModal">Editar</button>
-                                <button class="btn btn-danger btn-sm eliminar-cliente" data-id="{{ cliente.id }}" data-bs-toggle="modal" data-bs-target="#eraseClienteModal">Eliminar</button>
-                            </div>
-                        </div>
-                        {% endfor %}
-                   
-            </div>
-                </div>
-            </div>
-        </div>
-   
-    </div>
+    
 
 
      <!-- Modal para ingreso manual -->
@@ -330,7 +340,46 @@
     
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $("#id_region").change(function () {
+        var regionId = $(this).val();
+        if (regionId) {
+            $.ajax({
+                url: "{% url 'cargar_provincias' %}",
+                data: { 'region_id': regionId },
+                success: function (data) {
+                    $("#id_provincia").html('<option value="">Seleccione una provincia</option>');
+                    data.forEach(function (item) {
+                        $("#id_provincia").append('<option value="' + item.id + '">' + item.nombre + '</option>');
+                    });
+                    $("#id_provincia").prop('disabled', false);
+                }
+            });
+        } else {
+            $("#id_provincia").html('<option value="">Seleccione una provincia</option>').prop('disabled', true);
+            $("#id_comuna").html('<option value="">Seleccione una comuna</option>').prop('disabled', true);
+        }
+    });
 
+    $("#id_provincia").change(function () {
+        var provinciaId = $(this).val();
+        if (provinciaId) {
+            $.ajax({
+                url: "{% url 'cargar_comunas' %}",
+                data: { 'provincia_id': provinciaId },
+                success: function (data) {
+                    $("#id_comuna").html('<option value="">Seleccione una comuna</option>');
+                    data.forEach(function (item) {
+                        $("#id_comuna").append('<option value="' + item.id + '">' + item.nombre + '</option>');
+                    });
+                    $("#id_comuna").prop('disabled', false);
+                }
+            });
+        } else {
+            $("#id_comuna").html('<option value="">Seleccione una comuna</option>').prop('disabled', true);
+        }
+    });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const medioPagoSelect = document.getElementById('medio_pago');
@@ -358,79 +407,71 @@
 
 <script>
     $(document).ready(function () {
-        // Envío de formulario para agregar cliente
-        $("#add-cliente-form").submit(function (e) {
+        // Crear o modificar empresa
+        $("#empresaForm").submit(function (e) {
             e.preventDefault();
             $.ajax({
-                url: "{% url 'list_clientes' %}",
+                url: "{% url 'gestionar_empresas' %}",
                 type: "POST",
                 data: $(this).serialize(),
                 success: function (response) {
-                    if (response.success) {
-                        alert("Cliente registrado");
-                        location.reload();
-                    } else {
-                        alert(response.message);
-                    }
+                    alert(response.message);
+                    if (response.success) location.reload();
                 },
             });
         });
     
-        // Cargar formulario de edición en modal
-        $(".modificar-cliente").click(function () {
-            const clienteId = $(this).data("id"); // Obtiene el id del cliente desde el atributo data-id
-            if (clienteId) {
-                $.get(`/socios/cuentas/modificar/${clienteId}/`, function (data) {
-                    $("#modClienteModalBody").html(data.html_form);
-                });
-            } else {
-                alert("No se pudo identificar el cliente.");
-            }
+        // Editar empresa
+        $(document).on('click', '.editar-empresa', function () {
+            const empresaId = $(this).data("id");
+        
+            $.ajax({
+                url: "{% url 'gestionar_empresas' %}",
+                data: { id: empresaId },
+                success: function (response) {
+                    // Llenar los campos del modal con los datos de la empresa
+                    $('#edit-empresa-id').val(response.id);
+                    $('#edit-nombre').val(response.nombre);
+                    $('#edit-correo').val(response.correo);
+                    $('#edit-rut').val(response.rut_empresa);
+                    $('#edit-direccion').val(response.direccion);
+                    $('#edit-telefono').val(response.telefono);
+        
+                    // Seleccionar región, provincia y comuna
+                    $('#id_region').val(response.region_id).change();
+                    setTimeout(() => {
+                        $('#id_provincia').val(response.provincia_id).change();
+                    }, 300);
+                    setTimeout(() => {
+                        $('#id_comuna').val(response.comuna_id);
+                    }, 600);
+        
+                    // Mostrar el modal de edición
+                    $('#editEmpresaModal').modal('show');
+                },
+                error: function () {
+                    alert("Error al cargar los datos de la empresa.");
+                }
+            });
         });
         
     
-        // Envío del formulario de edición
-        $(document).on("submit", "#mod-cliente-form", function (e) {
-            e.preventDefault();
-            $.ajax({
-                url: $(this).attr("action"),
-                type: "POST",
-                data: $(this).serialize(),
-                success: function (response) {
-                    if (response.success) {
-                        alert("Cliente modificado");
-                        location.reload();
-                    } else {
-                        alert(response.message);
-                    }
-                },
-            });
-        });
-    
-        // Confirmar eliminación
-        $(".eliminar-cliente").click(function () {
-            const clienteId = $(this).data("id");
-            $("#cliente-id").val(clienteId);
-        });
-    
-        // Envío del formulario de eliminación
-        $("#erase-cliente-form").submit(function (e) {
-            e.preventDefault();
-            $.ajax({
-                url: "{% url 'erase_cliente' %}",
-                type: "POST",
-                data: $(this).serialize(),
-                success: function (response) {
-                    if (response.success) {
-                        alert("Cliente eliminado");
-                        location.reload();
-                    } else {
-                        alert(response.message);
-                    }
-                },
-            });
+        // Eliminar empresa
+        $(".eliminar-empresa").click(function () {
+            const empresaId = $(this).data("id");
+            if (confirm("¿Desea eliminar esta empresa?")) {
+                $.post("{% url 'gestionar_empresas' %}", {
+                    empresa_id: empresaId,
+                    accion: "eliminar",
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                }).done(function (response) {
+                    alert(response.message);
+                    if (response.success) location.reload();
+                });
+            }
         });
     });
+    
      
 </script>
 <script>

@@ -1,0 +1,30 @@
+{% extends 'app/base.html' %}
+{% block contenido %}
+<h1>Gestión de Clientes</h1>
+<a href="{% url 'add_cliente' %}" class="btn btn-primary">Agregar Cliente</a>
+<table class="table table-bordered mt-4">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>RUT</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cliente in clientes %}
+        <tr>
+            <td>{{ cliente.nombre }}</td>
+            <td>{{ cliente.rut }}</td>
+            <td>{{ cliente.correo }}</td>
+            <td>{{ cliente.telefono }}</td>
+            <td>
+                <a href="{% url 'mod_cliente' cliente.id %}" class="btn btn-warning">Modificar</a>
+                <a href="{% url 'erase_cliente' cliente.id %}" class="btn btn-danger">Eliminar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

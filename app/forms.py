@@ -147,6 +147,34 @@ class CarritoProductoForm(forms.ModelForm):
             'cantidad': 'Cantidad',
         }
 
+class PerfilClienteEmpresaForm(forms.ModelForm):
+    rut_empresa = forms.CharField(
+        max_length=12,
+        required=True,
+        label="RUT Empresa",
+        error_messages={
+            'required': 'Por favor, ingresa un RUT válido.',
+            'max_length': 'El RUT no puede exceder los 12 caracteres.'
+        }
+    )
+    class Meta:
+        model = PerfilClienteEmpresa
+        ordering = ['nombre']
+        fields = [
+            'nombre', 'raz_social', 'giro', 'rut_empresa', 'direccion', 'correo', 'telefono', 'linea_credito', 'descuento_fijo', 'dias_pago'
+        ]
+        widgets = {
+            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean_rut_empresa(self):
+        rut = self.cleaned_data.get('rut_empresa')
+        if not validar_rut_empresa(rut):
+            raise ValidationError("El RUT ingresado no es válido.")
+        return rut
+
 class PerfilClientesForm(forms.ModelForm):
     class Meta:
         model = PerfilClientes

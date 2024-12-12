@@ -1,4 +1,5 @@
 {% extends 'app/base.html' %}
+{% load custom_filters %}
 {% block contenido %}
 <!DOCTYPE html>
 <html lang="es">
@@ -74,8 +75,8 @@
             <div class="summary-item">
                 <span>{{ detalle.producto.nombre }}</span>
                 <span>{{ detalle.cantidad }}</span>
-                <span>{{ detalle.precio_unitario|floatformat:0 }} CLP</span>
-                <span>{{ detalle.subtotal|floatformat:0 }} CLP</span>
+                <span>{{ detalle.precio_unitario|floatformat:0|clp }}</span>
+                <span>{{ detalle.subtotal|floatformat:0|clp }}</span>
             </div>
             {% endfor %}
         </div>
@@ -85,19 +86,19 @@
         <div class="summary">
             <div class="summary-item">
                 <span>Subtotal</span>
-                <span>{{ compra.subtotal|floatformat:0 }} CLP</span>
+                <span>{{ compra.subtotal|floatformat:0|clp }}</span>
             </div>
             <div class="summary-item">
                 <span>Total Dsctos</span>
-                <span>{{ compra.descuento_total|floatformat:0 }} CLP</span>
+                <span>{{ compra.descuento_total|floatformat:0|clp }}</span>
             </div>
             <div class="summary-item">
                 <span>IVA (19%)</span>
-                <span>{{ compra.iva_total|floatformat:0 }} CLP</span>
+                <span>{{ compra.iva_total|floatformat:0|clp }}</span>
             </div>
             <div class="summary-item">
                 <span>Total Venta</span>
-                <span>{{ compra.total|floatformat:0 }} CLP</span>
+                <span>{{ compra.total|floatformat:0|clp }}</span>
             </div>
         </div>
 

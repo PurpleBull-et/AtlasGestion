@@ -1,0 +1,21 @@
+{%extends%}
+
+<div class="modal fade" id="eraseClienteModal" tabindex="-1" aria-labelledby="eraseClienteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eraseClienteModalLabel">Eliminar Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este cliente?</p>
+                <form method="post" id="erase-cliente-form">
+                    {% csrf_token %}
+                    <input type="hidden" id="cliente-id" name="cliente_id">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
