@@ -20,9 +20,11 @@ urlpatterns = [
 
     path('compras/detalle/<int:compra_id>/', detalle_compra, name='detalle_compra'),
     path('', home, name='home'),
+    
     path('ajax/cargar-provincias/', cargar_provincias, name='cargar_provincias'),
     path('ajax/cargar-comunas/', cargar_comunas, name='cargar_comunas'),
-
+    path('ajax/cargar_ciudades/', cargar_ciudades, name='cargar_ciudades'),
+    
     path('compra/confirmar/invitado/', confirmar_compra_invitado, name='confirmar_compra_invitado'),
 
     path('carrito/boleta/agregar', reg_prod_boleta, name='reg_prod_boleta'),
@@ -151,7 +153,7 @@ urlpatterns = [
     path('api/compras-diarias/', compras_diarias, name='compras_diarias'),
     path('reporte/', mostrar_reporte, name='mostrar_reporte'),
     path('reporte/pdf/', generar_reporte_pdf, name='generar_reporte_pdf'),
-
+    path('reporte/excel/', exportar_reportes_excel, name='exportar_reportes_excel'),
 
     
 

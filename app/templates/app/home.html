@@ -31,11 +31,18 @@
     .table-container {
         overflow-x: auto;
     }
+
+    .export-buttons {
+        display: flex;
+        justify-content: end;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
 </style>
 
 <div class="container-fluid py-4">
-    <div class="row mb-3">
-        <!-- Perfil del Staff -->
+    <div class="row">
+        <!-- Columna de Información Personal -->
         <div class="col-md-3">
             <div class="card h-100">
                 <div class="card-body">
@@ -47,36 +54,36 @@
             </div>
         </div>
 
-        <!-- Tarjetas del Dashboard -->
+        <!-- Columna de Tarjetas del Dashboard -->
         <div class="col-md-9">
             <div class="row">
                 <div class="col-md-3">
-                    <div class="card tdv text-center">
-                        <div class="card-body">
+                    <div class="card tdv text-center h-100">
+                        <div class="card-body d-flex flex-column justify-content-center">
                             <h5>Total de Ventas</h5>
                             <p>{{ total_ventas|clp }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card pdv text-center">
-                        <div class="card-body">
+                    <div class="card pdv text-center h-100">
+                        <div class="card-body d-flex flex-column justify-content-center">
                             <h5>Promedio Diario de Ventas</h5>
                             <p>{{ promedio_ventas_diario|clp }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card pmv text-center">
-                        <div class="card-body">
+                    <div class="card pmv text-center h-100">
+                        <div class="card-body d-flex flex-column justify-content-center">
                             <h5>Producto Más Vendido</h5>
                             <p>{{ producto_mas_vendido.nombre }} ({{ producto_mas_vendido.cantidad_total }} vendidos)</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card iva text-center">
-                        <div class="card-body">
+                    <div class="card iva text-center h-100">
+                        <div class="card-body d-flex flex-column justify-content-center">
                             <h5>Producto Menos Vendido</h5>
                             <p>{{ producto_menos_vendido.nombre }} ({{ producto_menos_vendido.cantidad_total }} vendidos)</p>
                         </div>
@@ -85,7 +92,16 @@
             </div>
         </div>
     </div>
-    <a href="{% url 'generar_reporte_pdf' %}" class="btn btn-primary">Descargar PDF</a>
+
+    <!-- Botones de Exportación -->
+    <div class="export-buttons">
+        <a href="{% url 'generar_reporte_pdf' %}" class="btn btn-danger">
+            <i class="fas fa-file-pdf"></i> Descargar PDF
+        </a>
+        <a href="{% url 'exportar_reportes_excel' %}" class="btn btn-success">
+            <i class="fas fa-file-excel"></i> Descargar Excel
+        </a>
+    </div>
 
     <!-- Sección de Gráficos -->
     <div class="row">
@@ -108,7 +124,7 @@
     </div>
 
     <!-- Ventas Totales -->
-    <div class="card mt-4">
+    <div class="card mt-4 h-200">
         <div class="card-body">
             <h5 class="card-title">Ventas Realizadas</h5>
             <div class="table-container">

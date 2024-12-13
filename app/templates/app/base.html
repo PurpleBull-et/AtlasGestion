@@ -122,6 +122,34 @@
         {% endblock %}
     </div>
 
+    {% if messages %}
+    <div class="container mt-4">
+        {% for message in messages %}
+        {% if 'logout_warning' in message.tags %}
+        <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="logoutModalLabel">Notificación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>{{ message }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+
+
+
     <script src="{% static 'app/js/main.js' %}"></script>
 </body>
 </html>
@@ -138,3 +166,11 @@
     }, 240000)
   </script>
   
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+        if (messageModal) {
+            messageModal.show();
+        }
+    });
+</script>

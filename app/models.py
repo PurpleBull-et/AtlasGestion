@@ -37,6 +37,16 @@ class Comuna(models.Model):
     def __str__(self):
         return f"{self.nombre} - {self.provincia.nombre}, {self.provincia.region.nombre}"
 
+class Ciudad(models.Model):
+    nombre = models.CharField(max_length=100)
+    comuna = models.ForeignKey(Comuna, on_delete=models.CASCADE, related_name="ciudades")
+
+    class Meta:
+        unique_together = ("nombre", "comuna") 
+
+    def __str__(self):
+        return f"{self.nombre} - {self.comuna.nombre}, {self.comuna.provincia.region.nombre}"
+
 
 class Membresia(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
@@ -52,7 +62,7 @@ class Membresia(models.Model):
 
 class Negocio(models.Model):
     id = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=255)
+    nombre = models.CharField(max_length=255) #Raz. social
     rut_empresa = models.CharField(max_length=12, unique=True)
     giro = models.CharField(max_length=255, null=True)
     direccion = models.CharField(max_length=255)
@@ -404,8 +414,9 @@ class CarritoProducto(models.Model):
 
     def __str__(self):
         return f'{self.cantidad} x {self.producto.nombre}'
-
-
+########################################
+####INTEGRACIÓN SII MODELOS Y CAMPOS####
+########################################
 class Compra(models.Model):
     TIPO_DOCUMENTO_CHOICES = [
         ('boleta', 'Boleta'),
@@ -420,8 +431,8 @@ class Compra(models.Model):
     id = models.AutoField(primary_key=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     fecha = models.DateTimeField(auto_now_add=True)
-    total = models.IntegerField()  
-    correo = models.EmailField(null=True, blank=True) 
+    total = models.IntegerField()
+    correo = models.EmailField(null=True, blank=True)
     nombre_staff = models.CharField(max_length=255, null=True, blank=True)
     medio_pago = models.CharField(max_length=20, choices=[
         ('transferencia', 'Transferencia Bancaria'),
@@ -429,13 +440,27 @@ class Compra(models.Model):
         ('efectivo', 'Efectivo')
     ], default='efectivo')
     glosa = models.TextField(null=True, blank=True)
-    subtotal = models.IntegerField(default=0)  
-    descuento_total = models.IntegerField(default=0) 
-    iva_total = models.IntegerField(default=0) 
-    
+    subtotal = models.IntegerField(default=0)
+    descuento_total = models.IntegerField(default=0)
+    iva_total = models.IntegerField(default=0)
+
+    # Nuevos campos añadidos
+    negocio = models.ForeignKey('Negocio', on_delete=models.CASCADE, related_name="compras")  # Emisor
+    cliente_natural = models.ForeignKey(PerfilClientes, on_delete=models.SET_NULL, null=True, blank=True)  # Receptor (cliente natural)
+    cliente_empresa = models.ForeignKey(PerfilClienteEmpresa, on_delete=models.SET_NULL, null=True, blank=True)  # Receptor (empresa)
+    folio = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
     def __str__(self):
-        return f'Compra #{self.id} - {self.usuario}'
+        return f'Compra #{self.folio or self.id} - {self.usuario}'
+
+    def calcular_totales(self):
+        subtotal = sum(detalle.subtotal() for detalle in self.detalles.all())
+        iva = subtotal * 0.19
+        total = subtotal + iva
+        self.subtotal = round(subtotal)
+        self.iva_total = round(iva)
+        self.total = round(total)
+        self.save()
 
 
 class DetalleCompra(models.Model):
@@ -447,13 +472,53 @@ class DetalleCompra(models.Model):
 
     def subtotal(self):
         return self.cantidad * self.precio_unitario
+    
+    def __str__(self):
+            return f'{self.cantidad} x {self.producto.nombre} en Compra {self.compra.folio or self.compra.id}'
+
+class Referencia(models.Model):
+    compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name="referencias")
+    numero_linea = models.PositiveIntegerField()
+    tipo_documento_ref = models.CharField(max_length=50)
+    folio_referencia = models.CharField(max_length=50)
+    fecha_referencia = models.DateField()
+    razon_referencia = models.TextField()
 
     def __str__(self):
-        return f'{self.cantidad} x {self.producto.nombre} en Compra {self.compra.id}'
+        return f"Referencia {self.tipo_documento_ref} - Folio {self.folio_referencia}"
 
+class Totales(models.Model):
+    compra = models.OneToOneField(Compra, on_delete=models.CASCADE, related_name="totales")
+    monto_neto = models.IntegerField()
+    tasa_iva = models.DecimalField(max_digits=5, decimal_places=2, default=19.0)
+    iva = models.IntegerField()
+    monto_total = models.IntegerField()
+
+    def __str__(self):
+        return f"Totales Compra {self.compra.folio or self.compra.id}"
+
+class TimbreElectronicoDigital(models.Model):
+    compra = models.OneToOneField(Compra, on_delete=models.CASCADE, related_name="ted")
+    rut_emisor = models.CharField(max_length=12)
+    tipo_dte = models.CharField(max_length=10)
+    folio = models.CharField(max_length=50)
+    fecha_emision = models.DateField()
+    rut_receptor = models.CharField(max_length=12)
+    razon_social_receptor = models.CharField(max_length=255)
+    monto_total = models.IntegerField()
+    item_principal = models.CharField(max_length=255)
+    timestamp_ted = models.DateTimeField()
+    algoritmo_firma = models.CharField(max_length=50)
+    firma = models.TextField()
+
+    def __str__(self):
+        return f"TED Compra {self.compra.folio or self.compra.id}"
+
+########################################
+####INTEGRACIÓN SII MODELOS Y CAMPOS####
+########################################
 
 class StaffProfile(models.Model):
-
     id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     rut = models.CharField(max_length=12, unique=True)

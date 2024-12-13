@@ -28,12 +28,12 @@ from django.db.models import F, Sum, ExpressionWrapper, IntegerField
 from django.db.models import F, Sum, ExpressionWrapper, IntegerField, Value, CharField, Case, When, Q
 from django.http import JsonResponse
 import requests
-from datetime import datetime
 import openpyxl
 from openpyxl.styles import Alignment, Font
 from io import BytesIO
 from django.http import HttpResponse
-
+from datetime import datetime
+from django.utils.timezone import make_aware
 @login_required
 def conectado(request):
     request.session['last_activity'] = datetime.timestamp(datetime.now())
@@ -80,9 +80,6 @@ def validar_correo_unico(correo, modelo, negocio=None):
         raise ValidationError(f"El correo '{correo}' ya está registrado en este módulo.")
 
 
-from datetime import datetime
-from django.utils.timezone import make_aware
-
 def obtener_hora_actual():
     url = "https://www.timeapi.io/api/Time/current/zone?timeZone=America/Santiago"
     try:
@@ -116,6 +113,11 @@ def cargar_comunas(request):
     provincia_id = request.GET.get('provincia_id')
     comunas = Comuna.objects.filter(provincia_id=provincia_id).order_by('nombre')
     return JsonResponse(list(comunas.values('id', 'nombre')), safe=False)
+
+def cargar_ciudades(request):
+    comuna_id = request.GET.get('comuna_id')
+    ciudades = Ciudad.objects.filter(comuna_id=comuna_id).order_by('nombre')
+    return JsonResponse(list(ciudades.values('id', 'nombre')), safe=False)
 
 def user_permissions(request):
     if not request.user.is_authenticated:
@@ -153,6 +155,13 @@ def home(request):
     es_jefe = user.groups.filter(name="staff_jefe").exists()
     es_cajero = user.groups.filter(name="staff_vendedor").exists()
     es_bodeguero = user.groups.filter(name="staff_bodega").exists()
+
+    if 'session_warning' in request.session:
+        session_warning = request.session['session_warning']
+        if session_warning.startswith("logout_warning|"):
+            _, message = session_warning.split("|", 1)
+            messages.warning(request, message, extra_tags='logout_warning')
+        del request.session['session_warning']
 
     if request.user.is_superuser:
         return redirect('list_admin') 
@@ -197,9 +206,6 @@ def home(request):
         'promedio_ventas_diario': promedio_ventas_diario,
         'producto_mas_vendido': producto_mas_vendido,
     })
-
-
-
 
 def es_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest'
@@ -303,6 +309,10 @@ def confirmar_compra_boleta(request):
         carrito_items = carrito.carritoproducto_set.all()
 
         if carrito_items:
+            # Obtener el perfil del staff y el negocio asociado
+            staff_profile = StaffProfile.objects.get(user=request.user)
+            negocio = staff_profile.negocio
+
             perfil_cliente = None
             if correo:
                 perfil_cliente, _ = PerfilClientes.objects.get_or_create(correo=correo)
@@ -321,6 +331,7 @@ def confirmar_compra_boleta(request):
             # Crear compra
             compra = Compra.objects.create(
                 usuario=request.user,
+                negocio=negocio,  # Asignar el negocio al crear la compra
                 subtotal=subtotal,
                 descuento_total=descuento_total,
                 iva_total=iva_total,
@@ -353,6 +364,7 @@ def confirmar_compra_boleta(request):
             carrito.carritoproducto_set.all().delete()
             carrito.actualizar_total()
 
+
             # Generar y enviar boleta en PDF
             if correo:
                 template_path = 'comprobante/boleta_pdf.html'
@@ -372,6 +384,8 @@ def confirmar_compra_boleta(request):
         else:
             messages.warning(request, 'El carrito está vacío.')
             return redirect('boleta')
+
+
 
 
 def generar_pdf(template_path, context):
@@ -936,18 +950,25 @@ def confirmar_compra_invitado(request):
 # / / / / / / / / / / / / / / / / / #
 #####################################
 # LOGIN Y LOGOUT
+
 def login(request):
+    if 'session_warning' in request.session:
+        session_warning = request.session['session_warning']
+        if session_warning.startswith("logout_warning|"):
+            _, message = session_warning.split("|", 1)
+            messages.warning(request, message, extra_tags='logout_warning')
+        del request.session['session_warning']
+
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
-            return redirect('home')  
+            return redirect('home')
     else:
         form = AuthenticationForm()
+
     return render(request, 'registration/login.html', {'form': form})
-
-
 @require_POST
 def logoutView(request):
     logout(request) 
@@ -3119,11 +3140,31 @@ def generar_contexto_reporte(request):
         total_cantidad=Sum('cantidad')
     ).order_by('-total_cantidad').first()
 
+    # Producto menos vendido
+    producto_menos_vendido = DetalleCompra.objects.filter(
+        compra__usuario__staffprofile__negocio=staff_profile.negocio
+    ).values('producto__nombre').annotate(
+        total_cantidad=Sum('cantidad')
+    ).order_by('total_cantidad').first()
 
+    # Número y porcentaje de compras realizadas con boleta y factura
+    compras_por_tipo_documento = compras.values('tipo_documento').annotate(
+        cantidad=Count('id')
+    )
+    total_compras = compras.count()
+    for tipo in compras_por_tipo_documento:
+        tipo['porcentaje'] = (tipo['cantidad'] / total_compras * 100) if total_compras > 0 else 0
+
+    # Número y porcentaje de compras por método de pago
+    compras_por_metodo_pago = compras.values('medio_pago').annotate(
+        cantidad=Count('id')
+    )
+    for metodo in compras_por_metodo_pago:
+        metodo['porcentaje'] = (metodo['cantidad'] / total_compras * 100) if total_compras > 0 else 0
 
     # Total de compras por mes diferenciando por tipo de documento
     compras_por_mes_boleta = (
-        Compra.objects.filter(tipo_documento='boleta')
+        Compra.objects.filter(tipo_documento='boleta', usuario__staffprofile__negocio=staff_profile.negocio)
         .annotate(mes=TruncMonth('fecha'))
         .values('mes')
         .annotate(total=Sum('total'))
@@ -3131,7 +3172,7 @@ def generar_contexto_reporte(request):
     )
 
     compras_por_mes_factura = (
-        Compra.objects.filter(tipo_documento='factura')
+        Compra.objects.filter(tipo_documento='factura', usuario__staffprofile__negocio=staff_profile.negocio)
         .annotate(mes=TruncMonth('fecha'))
         .values('mes')
         .annotate(total=Sum('total'))
@@ -3140,7 +3181,7 @@ def generar_contexto_reporte(request):
 
     # Total de compras diarias en el mes actual diferenciando por tipo de documento
     compras_diarias_boleta = (
-        Compra.objects.filter(tipo_documento='boleta')
+        Compra.objects.filter(tipo_documento='boleta', usuario__staffprofile__negocio=staff_profile.negocio)
         .annotate(dia=TruncDay('fecha'))
         .values('dia')
         .annotate(total=Sum('total'))
@@ -3148,7 +3189,7 @@ def generar_contexto_reporte(request):
     )
 
     compras_diarias_factura = (
-        Compra.objects.filter(tipo_documento='factura')
+        Compra.objects.filter(tipo_documento='factura', usuario__staffprofile__negocio=staff_profile.negocio)
         .annotate(dia=TruncDay('fecha'))
         .values('dia')
         .annotate(total=Sum('total'))
@@ -3238,10 +3279,11 @@ def generar_contexto_reporte(request):
         'total_compras': total_ventas,
         'promedio_diario_compras': promedio_ventas_diario,
         'producto_mas_comprado': producto_mas_vendido,
+        'producto_menos_comprado': producto_menos_vendido,
+        'compras_por_tipo_documento': compras_por_tipo_documento,
+        'compras_por_metodo_pago': compras_por_metodo_pago,
 
         # Datos de los gráficos
-        'compras_por_mes': compras_por_mes,
-        'compras_diarias': compras_diarias,
         'grafico_barras': grafico_barras,
         'grafico_linea': grafico_linea,
     }
@@ -3270,3 +3312,145 @@ def generar_reporte_pdf(request):
     response['Content-Disposition'] = 'attachment; filename="reporte_compras.pdf"'
 
     return response
+
+
+from django.http import HttpResponse
+import openpyxl
+from openpyxl.styles import Font, Alignment
+from openpyxl.drawing.image import Image
+from io import BytesIO
+import base64
+from PIL import Image as PILImage
+import logging
+
+logger = logging.getLogger(__name__)
+
+def exportar_reportes_excel(request):
+    try:
+        # Obtener los datos del contexto usando la función `generar_contexto_reporte`
+        contexto = generar_contexto_reporte(request)
+        logger.debug(f"Contexto generado: {contexto}")
+
+        # Crear un archivo Excel
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet.title = "Reporte de Negocio"
+
+        # Estilos
+        bold_font = Font(bold=True)
+        center_alignment = Alignment(horizontal='center', vertical='center')
+
+        # Agregar Títulos
+        sheet["A1"] = "Métricas del Negocio"
+        sheet["A1"].font = bold_font
+        sheet["A1"].alignment = center_alignment
+        sheet.merge_cells("A1:B1")
+
+        # Agregar Métricas Generales
+        sheet.append(["Métrica", "Valor"])
+        sheet.cell(row=2, column=1).font = bold_font
+        sheet.cell(row=2, column=2).font = bold_font
+
+        # Manejar 'producto_menos_comprado' de forma segura
+        producto_menos = contexto.get('producto_menos_comprado')
+        metrics = [
+            ("Total de Compras", f"${contexto.get('total_compras', 0):,.0f}"),
+            ("Promedio Diario de Compras", f"${contexto.get('promedio_diario_compras', 0):,.0f}"),
+            (
+                "Producto Más Vendido",
+                f"{contexto['producto_mas_comprado']['producto__nombre']} ({contexto['producto_mas_comprado']['total_cantidad']} unidades)"
+                if contexto.get('producto_mas_comprado') else "No disponible"
+            ),
+            (
+                "Producto Menos Vendido",
+                f"{producto_menos['producto__nombre']} ({producto_menos['total_cantidad']} unidades)"
+                if producto_menos else "No disponible"
+            )
+        ]
+
+        for metric in metrics:
+            sheet.append(metric)
+
+        # Agregar Compras por Tipo de Documento
+        sheet.append([])  # Espacio
+        sheet.append(["Compras por Tipo de Documento"])
+        sheet.cell(sheet.max_row, 1).font = bold_font
+
+        sheet.append(["Tipo de Documento", "Cantidad", "Porcentaje"])
+        sheet.cell(sheet.max_row, 1).font = bold_font
+        sheet.cell(sheet.max_row, 2).font = bold_font
+        sheet.cell(sheet.max_row, 3).font = bold_font
+
+        for tipo in contexto.get('compras_por_tipo_documento', []):
+            sheet.append([
+                tipo.get('tipo_documento', 'N/A'),
+                tipo.get('cantidad', 0),
+                f"{tipo.get('porcentaje', 0):.2f}%"
+            ])
+
+        # Agregar Compras por Método de Pago
+        sheet.append([])  # Espacio
+        sheet.append(["Compras por Método de Pago"])
+        sheet.cell(sheet.max_row, 1).font = bold_font
+
+        sheet.append(["Método de Pago", "Cantidad", "Porcentaje"])
+        sheet.cell(sheet.max_row, 1).font = bold_font
+        sheet.cell(sheet.max_row, 2).font = bold_font
+        sheet.cell(sheet.max_row, 3).font = bold_font
+
+        for metodo in contexto.get('compras_por_metodo_pago', []):
+            sheet.append([
+                metodo.get('medio_pago', 'N/A'),
+                metodo.get('cantidad', 0),
+                f"{metodo.get('porcentaje', 0):.2f}%"
+            ])
+
+        # Incluir gráficos en el Excel
+        current_row = sheet.max_row + 2  # Dejar espacio después de las tablas
+
+        # Gráfico de Barras
+        grafico_barras = contexto.get('grafico_barras')
+        if grafico_barras:
+            grafico_barras_data = base64.b64decode(grafico_barras)
+            grafico_barras_image = BytesIO(grafico_barras_data)
+            barras_img = PILImage.open(grafico_barras_image)
+            barras_img_path = "grafico_barras.png"
+            barras_img.save(barras_img_path)  # Guardar temporalmente
+
+            img_barras = Image(barras_img_path)
+            img_barras.anchor = f"A{current_row}"  # Ubicar la imagen en la celda A
+            sheet.add_image(img_barras)
+
+        # Gráfico de Líneas
+        current_row += 20  # Dejar espacio entre gráficos
+        grafico_linea = contexto.get('grafico_linea')
+        if grafico_linea:
+            grafico_linea_data = base64.b64decode(grafico_linea)
+            grafico_linea_image = BytesIO(grafico_linea_data)
+            linea_img = PILImage.open(grafico_linea_image)
+            linea_img_path = "grafico_linea.png"
+            linea_img.save(linea_img_path)  # Guardar temporalmente
+
+            img_linea = Image(linea_img_path)
+            img_linea.anchor = f"A{current_row}"  # Ubicar la imagen en la celda A
+            sheet.add_image(img_linea)
+
+        # Ajustar ancho de columnas de forma segura
+        for col_idx, col_cells in enumerate(sheet.columns, start=1):
+            max_length = 0
+            for cell in col_cells:
+                if cell.value:  # Considerar solo celdas con contenido
+                    max_length = max(max_length, len(str(cell.value)))
+            adjusted_width = max_length + 2  # Margen adicional
+            column_letter = openpyxl.utils.get_column_letter(col_idx)  # Obtener la letra de la columna
+            sheet.column_dimensions[column_letter].width = adjusted_width
+
+        # Exportar el archivo Excel
+        response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        response["Content-Disposition"] = 'attachment; filename="Reporte_Negocio.xlsx"'
+        workbook.save(response)
+        return response
+
+    except Exception as e:
+        logger.error(f"Error al exportar el reporte Excel: {e}", exc_info=True)
+        return HttpResponse("Ocurrió un error al generar el reporte.", status=500)
