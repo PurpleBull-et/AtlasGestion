@@ -686,9 +686,10 @@ def confirmar_compra_factura(request):
             iva_total = (subtotal - descuento_total) * 0.19
             total = subtotal - descuento_total + iva_total
 
-            # Crear la instancia de compra con los valores calculados
+            negocio = staff_profile.negocio 
             compra = Compra.objects.create(
                 usuario=request.user,
+                negocio=negocio, 
                 subtotal=subtotal,
                 descuento_total=descuento_total,
                 iva_total=iva_total,
@@ -696,8 +697,7 @@ def confirmar_compra_factura(request):
                 nombre_staff=request.user.get_full_name(),
                 correo=perfil_cliente.correo if perfil_cliente else None,
                 medio_pago=medio_pago,
-                glosa=glosa,
-                tipo_documento='factura',
+                tipo_documento='factura', 
                 fecha=fecha_hora_actual
             )
 
@@ -2864,7 +2864,12 @@ def erase_empresa(request):
 @jefe_required
 def register_staff_for_boss(request):
     jefe_profile = StaffProfile.objects.get(user=request.user)
+    negocio = jefe_profile.negocio
 
+    if not negocio.puede_agregar_usuario():
+        messages.error(request, "No puedes agregar más usuarios. Has alcanzado el límite de tu membresía.")
+        return redirect('list_staff_for_boss')
+    
     if request.method == 'POST':
         user_form = UserForBossForm(request.POST)
         profile_form = StaffProfileForBossForm(request.POST)

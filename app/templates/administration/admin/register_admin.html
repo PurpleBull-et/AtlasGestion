@@ -1,7 +1,7 @@
 {% extends 'app/base.html' %}
 {% block contenido %}
 <h2>Registrar Nuevo Administrador</h2>
-<form method="post" class="formAdmin">
+<form method="post" class="formAdmin regNegocio">
     {% csrf_token %}
     {{ user_form.as_p }}
     {{ profile_form.as_p }}

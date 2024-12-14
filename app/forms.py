@@ -248,9 +248,16 @@ class NegocioForm(forms.ModelForm):
         label="Dirección del Almacén"
     )
 
+    membresia = forms.ModelChoiceField(
+        queryset=Membresia.objects.all(),
+        required=True,
+        label="Tipo de Membresía",
+        help_text="Selecciona una membresía para este negocio."
+    )
+
     class Meta:
         model = Negocio
-        fields = ['nombre', 'giro', 'direccion', 'telefono', 'rut_empresa', 'is_mayorista', 'almacen_direccion']
+        fields = ['nombre', 'giro', 'direccion', 'telefono', 'rut_empresa', 'is_mayorista', 'almacen_direccion', 'membresia']
         widgets = {
             'is_mayorista': forms.CheckboxInput(),
         }

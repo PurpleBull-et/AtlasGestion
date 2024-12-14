@@ -1,11 +1,11 @@
 {% extends 'app/base.html' %}
 
 {% block contenido %}
-
+<div class="tituloh1">
 <h1>Gestión de Entradas de Bodega</h1>
-
+</div>
 <!-- Filtro por proveedor (opcional) -->
-<form method="get" class="mb-3">
+<form method="get" class="mb-3 regNegocio">
     <label for="proveedor" class="me-2">Filtrar por proveedor:</label>
     <select name="proveedor" id="proveedor" class="form-select w-auto" onchange="this.form.submit();">
         <option value="">Todos los proveedores</option>
@@ -19,7 +19,7 @@
 
 <!-- Lista de entradas de bodega -->
 <h2>Entradas de Bodega Registradas</h2>
-<div class="table-container" style="min-height: 450px">
+<div class="table-container regNegocio" style="">
 <table class="table table-bordered table-hover">
     <thead>
         <tr>

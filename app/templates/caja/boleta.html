@@ -5,7 +5,7 @@
 
 {% comment %} <div><h1>Boleta</h1></div> {% endcomment %}
 <h2>Boleta</h2>
-<div class="containerFiltros">
+<div class="containerFiltros regNegocio">
     <form method="get" class="mb-3">
         <div class="form-group">
             <label for="buscar">Buscar producto:</label>
@@ -43,15 +43,15 @@
 
 </div>
 <div>
-    <div class="card">
+    <div class="cardenv">
         <!-- Lista de productos -->
         <div class="row summary-boleta">
-            <div class="col-md-7 cart">
+            <div class="col-md-6 cart">
               {% comment %}   <div class="title">
                     <h4><b>Lista de Productos</b></h4>
                 </div> {% endcomment %}
 
-                <div class="containerEncabezado ">               
+                <div class="containerEncabezado">               
                     <thead>
                     <tr>
                         <th>Nombre</th>
@@ -75,15 +75,15 @@
                             <div class="col-2 btns">
                                 <form method="post" action="{% url 'agregar_al_carrito_boleta' producto.producto_id %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-success" style="background-color:#1499a3;">Añadir</button>
+                                    <button type="submit" class="btn btn-success w-auto btnAñadir" style="">+</button>
                                 </form>
                                 <!-- Modal para actualizar precio y descuento -->
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#precioDescuentoModal{{ producto.producto_id }}" class="btn btn-info btn-sm" style="background-color: rgb(84, 104, 104); border:none;">Descuento</a>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#precioDescuentoModal{{ producto.producto_id }}" class="btn btn-info btn-sm w-auto btnDesc" style="">Desc</a>
                                 <div class="modal fade" id="precioDescuentoModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="precioDescuentoModalLabel{{ producto.producto_id }}" aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title" id="precioDescuentoModalLabel{{ producto.producto_id }}">Asignar Precio/Descuento a {{ producto.nombre }}</h5>
+                                                <h5 class="modal-title" id="precioDescuentoModalLabel{{ producto.producto_id }}">Asignar Descuento a {{ producto.nombre }}</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"  style="transform:translate(15px, -15px); background-color:transparent"></button>
                                             </div>
                                             <form method="POST" action="{% url 'actualizar_descuento_boleta' producto.producto_id %}">
@@ -113,7 +113,7 @@
             <!-- Resumen del carrito -->
 
             <!-- Resumen del carrito -->
-            <div class="col-md-5 summary summary-boleta">
+            <div class="col-md-6 summary summary-boleta">
                 <div class="containerEncabezado boleta">               
                     <thead>
                     <tr>

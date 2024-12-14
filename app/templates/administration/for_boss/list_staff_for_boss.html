@@ -1,13 +1,14 @@
 {% extends 'app/base.html' %}
 
 {% block contenido %}
+<div class="tituloGSB">
 <h1>Gestión de Staff</h1>
 
 <!-- Botón para registrar nuevo staff -->
 <a href="{% url 'register_staff_for_boss' %}" class="btn btn-primary mb-3">Registrar Nuevo Usuario Staff</a>
-
+</div>
 <!-- Dropdown para filtrar usuarios por negocio -->
-<div class="mb-4">
+<div class="mb-4 filtboss">
     <form method="get" class="d-flex align-items-center">
         <label for="negocio" class="me-2">Filtrar por negocio:</label>
         <select name="negocio" id="negocio" class="form-select w-auto me-3" onchange="this.form.submit();">
@@ -27,7 +28,7 @@
 {% endif %}
 
 <!-- Lista de usuarios activos (staff) -->
-<div class="table-container">
+<div class="table-container regNegocio">
 <table class="table">
     
     <thead>

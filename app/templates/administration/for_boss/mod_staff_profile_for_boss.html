@@ -1,16 +1,17 @@
 {% extends 'app/base.html' %}
 
 {% block contenido %}
+<div class="tituloMPSB">
 <h1>Modificar Perfil Staff</h1>
-
-<form method="post" class="formModificarStaff">
+</div>
+<form method="post" class="formModificarStaff regNegocio">
     {% csrf_token %}
     <!-- Ocultar el campo negocio -->
     <input type="hidden" name="negocio" value="{{ user_profile.negocio.id }}"/>
     {{ profile_form.as_p }}
 
     
-    <div class="form-group" style="transform:translate(5px, 3px)"  >
+    <div class="form-group" style="transform:translate(5px, 3px)">
         <label for="grupo">Asignar Grupo:</label>
         <select name="grupo" id="grupo" class="form-control">
          {% comment %}    <option value="">Seleccionar un grupo</option> {% endcomment %}

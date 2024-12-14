@@ -13,6 +13,7 @@
   --placeholder-color: rgba(29, 29, 27, 0.9);
   --muted-text-color: rgba(29, 29, 27, 0.6);
   --light-text-color: rgba(255, 255, 255, 0.8);
+
 }
 
 *,
@@ -218,4 +219,40 @@ textarea.form-control {
 
 .form-control::placeholder {
   color: rgba(29, 29, 27, 0.6);
+}
+
+
+.card.tdv {
+  background-color: #DFF0D8; /* Verde claro */
+  color: #333;
+}
+
+.card.pdv {
+  background-color: #D9EDF7; /* Azul claro */
+  color: #333;
+}
+
+.card.pmv {
+  background-color: #FCF8E3; /* Amarillo claro */
+  color: #333;
+}
+
+.card.iva {
+  background-color: #F2DEDE; /* Rojo claro */
+  color: #333;
+}
+
+.grafico {
+  overflow-x: auto;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.export-buttons {
+  display: flex;
+  justify-content: end;
+  gap: 10px;
+  margin-bottom: 15px;
 }

@@ -77,7 +77,14 @@ class Negocio(models.Model):
     correo = models.CharField(max_length=50)
     membresia = models.ForeignKey(Membresia, on_delete=models.SET_NULL, null=True, blank=True, related_name="negocios")
 
+    def usuarios_activos(self):
+        return self.staff.filter(user__is_active=True).count()
 
+    def puede_agregar_usuario(self):
+        if not self.membresia:
+            return False  
+        return self.usuarios_activos() < self.membresia.max_users
+    
     def __str__(self):
         return self.nombre
 

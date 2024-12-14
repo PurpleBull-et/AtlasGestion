@@ -1,5 +1,5 @@
 {% block add_negocio_form %}
-<div class="card mb-5">
+<div class="card mb-2 miForm">
     <div class="card-body">
         <h4>Registrar Nuevo Negocio</h4>
         
@@ -16,7 +16,7 @@
         
         <form method="post" enctype="multipart/form-data" class="formNegocio">
             {% csrf_token %}
-            <div class="form-group" style="transform:translateX(5px);">
+            <div class="form-group divRegion" style="">
                 <label for="id_region" style="">Región:</label>
                 <select id="id_region" name="region" class="form-control">
                     <option value="">Seleccione una región</option>
@@ -26,14 +26,14 @@
                 </select>
             </div>
             
-            <div class="form-group" style="transform:translateX(5px);">
+            <div class="form-group divProv" style="">
                 <label for="id_provincia">Provincia:</label>
                 <select id="id_provincia" name="provincia" class="form-control" disabled>
                     <option value="">Seleccione una provincia</option>
                 </select>
             </div>
             
-            <div class="form-group" style="transform:translateX(5px);">
+            <div class="form-grou divComuna" style="">
                 <label for="id_comuna">Comuna:</label>
                 <select id="id_comuna" name="comuna" class="form-control" disabled>
                     <option value="">Seleccione una comuna</option>

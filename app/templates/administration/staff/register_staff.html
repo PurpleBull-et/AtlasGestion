@@ -3,9 +3,10 @@
 {% extends 'app/base.html' %}
 
 {% block contenido %}
+<div class="tituloRNS">
 <h1>Registrar Nuevo Usuario Staff</h1>
-
-<form method="post" class="formstaff">
+</div>
+<form method="post" class="formstaff regNegocio">
     <div class="form_containerStaff">
         <div class="form_groupStaff">
     {% csrf_token %}

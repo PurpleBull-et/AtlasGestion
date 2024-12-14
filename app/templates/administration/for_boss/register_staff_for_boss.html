@@ -3,9 +3,10 @@
 {% extends 'app/base.html' %}
 
 {% block contenido %}
+<div class="tituloh1 mb-5"> 
 <h1>Registrar Nuevo Usuario Staff</h1>
-
-<form method="post" class="formstaff">
+</div>
+<form method="post" class="formstaff regNegocio">
     <div class="form_containerStaff">
         <div class="form_groupStaff">
             
@@ -20,15 +21,17 @@
         </div>
     {% endif %}
 </div>
+{% comment %} <div class="titulodps mb-4">
 <h4>Datos del Perfil de Staff</h4>
-    
+</div>  {% endcomment %}
     <div class="personales">
+       
         {{ profile_form.as_p }}
         <!-- Ocultar el campo negocio -->
         <input type="hidden" name="negocio" value="{{ user_profile.negocio.id }}">
 
 
-        <div class="form-group" style="transform:translate(-2px, 3px)">
+        <div class="form-group" style="transform:translate(-2px, 3px); background-color:red">
             <label for="grupo">Asignar Grupo:</label>
             <select name="grupo" id="grupo" class="form-control">
              {% comment %}    <option value="">Seleccionar un grupo</option> {% endcomment %}

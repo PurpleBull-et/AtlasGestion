@@ -1,7 +1,14 @@
 {% extends 'app/base.html' %}
 {% block contenido %}
+<div class="tituloadmins">
 <h1>Gestión de Administradores</h1>
+</div>
+
+<div class="botonRA">
 <a href="{% url 'register_admin' %}" class="btn btn-primary mb-3">Registrar Nuevo Administrador</a>
+</div>
+<div class="table-container regNegocio" style="">
+
 <table class="table table-bordered table-hover">
     <thead>
         <tr>
@@ -28,5 +35,5 @@
         </tr>
     {% endfor %}
     </tbody>
-</table>
+
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends 'app/base.html' %}
 {% block contenido %}
 <h2>Modificar Cuenta de Administrador</h2>
-<form method="post" class="formModAdmin">
+<form method="post" class="formModAdmin regNegocio">
     {% csrf_token %}
     {{ user_form.as_p }}
     {{ profile_form.as_p }}

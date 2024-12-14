@@ -1,14 +1,15 @@
 {% extends 'app/base.html' %}
 
 {% block contenido %}
+<div class="tituloh1">
 <h1>Gestión de Negocios</h1>
-
+</div>
 <!-- formulario de agregar negocio -->
 {% include 'administration/negocio/add_negocio.html' %}
 
 <!-- Lista de negocios -->
 <h2>Negocios Registrados</h2>
-<div class="table-container">
+<div class="table-container regNegocio" style="">
 <table class="table">
     <thead>
         <tr>
@@ -57,7 +58,10 @@
             </td>
         </tr>
         {% endfor %}
+    
     </tbody>    
-</table>
+
+ {% comment %}    </table> {% endcomment %}
+</div>   
 
 {% endblock %}
