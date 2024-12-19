@@ -10,10 +10,10 @@
     
     {{ profile_form.as_p }}
     
-    <div class="form-group divGRUPO" style=""  >
+    <div class="form-group divGRUPO">
         <label for="grupo">Asignar Grupo:</label>
         <select name="grupo" id="grupo" class="form-control">
-         {% comment %}    <option value="">Seleccionar un grupo</option> {% endcomment %}
+        
             {% for grupo in grupos %}
                 <option class="optionClass" value="{{ grupo.id }}" {% if grupo_actual and grupo_actual.id == grupo.id %}selected{% endif %}>
                     {{ grupo.name }}
@@ -22,6 +22,6 @@
         </select>
     </div>
 
-    <button type="submit" class="btn btn-primary btnGC" style="">Guardar cambios</button>
+    <button type="submit" class="btn btn-primary btnGC">Guardar cambios</button>
 </form>
 {% endblock %}

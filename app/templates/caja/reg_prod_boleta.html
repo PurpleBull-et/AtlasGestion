@@ -1,32 +1,32 @@
 <form method="post" id="reg-prod-boleta-form">
     {% csrf_token %}
-    <div class="mb-3">
-        <label for="nombre" style="transform:translateY(-20px)">Nombre del Producto</label>
-        <input type="text" class="form-control" id="nombre" name="nombre" required style="transform:translateY(-20px)">
+    <div class="mb-3 nombreP">
+        <label for="nombre">Nombre del Producto</label>
+        <input type="text" class="form-control" id="nombre" name="nombre" required>
     </div>
 
-    <div class="mb-3">
-        <label for="precio" style="transform:translateY(-45px)">Precio Venta</label>
-        <input type="number" step="0.01" class="form-control" id="precio" name="precio" required style="transform:translateY(-45px)">
+    <div class="mb-3 entradaPrecio">
+        <label for="precio" style="">Precio Venta</label>
+        <input type="number" step="0.01" class="form-control" id="precio" name="precio" required>
     </div>
     
-    <div class="mb-3">
-        <label for="stock" style="transform:translateY(-45px)">Stock</label>
-        <input type="number" class="form-control" id="stock" name="stock" min="1" required style="transform:translateY(-45px)">
+    <div class="mb-3 entradaStock">
+        <label for="stock">Stock</label>
+        <input type="number" class="form-control" id="stock" name="stock" min="1" required>
     </div>
 
-    <div class="mb-3">
-        <label for="categoria_nombre" style="transform:translateY(-45px)">Categoría</label>
-        <input type="text" id="categoria_nombre" name="categoria_nombre" required style="transform:translateY(-45px)" class="form-control" placeholder="Escribe para buscar o crear">
+    <div class="mb-3 entradaCat">
+        <label for="categoria_nombre">Categoría</label>
+        <input type="text" id="categoria_nombre" name="categoria_nombre" required class="form-control" placeholder="Escribe para buscar o crear">
         <input type="hidden" id="categoria_id" name="categoria_id">
     
         <!-- Contenedor para mostrar sugerencias -->
         <div id="categoria_suggestions" class="suggestions-box"></div>
     </div>
     
-    <div class="mb-3">
-        <label for="marca_nombre" style="transform:translateY(-45px)">Marca</label>
-        <input type="text" id="marca_nombre" name="marca_nombre" required style="transform:translateY(-45px)" class="form-control" placeholder="Escribe para buscar o crear">
+    <div class="mb-3 entradaMarca">
+        <label for="marca_nombre">Marca</label>
+        <input type="text" id="marca_nombre" name="marca_nombre" required class="form-control" placeholder="Escribe para buscar o crear">
         <input type="hidden" id="marca_id" name="marca_id">
         <!-- Contenedor para mostrar sugerencias -->
         <div id="marca_suggestions" class="suggestions-box"></div>
@@ -34,7 +34,7 @@
     </div>
     <!--Estilo directo para las sugerencias-->
 
-    <button type="submit" class="btn btn-primary"  style="transform:translate(155px, -15px)">Registrar Producto</button>
+    <button type="submit" class="btn btn-primary brpmd">Registrar Producto</button>
 </form>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.css">

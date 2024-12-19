@@ -3,6 +3,8 @@
 {% block contenido %}
 {% load custom_filters %}
 
+
+<div class="infoDEB">
 <h1>Detalle de Entrada de Bodega</h1>
 
 <div class="mb-4">
@@ -17,9 +19,12 @@
     <a href="{% url 'devolver_factura' entrada.id %}" class="btn btn-warning">Registrar Devolución</a>
 
 </div>
+</div>
 
+<div class="tituloh1">
 <h4>Productos Comprados</h4>
-<div class="table-container">
+</div>
+<div class="table-container regNegocio">
 <table class="table table-bordered table-hover">
     <thead>
         <tr>
@@ -55,6 +60,7 @@
     </tbody>
 </table>
 </div>
+<div class="volver">
 <a href="{% url 'listar_entradas_bodega' %}" class="btn btn-primary">Volver a la Lista de Entradas</a>
-
+</div>
 {% endblock %}

@@ -9,7 +9,7 @@
         {% csrf_token %}
         {{ formset.management_form }}
 
-        <div id="devoluciones-container" class="table-container" style="min-height:500px">
+        <div id="devoluciones-container" class="table-container">
             {% for form in formset %}
                 <div class="devolucion-form">
                     {{ form.as_p }}

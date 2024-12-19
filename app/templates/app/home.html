@@ -25,32 +25,32 @@
                 <div class="col-md-3">
                     <div class="card tdv text-center h-100">
                         <div class="card-body d-flex flex-column justify-content-center">
-                            <h5>Total de Ventas</h5>
-                            <p>{{ total_ventas|clp }}</p>
+                            <h1>{{ total_ventas|clp }}</h1>
+                            <h6>Total de Ventas</h6>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card pdv text-center h-100">
                         <div class="card-body d-flex flex-column justify-content-center">
-                            <h5>Promedio Diario de Ventas</h5>
-                            <p>{{ promedio_ventas_diario|clp }}</p>
+                            <h1>{{ promedio_ventas_diario|clp }}</h1>
+                            <h6>Promedio Diario de Ventas</h6>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card pmv text-center h-100">
                         <div class="card-body d-flex flex-column justify-content-center">
-                            <h5>Producto Más Vendido</h5>
-                            <p>{{ producto_mas_vendido.nombre }} ({{ producto_mas_vendido.cantidad_total }} vendidos)</p>
+                            <h1>{{ producto_mas_vendido.producto__nombre }}</h1>
+                            <h6>Producto Más Vendido</h6>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card iva text-center h-100">
                         <div class="card-body d-flex flex-column justify-content-center">
-                            <h5>Producto Menos Vendido</h5>
-                            <p>{{ producto_menos_vendido.nombre }} ({{ producto_menos_vendido.cantidad_total }} vendidos)</p>
+                            <h1>{{ producto_menos_vendido.producto__nombre }}</h1>
+                            <h6>Producto Menos Vendido</h6>
                         </div>
                     </div>
                 </div>

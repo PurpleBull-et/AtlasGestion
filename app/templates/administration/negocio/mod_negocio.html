@@ -9,8 +9,8 @@
     <div class="card-body">
         <form method="post" class="formModNeg">
             {% csrf_token %}
-            <div class="form-group" style="transform:translateX(5px);">
-                <label for="id_region" style="">Región:</label>
+            <div class="form-group">
+                <label for="id_region">Región:</label>
                 <select id="id_region" name="region" class="form-control">
                     <option value="">Seleccione una región</option>
                     {% for region in regions %}
@@ -19,14 +19,14 @@
                 </select>
             </div>
             
-            <div class="form-group" style="transform:translateX(5px);">
+            <div class="form-group">
                 <label for="id_provincia">Provincia:</label>
                 <select id="id_provincia" name="provincia" class="form-control" disabled>
                     <option value="">Seleccione una provincia</option>
                 </select>
             </div>
             
-            <div class="form-group" style="transform:translateX(5px);">
+            <div class="form-group">
                 <label for="id_comuna">Comuna:</label>
                 <select id="id_comuna" name="comuna" class="form-control" disabled>
                     <option value="">Seleccione una comuna</option>

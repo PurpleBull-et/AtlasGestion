@@ -5,15 +5,15 @@
 <div class="container mt-4">
     <h1 class="text-center">Registro de Compra</h1>
     <div class="EntradaProductos">
-        {% comment %} <h2 class="mb-4">Registrar Entrada de Productos</h2> {% endcomment %}
+       
         <form method="post" class="entradaBodegaForm">
-            {% comment %} class="formBodega" {% endcomment %}
+   
             {% csrf_token %}
 
             <!-- Fecha de recepción -->
-            <div class="form-group mb-3" style="width:200px">
+            <div class="form-group mb-3 fechaREC">
                 <label for="fecha_recepcion" class="form-label">Fecha de Recepción</label>
-                <input type="date" class="form-control" id="fecha_recepcion" name="fecha_recepcion" required style="transform:translateY(-23px)">
+                <input type="date" class="form-control" id="fecha_recepcion" name="fecha_recepcion" required>
             </div>
 
             <!-- Formulario de EntradaBodega -->
@@ -22,39 +22,36 @@
             </div>
 
             <div class="ContenedorcajaProducto">
-                <div class="table-container tablaProd" style="transform:translate(140px, -10px); min-height:350px; width:800px;">
-                    {% comment %} <table class="table"> {% endcomment %}
-                        <div class="cajaProducto" style="width:750px;">
+                <div class="table-container tablaProd">
+                   
+                        <div class="cajaProducto">
                             {{ producto_formset.management_form }}
-                            {% comment %} </div> {% endcomment %}
-                            {% comment %} <div class="containerproductos-container"> {% endcomment %}
+                            
                             <div id="productos-container">
                                 {% for form in producto_formset %}
                                 <div class="producto-form mb-3 p-3 border rounded">
                                     {{ form.as_p }}
-                                    {% comment %}
                                     <!-- Cálculos dinámicos -->
-                                    <div>
+                                    {% comment %} <div>
                                         <label>IVA (19%):</label>
                                         <span id="iva_{{ forloop.counter }}">0</span>
                                     </div>
                                     <div>
                                         <label>Precio Neto:</label>
                                         <span id="neto_{{ forloop.counter }}">0</span>
-                                    </div>
+                                    </div> {% endcomment %}
                                 </div>
                                 <script>
                                     document.getElementById("id_form-{{ forloop.counter0 }}-precio_total").addEventListener("input", function() {
                                         calcularValores("id_form-{{ forloop.counter0 }}-precio_total", "iva_{{ forloop.counter }}", "neto_{{ forloop.counter }}");
                                     });
                                 </script>
-                                {% endcomment %}
                             {% endfor %}                 
                         </div>
                     </div>
                 </div>
             </form>
-            <div class="card" style="width:18rem; transform:translate(950px, -360px); position:absolute; background-color: rgb(241, 243, 243);">
+            <div class="card BotonesRC">
                 <button type="button" class="btn btn-secondary mt-3" onclick="agregarProducto()">Agregar Otro Producto</button>
                 <button type="submit" class="btn btn-primary mt-3">Registrar Entrada</button>
             </div>
@@ -62,23 +59,6 @@
         </div>
     </div>
 
-    {% comment %}
-    <ul id="productos-container" style="display: flex; gap: 10px; list-style: none;">
-        {% for form in producto_formset %}
-        <li class="producto-form">
-            {{ form.as_p }}
-            <button type="button" class="btn btn-danger mt-2" onclick="this.closest('.producto-form').remove()">Eliminar Producto</button>
-            <input type="text" name="producto-__prefix__-nombre" id="id_producto-__prefix__-nombre" placeholder="Nombre del producto">
-            <input type="number" name="producto-__prefix__-cantidad" id="id_producto-__prefix__-cantidad" placeholder="Cantidad">
-            <input type="number" name="producto-__prefix__-precio" id="id_producto-__prefix__-precio" placeholder="Precio">
-        {% endfor %}
-        </li>
-    </ul>
-    <button type="button" class="btn btn-secondary mt-3" onclick="agregarProducto()">Agregar Otro Producto</button>
-    <button type="submit" class="btn btn-primary mt-3">Registrar Entrada</button>
-    <input type="hidden" id="id_form-TOTAL_FORMS" value="1">
-    <button onclick="agregarProducto()">Agregar producto</button>
-    {% endcomment %}
     <script>
         function agregarProducto() {
             const container = document.getElementById('productos-container');

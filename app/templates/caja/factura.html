@@ -32,8 +32,8 @@
         </div>
         {% endif %}
         
-        <button type="submit" class="btnFiltros" style="">Aplicar Filtros</button>
-        <button type="button" class="IngresoManual" style="" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">Ingreso Manual</button>
+        <button type="submit" class="btnFiltros">Aplicar Filtros</button>
+        <button type="button" class="IngresoManual" data-bs-toggle="modal" data-bs-target="#registrarProductoModal">Ingreso Manual</button>
          
         <button type="button" class="btn btn-info GestionClientes" style="" data-bs-toggle="modal" data-bs-target="#listEmpresaModal">
             Gestionar Perfiles de Cliente
@@ -41,13 +41,11 @@
     </form>
 </div>
 <div>
-    <div class="cardenv">{% comment %}borde exterior que encierra todo  {% endcomment %}
+    <div class="cardenv">
         <!-- Lista de productos -->
         <div class="row">{% comment %} hace que se alineen en horizontal {% endcomment %}
             <div class="col-md-6 cart">
-             {% comment %}    <div class="title">
-                    <h4><b>Lista de Productos</b></h4>
-                </div> {% endcomment %}
+            
                
                 <div class="containerEncabezado factura">               
                     <thead>
@@ -74,26 +72,29 @@
                             <div class="col-2 btns">
                                 <form method="post" action="{% url 'agregar_al_carrito_factura' producto.producto_id %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-success w-auto btnAñadir" style="">+</button>
+                                    <button type="submit" class="btn btn-success w-auto btnAñadir">+</button>
                                 </form>
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#precioDescuentoModal{{ producto.producto_id }}" class="btn btn-info btn-sm w-auto btnDesc" style="">Desc</a>
-                                <div class="modal fade" id="precioDescuentoModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="precioDescuentoModalLabel{{ producto.producto_id }}" aria-hidden="true">
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#precioDescuentoModal{{ producto.producto_id }}" class="btn btn-info btn-sm w-auto btnDesc">Desc</a>
+                               
+                               
+                               {% comment %} MODAL DESC LISTA PRODUCTOS {% endcomment %}
+                                <div class="modal fade modalDescFact" id="precioDescuentoModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="precioDescuentoModalLabel{{ producto.producto_id }}" aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title" id="precioDescuentoModalLabel{{ producto.producto_id }}">Asignar Descuento a {{ producto.nombre }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform:translate(15px, -15px); background-color:transparent"></button>
+                                                <button type="button" class="btn-close mbtnCerrar" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
                                             <form method="POST" action="{% url 'actualizar_descuento_factura' producto.producto_id %}">
                                                 {% csrf_token %}
                                                 <div class="modal-body">
                                                     <div class="mb-3">
                                                         <label for="descuento" class="form-label">Descuento (%)</label>
-                                                        <input type="number" class="form-control" id="descuento" name="descuento" value="{{ producto.descuento_mayorista }}" min="0" max="100" style="transform:translateY(-10px)">
+                                                        <input type="number" class="form-control" id="descuento" name="descuento" value="{{ producto.descuento_mayorista }}" min="0" max="100">
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn bg-danger text-light " data-bs-dismiss="modal" style="transform:translate(-80px, -7.5px)">Cancelar</button>
+                                                    <button type="button" class="btn text-light bcmf" data-bs-dismiss="modal">Cancelar</button>
                                                     <button type="submit" class="btn btn-primary">Guardar</button>
                                                 </div>
                                             </form>
@@ -109,10 +110,10 @@
             
             <!-- Resumen del carrito -->
             <div class="col-md-6 summary summary-factura">
-                {% comment %} <div><h5><b>Tu Carro (Items)</b></h5></div>{% endcomment %}
+                
                 <hr> 
 
-                <div class="containerEncabezado factura" style="transform:translateY(-30px)">               
+                <div class="containerEncabezado factura">               
                     <thead>
                     <tr>
                         <th>Cant.</th>
@@ -134,7 +135,7 @@
                         <div class="botones">
                             <form method="post" action="{% url 'restar_producto_factura' item.producto.producto_id %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-danger" style="">-</button>
+                                <button type="submit" class="btn btn-danger">-</button>
                             </form>
                             <form method="post" action="{% url 'agregar_al_carrito_factura' item.producto.producto_id %}">
                                 {% csrf_token %}
@@ -143,7 +144,7 @@
                         </div>
                         <form method="post" action="{% url 'eliminar_del_carrito_factura' item.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-secondary cerrarCompra" style="">x</button>
+                            <button type="submit" class="btn btn-secondary cerrarCompra">x</button>
                         </form>
                     </li>
                     {% endfor %}
@@ -161,7 +162,7 @@
                         <div class="col text-right"><strong>MontoTotal:</strong> {{ carrito_total|clp }}</div>
                     </div>
                     <div class="mb-3 medioPago">
-                        <label for="medio_pago" class="form-label labelmediopago" style="">Medio de Pago</label>
+                        <label for="medio_pago" class="form-label labelmediopago">Medio de Pago</label>
                         <select class="form-select" id="medio_pago" name="medio_pago">
                             <option value="" disabled selected>Seleccione un medio de pago</option>
                             <option value="efectivo">Efectivo</option>
@@ -171,10 +172,10 @@
                     </div>
                     <div class="mb-3 OpcionCorreo">
                         <div class="form-group">
-                            <label for="correo" class="form-label labelCorreo" style="">Correo electrónico (opcional)</label>
-                            <input type="email" id="correo" name="correo" class="form-control inputCorreo" placeholder="Escribe para buscar o crear" style="">
+                            <label for="correo" class="form-label labelCorreo">Correo electrónico (opcional)</label>
+                            <input type="email" id="correo" name="correo" class="form-control inputCorreo" placeholder="Escribe para buscar o crear">
                             <input type="hidden" id="correo_id" name="correo_id">
-                            <div id="correo_suggestions" class="suggestions-box border border-light rounded-1 border-3" style=""></div>
+                            <div id="correo_suggestions" class="suggestions-box border border-light rounded-1 border-3"></div>
                         </div>
                             <style>
                                 .suggestions-box {
@@ -202,16 +203,16 @@
                             
                         </div>                            
                     </div>                 
-                    <div id="mensaje-medio-pago" style="display: none; color: red; margin-top: 10px;"></div>
+                    {% comment %} <div id="mensaje-medio-pago" style="display: none; color: red; margin-top: 10px;"></div> {% endcomment %}
                     <div class="d-flex justify-content-between w-100 mt-3 contBoton">                          
                         <!-- Botón para pagar -->
-                        <button type="submit" class="btn btn-success  btnPagarFact" style="" id="pagar-btn">Pagar</button>
+                        <button type="submit" class="btn btn-success  btnPagarFact" id="pagar-btn">Pagar</button>
                     </div>
                 </form>
-                <form method="post" action="{% url 'vaciar_carrito_factura' %}" style="">
+                <form method="post" action="{% url 'vaciar_carrito_factura' %}">
                     {% csrf_token %}
                     <input type="hidden" name="cancelar" value="true">
-                    <button type="submit" class="btn btn-danger btnCancelarFact" style="" >Cancelar</button>
+                    <button type="submit" class="btn btn-danger btnCancelarFact">Cancelar</button>
                 </form>           
                 {% else %}
                 <p>Tu carrito está vacío.</p>
@@ -221,7 +222,7 @@
     </div>
 
     <!-- Modal para gestión de empresas -->
-    <div class="modal fade" id="listEmpresaModal" tabindex="-1" aria-labelledby="listEmpresaModalLabel" aria-hidden="true">
+    <div class="modal fade ModalGestEmp" id="listEmpresaModal" tabindex="-1" aria-labelledby="listEmpresaModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -231,8 +232,8 @@
                 <div class="modal-body">
                     <form id="empresaForm" method="POST">
                         {% csrf_token %}
-                        <div class="form-group" style="transform:translateX(5px);">
-                            <label for="id_region" style="">Región:</label>
+                        <div class="form-group">
+                            <label for="id_region">Región:</label>
                             <select id="id_region" name="region" class="form-control">
                                 <option value="">Seleccione una región</option>
                                 {% for region in regions %}
@@ -241,14 +242,14 @@
                             </select>
                         </div>
                         
-                        <div class="form-group" style="transform:translateX(5px);">
+                        <div class="form-group">
                             <label for="id_provincia">Provincia:</label>
                             <select id="id_provincia" name="provincia" class="form-control" disabled>
                                 <option value="">Seleccione una provincia</option>
                             </select>
                         </div>
                         
-                        <div class="form-group" style="transform:translateX(5px);">
+                        <div class="form-group">
                             <label for="id_comuna">Comuna:</label>
                             <select id="id_comuna" name="comuna" class="form-control" disabled>
                                 <option value="">Seleccione una comuna</option>
@@ -262,7 +263,7 @@
                         <button type="submit" class="btn btn-primary">Guardar Empresa</button>
                     </form>
                     <hr>
-                    <ul id="empresa-list" class="list-group">
+                    <ul id="empresa-list" class="list-group table-container">
                         {% for empresa in empresas %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><strong>{{ empresa.nombre }}</strong> ({{ empresa.correo }})</span>

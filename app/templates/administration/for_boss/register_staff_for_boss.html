@@ -1,63 +1,96 @@
-<!-- register_staff.html -->
-
 {% extends 'app/base.html' %}
 
 {% block contenido %}
 <div class="tituloh1 mb-5"> 
-<h1>Registrar Nuevo Usuario Staff</h1>
+    <h1>Registrar Nuevo Usuario Staff</h1>
 </div>
 <form method="post" class="formstaff regNegocio">
     <div class="form_containerStaff">
         <div class="form_groupStaff">
-            
-    {% csrf_token %}
-    
-    <h4>Datos del Usuario</h4>
-    <br></br>
-    <div class="staff">{{ user_form.as_p }}</div>
-    {% if user_form.errors %}
-        <div class="alert alert-danger">
-            {{ user_form.errors }}
+            {% csrf_token %}
+            <h4>Datos del Usuario</h4>
+            <br>
+            <div class="staff">
+                <div class="form-group">
+                    <label for="id_username">Nombre de Usuario:</label>
+                    {{ user_form.username }}
+                    {% if user_form.username.errors %}
+                        <div class="text-danger">
+                            {{ user_form.username.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_first_name">Primer Nombre:</label>
+                    {{ user_form.first_name }}
+                    {% if user_form.first_name.errors %}
+                        <div class="text-danger">
+                            {{ user_form.first_name.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_last_name">Apellido:</label>
+                    {{ user_form.last_name }}
+                    {% if user_form.last_name.errors %}
+                        <div class="text-danger">
+                            {{ user_form.last_name.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_email">Correo Electrónico:</label>
+                    {{ user_form.email }}
+                    {% if user_form.email.errors %}
+                        <div class="text-danger">
+                            {{ user_form.email.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% if user_form.errors %}
+            <div class="alert alert-danger">
+                <ul>
+                    {% for field, errors in user_form.errors.items %}
+                    <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
         </div>
-    {% endif %}
-</div>
-{% comment %} <div class="titulodps mb-4">
-<h4>Datos del Perfil de Staff</h4>
-</div>  {% endcomment %}
-    <div class="personales">
-       
-        {{ profile_form.as_p }}
-        <!-- Ocultar el campo negocio -->
-        <input type="hidden" name="negocio" value="{{ user_profile.negocio.id }}">
 
-
-        <div class="form-group" style="transform:translate(-2px, 3px); background-color:red">
-            <label for="grupo">Asignar Grupo:</label>
-            <select name="grupo" id="grupo" class="form-control">
-             {% comment %}    <option value="">Seleccionar un grupo</option> {% endcomment %}
-                {% for grupo in grupos %}
+        <div class="personales">
+            {{ profile_form.as_p }}
+            <input type="hidden" name="negocio" value="{{ user_profile.negocio.id }}">
+            <div class="form-group" style="transform:translate(-2px, 3px); background-color:red">
+                <label for="grupo">Asignar Grupo:</label>
+                <select name="grupo" id="grupo" class="form-control">
+                    {% for grupo in grupos %}
                     <option class="optionClass" value="{{ grupo.id }}" {% if grupo_actual and grupo_actual.id == grupo.id %}selected{% endif %}>
                         {{ grupo.name }}
                     </option>
-                {% endfor %}
-            </select>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-    </div>
-    {% if profile_form.errors %}
+
+        {% if profile_form.errors %}
         <div class="alert alert-danger">
-            {{ profile_form.errors }}
+            <ul>
+                {% for field, errors in profile_form.errors.items %}
+                    {% if field == '__all__' %}
+                        {% for error in errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
         </div>
-        
-    {% endif %} 
-
-
-
+        {% endif %}
+    </div>
 
     <button type="submit" class="btnStaff" style="background-color:#1499a3; transform:translateY(18px)">Registrar</button>
-  
 </form>
-</div>
-
-
-
 {% endblock %}

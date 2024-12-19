@@ -257,7 +257,7 @@
 
 
 
-    <div class="table-container" style="min-height:550px">
+    <div class="table-container listaInventario">
         <table class="table">
             <thead class="table">
                 <tr>
@@ -307,7 +307,7 @@
                             <a href="#" class="btn btn-primary btn-sm edit-product" data-bs-toggle="modal" data-bs-target="#modProdModal{{ producto.producto_id }}" data-product-id="{{ producto.producto_id }}">Editar</a>
 
                             <!-- Modal para editar producto -->
-                            <div class="modal fade" id="modProdModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="modProdModalLabel{{ producto.producto_id }}" aria-hidden="true">
+                            <div class="modal fade modEditProdInvent" id="modProdModal{{ producto.producto_id }}" tabindex="-1" aria-labelledby="modProdModalLabel{{ producto.producto_id }}" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">

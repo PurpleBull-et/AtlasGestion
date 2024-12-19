@@ -1,13 +1,15 @@
 {% extends 'app/base.html' %}
 {% block contenido %}
+<div class="tituloh1 mb-4">
 <h2>Modificar Perfil de Administrador</h2>
-<form method="post" class="formModProfile">
+</div>
+<form method="post" class="formModProfile regNegocio">
     {% csrf_token %}
     {{ profile_form.as_p }}
     <div class="form-group">
         <label for="grupo">Asignar Grupo:</label>
-        <select name="grupo" id="grupo" class="form-control">
-         {% comment %}    <option value="">Seleccionar un grupo</option> {% endcomment %}
+        <select name="grupo" id="grupo" class="form-control miselect">
+         
             {% for grupo in grupos %}
                 <option class="optionClass" value="{{ grupo.id }}" {% if grupo_actual and grupo_actual.id == grupo.id %}selected{% endif %}>
                     {{ grupo.name }}

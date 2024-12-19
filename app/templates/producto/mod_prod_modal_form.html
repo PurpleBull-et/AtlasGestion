@@ -1,21 +1,21 @@
-<form method="post" id="mod-prod-form-{{ producto.producto_id }}">
+<form method="post" id="mod-prod-form-{{ producto.producto_id }}" class="formu-edit">
     {% csrf_token %}
     {{ producto_form.as_p }}
 
-    <div class="mb-3">
+    <div class="mb-3 editMarca">
         <label for="marca_nombre">Marca</label>
-        <input type="text" id="marca_nombre" name="marca_nombre" class="form-control" style="transform:translateY(-15px)"
+        <input type="text" id="marca_nombre" name="marca_nombre" class="form-control"
                placeholder="Escribe para buscar o crear" value="{{ marca_nombre }}">
         <input type="hidden" id="marca_id" name="marca_id" value="{{ marca_id }}">
-        <div id="marca_suggestions" class="suggestions-box border border-primary rounded-1 border-2" style="transform:translate(-15px, -15px); height:40px; text-align:center;"></div>
+        <div id="marca_suggestions" class="suggestions-box border border-primary rounded-1 border-2"></div>
     </div>
 
-    <div class="mb-3">
+    <div class="mb-3 editCat">
         <label for="categoria_nombre">Categoría</label>
-        <input type="text" id="categoria_nombre" name="categoria_nombre" class="form-control"style="transform:translateY(-15px)"
+        <input type="text" id="categoria_nombre" name="categoria_nombre" class="form-control"
                placeholder="Escribe para buscar o crear" value="{{ categoria_nombre }}">
         <input type="hidden" id="categoria_id" name="categoria_id" value="{{ categoria_id }}">
-        <div id="categoria_suggestions" class="suggestions-box border border-primary rounded-1 border-2" style="transform:translate(-15px, -15px); height:40px; text-align:center;"></div>
+        <div id="categoria_suggestions" class="suggestions-box border border-primary rounded-1 border-2"></div>
     </div>
     
     
@@ -49,8 +49,8 @@
         </style>
 
 
-    <button type="submit" class="btn btn-primary w-50">Guardar Cambios</button>
-    <button type="button" class="btn bg-danger" data-bs-dismiss="modal">Cancelar</button>
+    <button type="submit" class="btnEditInv">Guardar Cambios</button>
+    <button type="button" class="editInvCerrar" data-bs-dismiss="modal">Cancelar</button>
 </form>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.css">

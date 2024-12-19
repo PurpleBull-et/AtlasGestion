@@ -164,11 +164,10 @@ def home(request):
         del request.session['session_warning']
 
     if request.user.is_superuser:
-        return redirect('list_admin') 
+        return redirect('list_admin')
 
     staff_profile = StaffProfile.objects.get(user=request.user)
 
-    # Ordenar las compras desde la más reciente
     compras = Compra.objects.filter(
         usuario__staffprofile__negocio=staff_profile.negocio
     ).prefetch_related('detalles').order_by('-fecha')
@@ -178,9 +177,12 @@ def home(request):
     page_number = request.GET.get('page')  # Obtener el número de página
     compras_page = paginator.get_page(page_number)  # Página actual
 
-    # Cálculo de KPI si es jefe
+    # Cálculo de métricas si el usuario es jefe
     if es_jefe:
+        # Total de ventas
         total_ventas = compras.aggregate(Sum('total'))['total__sum'] or 0
+
+        # Promedio diario de ventas
         promedio_ventas_diario = compras.annotate(
             dia=TruncDay('fecha')
         ).values('dia').annotate(
@@ -188,23 +190,34 @@ def home(request):
         ).aggregate(
             Avg('total_dia')
         )['total_dia__avg'] or 0
+
+        # Producto más vendido basado en cantidad
         producto_mas_vendido = DetalleCompra.objects.filter(
             compra__usuario__staffprofile__negocio=staff_profile.negocio
         ).values('producto__nombre').annotate(
             cantidad_total=Sum('cantidad')
         ).order_by('-cantidad_total').first()
+
+        # Producto menos vendido basado en cantidad
+        producto_menos_vendido = DetalleCompra.objects.filter(
+            compra__usuario__staffprofile__negocio=staff_profile.negocio
+        ).values('producto__nombre').annotate(
+            cantidad_total=Sum('cantidad')
+        ).order_by('cantidad_total').first()
+
     else:
-        total_ventas = promedio_ventas_diario = producto_mas_vendido = None
+        total_ventas = promedio_ventas_diario = producto_mas_vendido = producto_menos_vendido = None
 
     return render(request, 'app/home.html', {
         'staff': user,
         'es_jefe': es_jefe,
         'es_cajero': es_cajero,
         'es_bodeguero': es_bodeguero,
-        'compras': compras_page,  # Pasar la página actual al contexto
+        'compras': compras_page, 
         'total_ventas': total_ventas,
         'promedio_ventas_diario': promedio_ventas_diario,
         'producto_mas_vendido': producto_mas_vendido,
+        'producto_menos_vendido': producto_menos_vendido,
     })
 
 def es_ajax(request):
@@ -697,6 +710,7 @@ def confirmar_compra_factura(request):
                 nombre_staff=request.user.get_full_name(),
                 correo=perfil_cliente.correo if perfil_cliente else None,
                 medio_pago=medio_pago,
+                glosa=glosa,
                 tipo_documento='factura', 
                 fecha=fecha_hora_actual
             )
@@ -3459,3 +3473,4 @@ def exportar_reportes_excel(request):
     except Exception as e:
         logger.error(f"Error al exportar el reporte Excel: {e}", exc_info=True)
         return HttpResponse("Ocurrió un error al generar el reporte.", status=500)
+

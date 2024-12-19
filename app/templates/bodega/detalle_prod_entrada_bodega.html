@@ -20,8 +20,8 @@
     <ul>
         <li><strong>Producto:</strong> {{ producto_entrada.producto.nombre }}</li>
         <li><strong>Cantidad Recibida:</strong> {{ producto_entrada.cantidad_recibida }}</li>
-        <li><strong>Precio Unitario:</strong> ${{ producto_entrada.precio_unitario }}</li>
-        <li><strong>Subtotal:</strong> ${{ producto_entrada.cantidad_recibida|multiply:producto_entrada.precio_unitario }}</li>
+        <li><strong>Precio Total:</strong> ${{ producto_entrada.precio_total }}</li>
+        <li><strong>Subtotal:</strong> ${{ producto_entrada.cantidad_recibida|multiply:producto_entrada.precio_total }}</li>
     </ul>
 </div>
 

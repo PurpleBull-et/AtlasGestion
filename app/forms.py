@@ -16,6 +16,14 @@ class UserForBossForm(forms.ModelForm):
             'email': 'Correo Electrónico',
         }
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        
+        # Verificar si el correo ya existe en otro usuario
+        if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            self.add_error('email', "Este correo ya está registrado en otra cuenta.")
+        
+        return email
 
 class UserForm(UserCreationForm):
     class Meta:
@@ -30,11 +38,12 @@ class UserForm(UserCreationForm):
             'password2': 'Confirmar Contraseña',
         }
 
-    def __init__(self, *args, **kwargs):
-        disable_username = kwargs.pop('disable_username', False)
-        super(UserForm, self).__init__(*args, **kwargs)
-        if disable_username:
-            self.fields['username'].disabled = True
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        # Verificar si el correo ya existe
+        if User.objects.filter(email=email).exists():
+            self.add_error('email', "Este correo ya está registrado en otra cuenta.")
+        return email
          
 class StaffProfileForm(forms.ModelForm):
     class Meta:
@@ -44,10 +53,34 @@ class StaffProfileForm(forms.ModelForm):
             'rut': 'RUT',
             'direccion': 'Dirección',
             'telefono': 'Teléfono',
-            'region': 'Región',
-            'provincia': 'Provincia',
             'negocio': 'Negocio',
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # Verificar si el usuario asociado existe antes de acceder a su correo
+        if self.instance and self.instance.pk and hasattr(self.instance, 'user') and self.instance.user:
+            user_email = self.instance.user.email
+        else:
+            user_email = None
+
+        # Validar si el correo ya existe en StaffProfile
+        if user_email and StaffProfile.objects.filter(user__email=user_email).exclude(pk=self.instance.pk).exists():
+            raise ValidationError("Este correo ya está registrado como usuario Staff.")
+
+        # Validar si el correo ya existe en otros modelos
+        if user_email:
+            if Negocio.objects.filter(correo=user_email).exists():
+                raise ValidationError("Este correo ya está registrado como Negocio.")
+            if Proveedor.objects.filter(correo=user_email).exists():
+                raise ValidationError("Este correo ya está registrado como Proveedor.")
+            if PerfilClienteEmpresa.objects.filter(correo=user_email).exists():
+                raise ValidationError("Este correo ya está registrado como Cliente de Empresa.")
+            if PerfilClientes.objects.filter(correo=user_email).exists():
+                raise ValidationError("Este correo ya está registrado como Cliente.")
+
+        return cleaned_data
 
 class MarcaForm(forms.ModelForm):
     class Meta:
@@ -359,3 +392,4 @@ class StaffProfileForBossForm(forms.ModelForm):
         if negocio:
             self.fields['negocio'].initial = negocio
             self.fields['negocio'].widget = forms.HiddenInput()
+

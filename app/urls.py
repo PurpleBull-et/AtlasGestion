@@ -155,6 +155,7 @@ urlpatterns = [
     path('reporte/pdf/', generar_reporte_pdf, name='generar_reporte_pdf'),
     path('reporte/excel/', exportar_reportes_excel, name='exportar_reportes_excel'),
 
+ 
     
 
 ]

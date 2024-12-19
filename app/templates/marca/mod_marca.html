@@ -1,9 +1,10 @@
 {% extends 'app/base.html' %}
 
 {% block contenido %}
+<div class="tituloh1">
 <h1>Modificar Marca</h1>
-
-<div class="card mb-5">
+</div>
+<div class="card mb-5 regNegocio">
     <div class="card-body">
         <form method="post" class="formModMarca">
             {% csrf_token %}

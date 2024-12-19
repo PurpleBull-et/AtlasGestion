@@ -10,43 +10,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>
-   {% comment %}  <section class="ftco-section">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-12">
-                    <div class="wrap d-md-flex">
-                        <div class="text-wrap p-4 p-lg-5 d-flex img" style="background-image: url({% static 'app/img/bg.jpg' %});">
-                            <div class="text w-100">
-                                <h2 class="mb-4">Bienvenido a Atlas Gestión</h2>
-                                <p>Atlas Gestión, la solución integral para administrar y escalar tus negocios de forma segura y eficiente. Con herramientas avanzadas, simplificamos tus operaciones diarias para que puedas concentrarte en lo más importante: el crecimiento de tu empresa.</p>
-                            </div>
-                        </div>
-                        <div class="login-wrap p-4 p-md-5">
-                            <div class="row justify-content-center py-md-5">
-                                <div class="col-lg-9"> {% endcomment %}
-                                    <form action="" method="post" class="form">
-                                        <h2 class="form_title">Inicia Sesion</h2>
-                                        
-                                        <div class="form_container" style="transform:translateY(60px)">
-                                            <div class="form_group">
-                                                {% csrf_token %}
-                                                {{ form|crispy }}
-                                        <button type="submit" class="btn btn-primary btn-block" style="transform:translateY(-50px)">Iniciar Sesión</button>
-                                    </form>
-                                    <a href="{% url 'password_reset' %}">Recuperar contraseña</a>
-                                    
-                                </div>
-                            </div>
-                               {% comment %}  </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section> {% endcomment %}
 
-
+        <form action="" method="post" class="form">
+            <h2 class="form_title">Inicia Sesion</h2>
+            
+            <div class="form_container contLogin">
+                <div class="form_group">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+            <button type="submit" class="btn btn-block botonLogin">Iniciar Sesión</button>
+        </form>
+    
+    <div class="recuperarPass">
+    <span>Olvidaste tu contraseña?...</span>
+    <br> </br>
+        <a href="{% url 'password_reset' %}">🔒Recuperar contraseña</a>
+    </div>
+               
+</div>
+           
+</div>
+             
 </body>
 </html>
 
